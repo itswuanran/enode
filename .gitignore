@@ -1,0 +1,13 @@
+*.class
+
+.mtj.tmp/
+
+*.jar
+*.war
+*.ear
+logs/
+
+.idea
+*.iml
+target/
+test/
