@@ -66,14 +66,14 @@ public class DefaultAggregateRootInternalHandlerProvider implements IAggregateRo
 
     private void registerInternalHandler(Class aggregateRootType, Class eventType, Method method) {
         Map<Class, Action2<IAggregateRoot, IDomainEvent>> eventHandlerDic = mappings.computeIfAbsent(aggregateRootType, k -> new HashMap<>());
+        method.setAccessible(true);
         try {
-            method.setAccessible(true);
             MethodHandle methodHandle = MethodHandles.lookup().unreflect(method);
             eventHandlerDic.put(eventType, (aggregateRoot, domainEvent) -> {
                 try {
                     methodHandle.invoke(aggregateRoot, domainEvent);
                 } catch (Throwable throwable) {
-                    throw new RuntimeException(throwable);
+                    throw new WrappedRuntimeException(throwable);
                 }
             });
         } catch (Exception e) {

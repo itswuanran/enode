@@ -1,12 +1,12 @@
 package com.enodeframework.queue;
 
-import com.enodeframework.common.logging.ENodeLogger;
 import com.enodeframework.common.remoting.RemotingClient;
 import com.enodeframework.common.remoting.netty.NettyClientConfig;
 import com.enodeframework.common.remoting.netty.NettyRemotingClient;
 import com.enodeframework.common.remoting.protocol.RemotingCommand;
 import com.enodeframework.common.serializing.IJsonSerializer;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.nio.charset.Charset;
@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class SendReplyService {
 
-    private static final Logger logger = ENodeLogger.getLog();
+    private static final Logger logger = LoggerFactory.getLogger(SendReplyService.class);
 
     private static final Charset CHARSETUTF8 = Charset.forName("UTF-8");
 

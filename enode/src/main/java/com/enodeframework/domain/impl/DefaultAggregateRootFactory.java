@@ -2,6 +2,7 @@ package com.enodeframework.domain.impl;
 
 import com.enodeframework.domain.IAggregateRoot;
 import com.enodeframework.domain.IAggregateRootFactory;
+import com.enodeframework.infrastructure.WrappedRuntimeException;
 
 public class DefaultAggregateRootFactory implements IAggregateRootFactory {
 
@@ -10,7 +11,7 @@ public class DefaultAggregateRootFactory implements IAggregateRootFactory {
         try {
             return aggregateRootType.newInstance();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new WrappedRuntimeException(e);
         }
     }
 }

@@ -1,7 +1,6 @@
 package com.enodeframework.queue.domainevent;
 
 import com.enodeframework.commanding.CommandReturnType;
-import com.enodeframework.common.logging.ENodeLogger;
 import com.enodeframework.common.serializing.IJsonSerializer;
 import com.enodeframework.eventing.DomainEventStreamMessage;
 import com.enodeframework.eventing.IDomainEvent;
@@ -14,11 +13,12 @@ import com.enodeframework.queue.IMessageHandler;
 import com.enodeframework.queue.QueueMessage;
 import com.enodeframework.queue.SendReplyService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class DomainEventListener implements IMessageHandler {
 
-    private static final Logger logger = ENodeLogger.getLog();
+    private static final Logger logger = LoggerFactory.getLogger(DomainEventListener.class);
 
     @Autowired
     protected SendReplyService sendReplyService;

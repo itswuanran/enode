@@ -1,6 +1,5 @@
 package com.enodeframework.domain.impl;
 
-import com.enodeframework.common.logging.ENodeLogger;
 import com.enodeframework.common.scheduling.IScheduleService;
 import com.enodeframework.domain.AggregateCacheInfo;
 import com.enodeframework.domain.IAggregateRoot;
@@ -8,6 +7,7 @@ import com.enodeframework.domain.IAggregateStorage;
 import com.enodeframework.domain.IMemoryCache;
 import com.enodeframework.infrastructure.ITypeNameProvider;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 public class DefaultMemoryCache implements IMemoryCache {
 
-    private static final Logger logger = ENodeLogger.getLog();
+    private static final Logger logger = LoggerFactory.getLogger(DefaultMemoryCache.class);
 
     private final ConcurrentMap<String, AggregateCacheInfo> aggregateRootInfoDict;
     private final int timeoutSeconds = 5000;
@@ -44,26 +44,23 @@ public class DefaultMemoryCache implements IMemoryCache {
             throw new NullPointerException("aggregateRootId");
         }
         AggregateCacheInfo aggregateRootInfo = aggregateRootInfoDict.get(aggregateRootId.toString());
-        CompletableFuture<IAggregateRoot> promise = new CompletableFuture<>();
         if (aggregateRootInfo == null) {
-            promise.complete(null);
-            return promise;
+            return CompletableFuture.completedFuture(null);
         }
         IAggregateRoot aggregateRoot = aggregateRootInfo.getAggregateRoot();
         if (aggregateRoot.getClass() != aggregateRootType) {
             throw new RuntimeException(String.format("Incorrect aggregate root type, aggregateRootId:%s, type:%s, expecting type:%s", aggregateRootId, aggregateRoot.getClass(), aggregateRootType));
         }
         if (aggregateRoot.getChanges().size() > 0) {
-            CompletableFuture<IAggregateRoot> future = aggregateStorage.getAsync(aggregateRootType, aggregateRootId.toString());
-            future.thenAccept(lastestAggregateRoot -> {
+            CompletableFuture<IAggregateRoot> lastestAggregateRootFuture = aggregateStorage.getAsync(aggregateRootType, aggregateRootId.toString());
+            return lastestAggregateRootFuture.thenApply(lastestAggregateRoot -> {
                 if (lastestAggregateRoot != null) {
                     setInternal(lastestAggregateRoot);
                 }
+                return lastestAggregateRoot;
             });
-            return future;
         }
-        promise.complete(aggregateRoot);
-        return promise;
+        return CompletableFuture.completedFuture(aggregateRoot);
     }
 
     /**

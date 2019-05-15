@@ -2,7 +2,6 @@ package com.enodeframework.infrastructure.impl;
 
 import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.common.io.IOHelper;
-import com.enodeframework.common.logging.ENodeLogger;
 import com.enodeframework.eventing.DomainEventStreamMessage;
 import com.enodeframework.infrastructure.IMessage;
 import com.enodeframework.infrastructure.IMessageDispatcher;
@@ -11,13 +10,14 @@ import com.enodeframework.infrastructure.IProcessingMessageHandler;
 import com.enodeframework.infrastructure.IPublishedVersionStore;
 import com.enodeframework.infrastructure.ProcessingDomainEventStreamMessage;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.CompletableFuture;
 
 public class DefaultProcessingMessageHandler<X extends IProcessingMessage<X, Y>, Y extends IMessage> implements IProcessingMessageHandler<X, Y> {
 
-    private static final Logger logger = ENodeLogger.getLog();
+    private static final Logger logger = LoggerFactory.getLogger(DefaultProcessingMessageHandler.class);
 
     private final String domainEventStreamMessageHandlerName = "DefaultEventProcessor";
 
@@ -70,7 +70,6 @@ public class DefaultProcessingMessageHandler<X extends IProcessingMessage<X, Y>,
                 },
                 () -> String.format("sequence message [messageId:%s, messageType:%s, aggregateRootId:%s, aggregateRootVersion:%s]", message.id(), message.getClass().getName(), message.aggregateRootStringId(), message.version()),
                 errorMessage ->
-
                         logger.error(String.format("Get published version has unknown exception, the code should not be run to here, errorMessage: %s", errorMessage)),
                 retryTimes, true);
     }

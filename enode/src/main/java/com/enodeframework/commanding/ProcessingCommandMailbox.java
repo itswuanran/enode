@@ -1,8 +1,8 @@
 package com.enodeframework.commanding;
 
-import com.enodeframework.common.logging.ENodeLogger;
 import com.enodeframework.common.threading.ManualResetEvent;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ProcessingCommandMailbox {
-    private static final Logger logger = ENodeLogger.getLog();
+    private static final Logger logger = LoggerFactory.getLogger(ProcessingCommandMailbox.class);
 
     private final Object lockObj = new Object();
     // TODO async lock
@@ -89,28 +89,28 @@ public class ProcessingCommandMailbox {
         this.requestToCompleteCommandDict.clear();
     }
 
-    //TODO async
     public CompletableFuture completeMessage(ProcessingCommand processingCommand, CommandResult commandResult) {
-        //TODO synchronized
         synchronized (lockObj2) {
-            lastActiveTime = new Date();
             try {
+                lastActiveTime = new Date();
                 if (processingCommand.getSequence() == consumedSequence + 1) {
                     messageDict.remove(processingCommand.getSequence());
-                    completeCommand(processingCommand, commandResult);
+                    completeCommand(processingCommand, commandResult).get();
                     consumedSequence = processNextCompletedCommands(processingCommand.getSequence());
+                    return null;
                 } else if (processingCommand.getSequence() > consumedSequence + 1) {
                     requestToCompleteCommandDict.put(processingCommand.getSequence(), commandResult);
                 } else if (processingCommand.getSequence() < consumedSequence + 1) {
                     messageDict.remove(processingCommand.getSequence());
-                    completeCommand(processingCommand, commandResult);
+                    completeCommand(processingCommand, commandResult).get();
                     requestToCompleteCommandDict.remove(processingCommand.getSequence());
                 }
             } catch (Exception ex) {
                 logger.error(String.format("Command mailbox complete command failed, commandId: %s, aggregateRootId: %s", processingCommand.getMessage().id(), processingCommand.getMessage().getAggregateRootId()), ex);
+                return CompletableFuture.completedFuture(false);
             }
         }
-        return CompletableFuture.completedFuture(null);
+        return CompletableFuture.completedFuture(true);
     }
 
     public void run() {
@@ -119,18 +119,16 @@ public class ProcessingCommandMailbox {
             logger.info("Command mailbox is pausing and we should wait for a while, aggregateRootId: {}", aggregateRootId);
             pauseWaitHandle.waitOne(1000);
         }
-
         ProcessingCommand processingCommand = null;
-
         try {
             processingWaitHandle.reset();
             isProcessingCommand = true;
             int count = 0;
-
             while (consumingSequence < nextSequence && count < batchSize) {
                 processingCommand = getProcessingCommand(consumingSequence);
                 if (processingCommand != null) {
-                    messageHandler.handle(processingCommand);
+                    // await 阻塞操作
+                    messageHandler.handle(processingCommand).get();
                 }
                 consumingSequence++;
                 count++;
@@ -180,12 +178,10 @@ public class ProcessingCommandMailbox {
     }
 
     private CompletableFuture completeCommand(ProcessingCommand processingCommand, CommandResult commandResult) {
-        try {
-            return processingCommand.completeAsync(commandResult);
-        } catch (Exception ex) {
-            logger.error(String.format("Failed to complete command, commandId: %s, aggregateRootId: %s", processingCommand.getMessage().id(), processingCommand.getMessage().getAggregateRootId()), ex);
-            return CompletableFuture.completedFuture(null);
-        }
+        return processingCommand.completeAsync(commandResult).exceptionally(ex -> {
+            logger.error("Failed to complete command, commandId: {}, aggregateRootId: {}", processingCommand.getMessage().id(), processingCommand.getMessage().getAggregateRootId(), ex);
+            return null;
+        });
     }
 
     private void tryRun() {

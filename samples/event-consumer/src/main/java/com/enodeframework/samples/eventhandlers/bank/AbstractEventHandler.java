@@ -1,7 +1,6 @@
 package com.enodeframework.samples.eventhandlers.bank;
 
 import com.enodeframework.common.io.AsyncTaskResult;
-import com.enodeframework.common.logging.ENodeLogger;
 import com.enodeframework.samples.applicationmessages.AccountValidateFailedMessage;
 import com.enodeframework.samples.applicationmessages.AccountValidatePassedMessage;
 import com.enodeframework.samples.domain.bank.TransactionType;
@@ -16,12 +15,13 @@ import com.enodeframework.samples.domain.bank.transfertransaction.TransferTransa
 import com.enodeframework.samples.domain.bank.transfertransaction.TransferTransactionCompletedEvent;
 import com.enodeframework.samples.domain.bank.transfertransaction.TransferTransactionStartedEvent;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CompletableFuture;
 
 public class AbstractEventHandler {
 
-    public static Logger logger = ENodeLogger.getLog();
+    public static Logger logger = LoggerFactory.getLogger(AbstractEventHandler.class);
 
     public CompletableFuture<AsyncTaskResult> handleAsyncInternal(AccountCreatedEvent evnt) {
         logger.info("账户已创建，账户：{}，所有者：{}", evnt.aggregateRootId(), evnt.Owner);

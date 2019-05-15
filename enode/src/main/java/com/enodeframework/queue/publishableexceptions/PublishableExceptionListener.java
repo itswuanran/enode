@@ -1,6 +1,5 @@
 package com.enodeframework.queue.publishableexceptions;
 
-import com.enodeframework.common.logging.ENodeLogger;
 import com.enodeframework.common.serializing.IJsonSerializer;
 import com.enodeframework.infrastructure.IMessageProcessor;
 import com.enodeframework.infrastructure.IPublishableException;
@@ -13,11 +12,12 @@ import com.enodeframework.queue.IMessageContext;
 import com.enodeframework.queue.IMessageHandler;
 import com.enodeframework.queue.QueueMessage;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class PublishableExceptionListener implements IMessageHandler {
 
-    private static final Logger logger = ENodeLogger.getLog();
+    private static final Logger logger = LoggerFactory.getLogger(PublishableExceptionListener.class);
 
     @Autowired
     protected IJsonSerializer jsonSerializer;

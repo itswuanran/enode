@@ -4,7 +4,6 @@ import com.enodeframework.commanding.ICommand;
 import com.enodeframework.commanding.ICommandProcessor;
 import com.enodeframework.commanding.ProcessingCommand;
 import com.enodeframework.commanding.impl.CommandExecuteContext;
-import com.enodeframework.common.logging.ENodeLogger;
 import com.enodeframework.common.serializing.IJsonSerializer;
 import com.enodeframework.domain.IAggregateStorage;
 import com.enodeframework.domain.IRepository;
@@ -14,6 +13,7 @@ import com.enodeframework.queue.IMessageHandler;
 import com.enodeframework.queue.QueueMessage;
 import com.enodeframework.queue.SendReplyService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.HashMap;
@@ -21,7 +21,7 @@ import java.util.Map;
 
 public abstract class CommandListener implements IMessageHandler {
 
-    private static final Logger logger = ENodeLogger.getLog();
+    private static final Logger logger = LoggerFactory.getLogger(CommandListener.class);
 
     @Autowired
     protected SendReplyService sendReplyService;

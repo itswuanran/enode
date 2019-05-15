@@ -1,8 +1,8 @@
 package com.enodeframework.eventing.impl;
 
-import com.enodeframework.common.logging.ENodeLogger;
 import com.enodeframework.eventing.EventCommittingContext;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 public class EventMailBox {
-    private static final Logger logger = ENodeLogger.getLog();
+    private static final Logger logger = LoggerFactory.getLogger(EventMailBox.class);
 
     private final String aggregateRootId;
     private final Queue<EventCommittingContext> messageQueue;

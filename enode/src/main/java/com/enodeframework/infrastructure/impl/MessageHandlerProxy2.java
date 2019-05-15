@@ -5,6 +5,7 @@ import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.infrastructure.IMessage;
 import com.enodeframework.infrastructure.IMessageHandlerProxy2;
 import com.enodeframework.infrastructure.ITwoMessageHandler;
+import com.enodeframework.infrastructure.WrappedRuntimeException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.lang.invoke.MethodHandle;
@@ -36,7 +37,7 @@ public class MessageHandlerProxy2 implements IMessageHandlerProxy2 {
                 return (CompletableFuture<AsyncTaskResult>) methodHandle.invoke(handler, message2, message1);
             }
         } catch (Throwable throwable) {
-            throw new RuntimeException(throwable);
+            throw new WrappedRuntimeException(throwable);
         }
     }
 

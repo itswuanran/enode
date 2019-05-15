@@ -6,7 +6,6 @@ import com.enodeframework.commanding.ICommand;
 import com.enodeframework.commanding.ProcessingCommand;
 import com.enodeframework.commanding.ProcessingCommandMailbox;
 import com.enodeframework.common.io.IOHelper;
-import com.enodeframework.common.logging.ENodeLogger;
 import com.enodeframework.common.scheduling.IScheduleService;
 import com.enodeframework.domain.IMemoryCache;
 import com.enodeframework.eventing.DomainEventStream;
@@ -17,6 +16,7 @@ import com.enodeframework.eventing.IEventService;
 import com.enodeframework.eventing.IEventStore;
 import com.enodeframework.infrastructure.IMessagePublisher;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 
 public class DefaultEventService implements IEventService {
 
-    private static final Logger logger = ENodeLogger.getLog();
+    private static final Logger logger = LoggerFactory.getLogger(DefaultEventService.class);
 
     private final ConcurrentMap<String, EventMailBox> mailboxDict;
 
@@ -197,12 +197,12 @@ public class DefaultEventService implements IEventService {
 
         commandMailBox.pause();
         try {
-            refreshAggregateMemoryCacheToLatestVersion(context.getEventStream().aggregateRootTypeName(), context.getEventStream().aggregateRootId());
+            // await 阻塞获取
+            refreshAggregateMemoryCacheToLatestVersion(context.getEventStream().aggregateRootTypeName(), context.getEventStream().aggregateRootId()).get();
             commandMailBox.resetConsumingSequence(consumingSequence);
             eventMailBox.clear();
             eventMailBox.exit();
             logger.info("ResetCommandMailBoxConsumingSequence success, commandId: {}, aggregateRootId: {}, consumingSequence: {}", command.id(), command.getAggregateRootId(), consumingSequence);
-
         } catch (Exception ex) {
             logger.error(String.format("ResetCommandMailBoxConsumingOffset has unknown exception, commandId: %s, aggregateRootId: %s", command.id(), command.getAggregateRootId()), ex);
         } finally {
@@ -299,12 +299,13 @@ public class DefaultEventService implements IEventService {
         }
     }
 
-    private void refreshAggregateMemoryCacheToLatestVersion(String aggregateRootTypeName, String aggregateRootId) {
+    private CompletableFuture refreshAggregateMemoryCacheToLatestVersion(String aggregateRootTypeName, String aggregateRootId) {
         try {
-            memoryCache.refreshAggregateFromEventStoreAsync(aggregateRootTypeName, aggregateRootId);
+            return memoryCache.refreshAggregateFromEventStoreAsync(aggregateRootTypeName, aggregateRootId);
         } catch (Exception ex) {
-            logger.error(String.format("Refresh aggregate memory cache to latest version has unknown exception, aggregateRootTypeName: %s, aggregateRootId:%s", aggregateRootTypeName, aggregateRootId), ex);
+            logger.error("Refresh aggregate memory cache to latest version has unknown exception, aggregateRootTypeName:{}, aggregateRootId:{}", aggregateRootTypeName, aggregateRootId, ex);
         }
+        return CompletableFuture.completedFuture(null);
     }
 
     private void publishDomainEventAsync(ProcessingCommand processingCommand, DomainEventStreamMessage eventStream, int retryTimes) {

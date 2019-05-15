@@ -14,7 +14,6 @@ import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.common.io.AsyncTaskStatus;
 import com.enodeframework.common.io.IOHelper;
 import com.enodeframework.common.io.IORuntimeException;
-import com.enodeframework.common.logging.ENodeLogger;
 import com.enodeframework.common.serializing.IJsonSerializer;
 import com.enodeframework.domain.IAggregateRoot;
 import com.enodeframework.eventing.DomainEventStream;
@@ -31,6 +30,7 @@ import com.enodeframework.infrastructure.MessageHandlerData;
 import com.enodeframework.infrastructure.WrappedRuntimeException;
 import com.google.common.base.Strings;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
 
 public class DefaultProcessingCommandHandler implements IProcessingCommandHandler {
 
-    private static final Logger logger = ENodeLogger.getLog();
+    private static final Logger logger = LoggerFactory.getLogger(DefaultProcessingCommandHandler.class);
 
     @Autowired
     private IJsonSerializer jsonSerializer;

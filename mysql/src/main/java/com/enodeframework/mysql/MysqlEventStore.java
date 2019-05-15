@@ -3,7 +3,6 @@ package com.enodeframework.mysql;
 import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.common.io.AsyncTaskStatus;
 import com.enodeframework.common.io.IOHelper;
-import com.enodeframework.common.logging.ENodeLogger;
 import com.enodeframework.common.serializing.IJsonSerializer;
 import com.enodeframework.common.utilities.Ensure;
 import com.enodeframework.configurations.DefaultDBConfigurationSetting;
@@ -19,6 +18,7 @@ import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.sql.DataSource;
@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 
 public class MysqlEventStore implements IEventStore {
 
-    private static final Logger logger = ENodeLogger.getLog();
+    private static final Logger logger = LoggerFactory.getLogger(MysqlEventStore.class);
 
     private static final String EVENT_TABLE_NAME_FORMAT = "%s_%s";
 

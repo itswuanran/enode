@@ -6,7 +6,6 @@ import com.enodeframework.commanding.CommandStatus;
 import com.enodeframework.commanding.ICommand;
 import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.common.io.AsyncTaskStatus;
-import com.enodeframework.common.logging.ENodeLogger;
 import com.enodeframework.common.remoting.RemotingServer;
 import com.enodeframework.common.remoting.netty.NettyRemotingServer;
 import com.enodeframework.common.remoting.netty.NettyRequestProcessor;
@@ -17,6 +16,7 @@ import com.enodeframework.common.serializing.IJsonSerializer;
 import com.enodeframework.queue.domainevent.DomainEventHandledMessage;
 import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.SocketAddress;
@@ -29,7 +29,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class CommandResultProcessor implements NettyRequestProcessor {
 
-    private static final Logger logger = ENodeLogger.getLog();
+    private static final Logger logger = LoggerFactory.getLogger(CommandResultProcessor.class);
 
     private static final Charset CHARSETUTF8 = Charset.forName("UTF-8");
 

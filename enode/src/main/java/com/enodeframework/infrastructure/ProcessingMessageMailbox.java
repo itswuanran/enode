@@ -1,7 +1,7 @@
 package com.enodeframework.infrastructure;
 
-import com.enodeframework.common.logging.ENodeLogger;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ProcessingMessageMailbox<X extends IProcessingMessage<X, Y>, Y extends IMessage> {
-    private static final Logger logger = ENodeLogger.getLog();
+    private static final Logger logger = LoggerFactory.getLogger(ProcessingMessageMailbox.class);
 
     private final String routingKey;
     private final ConcurrentLinkedQueue<X> messageQueue;
