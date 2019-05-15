@@ -1,0 +1,16 @@
+package com.enodeframework.samples.eventhandlers.bank;
+
+import com.enodeframework.common.io.AsyncTaskResult;
+import com.enodeframework.infrastructure.IMessageHandler;
+import com.enodeframework.samples.domain.bank.transfertransaction.TransferTransactionCompletedEvent;
+import org.springframework.stereotype.Component;
+
+import java.util.concurrent.CompletableFuture;
+
+@Component
+public class AysncCountHandler extends AbstractEventHandler implements IMessageHandler<TransferTransactionCompletedEvent> {
+    @Override
+    public CompletableFuture<AsyncTaskResult> handleAsync(TransferTransactionCompletedEvent message) {
+        return handleAsyncInternal(message);
+    }
+}
