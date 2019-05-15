@@ -1,10 +1,8 @@
-package com.enode.eventing.impl;
+package com.enode.mysql;
 
-import com.enode.common.container.IObjectContainer;
 import com.enode.common.io.AsyncTaskResult;
 import com.enode.common.io.AsyncTaskStatus;
 import com.enode.common.io.IOHelper;
-import com.enode.common.io.IORuntimeException;
 import com.enode.common.logging.ENodeLogger;
 import com.enode.common.serializing.IJsonSerializer;
 import com.enode.common.utilities.Ensure;
@@ -15,12 +13,13 @@ import com.enode.eventing.EventAppendResult;
 import com.enode.eventing.IDomainEvent;
 import com.enode.eventing.IEventSerializer;
 import com.enode.eventing.IEventStore;
-import com.enode.infrastructure.WrappedRuntimeException;
+import com.enode.eventing.impl.StreamRecord;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
@@ -37,7 +36,7 @@ public class MysqlEventStore implements IEventStore {
 
     private static final Logger logger = ENodeLogger.getLog();
 
-    private static final String EVENTTABLENAMEFORMAT = "%s%s";
+    private static final String EVENT_TABLE_NAME_FORMAT = "%s_%s";
 
     private final String tableName;
     private final int tableCount;
@@ -45,14 +44,23 @@ public class MysqlEventStore implements IEventStore {
     private final String commandIndexName;
     private final int bulkCopyBatchSize;
     private final int bulkCopyTimeout;
-    private final IJsonSerializer jsonSerializer;
-    private final IEventSerializer eventSerializer;
-    private final IOHelper ioHelper;
+
+    @Autowired
+    private IJsonSerializer jsonSerializer;
+
+    @Autowired
+    private IEventSerializer eventSerializer;
+
+    @Autowired
+    private IOHelper ioHelper;
+
     private final QueryRunner queryRunner;
+
     private boolean supportBatchAppendEvent;
+
     private Executor executor;
 
-    public MysqlEventStore(DataSource ds, OptionSetting optionSetting, IObjectContainer objectContainer) {
+    public MysqlEventStore(DataSource ds, OptionSetting optionSetting) {
         Ensure.notNull(ds, "ds");
         if (optionSetting != null) {
             tableName = optionSetting.getOptionValue("TableName");
@@ -78,9 +86,6 @@ public class MysqlEventStore implements IEventStore {
         Ensure.positive(bulkCopyBatchSize, "bulkCopyBatchSize");
         Ensure.positive(bulkCopyTimeout, "bulkCopyTimeout");
 
-        jsonSerializer = objectContainer.resolve(IJsonSerializer.class);
-        eventSerializer = objectContainer.resolve(IEventSerializer.class);
-        ioHelper = objectContainer.resolve(IOHelper.class);
         queryRunner = new QueryRunner(ds);
         executor = new ThreadPoolExecutor(4, 4,
                 0L, TimeUnit.MILLISECONDS,
@@ -95,29 +100,6 @@ public class MysqlEventStore implements IEventStore {
 
     public void setSupportBatchAppendEvent(boolean supportBatchAppendEvent) {
         this.supportBatchAppendEvent = supportBatchAppendEvent;
-    }
-
-    public List<DomainEventStream> queryAggregateEvents(String aggregateRootId, String aggregateRootTypeName, int minVersion, int maxVersion) {
-        List<StreamRecord> records = ioHelper.tryIOFunc(() -> {
-                    try {
-                        return queryRunner.query(String.format("SELECT * FROM `%s` WHERE AggregateRootId = ? AND Version >= ? AND Version <= ? ORDER BY Version", getTableName(aggregateRootId)),
-                                new BeanListHandler<>(StreamRecord.class),
-                                aggregateRootId,
-                                minVersion,
-                                maxVersion);
-                    } catch (SQLException ex) {
-                        String errorMessage = String.format("Failed to query aggregate events, aggregateRootId: %s, aggregateRootType: %s", aggregateRootId, aggregateRootTypeName);
-                        logger.error(errorMessage, ex);
-                        throw new IORuntimeException(errorMessage, ex);
-                    } catch (Exception ex) {
-                        String errorMessage = String.format("Failed to query aggregate events, aggregateRootId: %s aggregateRootType: %s", aggregateRootId, aggregateRootTypeName);
-                        logger.error(errorMessage, ex);
-                        throw new WrappedRuntimeException(ex);
-                    }
-                }
-                , "QueryAggregateEvents");
-
-        return records.stream().map(this::convertFrom).collect(Collectors.toList());
     }
 
     @Override
@@ -284,7 +266,7 @@ public class MysqlEventStore implements IEventStore {
 
         int tableIndex = getTableIndex(aggregateRootId);
 
-        return String.format(EVENTTABLENAMEFORMAT, tableName, tableIndex);
+        return String.format(EVENT_TABLE_NAME_FORMAT, tableName, tableIndex);
     }
 
     private DomainEventStream convertFrom(StreamRecord record) {

@@ -1,4 +1,4 @@
-package com.enode.infrastructure.impl.inmemory;
+package com.enode.infrastructure.impl;
 
 import com.enode.common.io.AsyncTaskResult;
 import com.enode.common.io.AsyncTaskStatus;

@@ -63,10 +63,10 @@ public class DefaultEventService implements IEventService {
     private IOHelper ioHelper;
 
     public DefaultEventService() {
-        mailboxDict = new ConcurrentHashMap<>();
-        batchSize = eventMailBoxPersistenceMaxBatchSize;
-        timeoutSeconds = aggregateRootMaxInactiveSeconds;
-        taskName = "CleanInactiveAggregates" + System.nanoTime() + new Random().nextInt(10000);
+        this.mailboxDict = new ConcurrentHashMap<>();
+        this.batchSize = eventMailBoxPersistenceMaxBatchSize;
+        this.timeoutSeconds = aggregateRootMaxInactiveSeconds;
+        this.taskName = "CleanInactiveAggregates" + System.nanoTime() + new Random().nextInt(10000);
     }
 
     @Override

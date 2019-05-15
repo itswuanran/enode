@@ -34,13 +34,13 @@ public class ProcessingCommandMailbox {
     private volatile boolean isPaused;
     private Date lastActiveTime;
 
-    public ProcessingCommandMailbox(String aggregaterootid, IProcessingCommandHandler messageHandler) {
+    public ProcessingCommandMailbox(String aggregateRootId, IProcessingCommandHandler messageHandler) {
         this.messageDict = new ConcurrentHashMap<>();
         this.requestToCompleteCommandDict = new HashMap<>();
         this.pauseWaitHandle = new ManualResetEvent(false);
         this.processingWaitHandle = new ManualResetEvent(false);
         this.batchSize = commandMailBoxPersistenceMaxBatchSize;
-        this.aggregateRootId = aggregaterootid;
+        this.aggregateRootId = aggregateRootId;
         this.messageHandler = messageHandler;
         this.consumedSequence = -1;
         this.isRunning = new AtomicBoolean(false);

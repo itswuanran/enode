@@ -11,7 +11,6 @@ import com.enode.infrastructure.impl.DefaultMessageHandlerProvider;
 import com.enode.infrastructure.impl.DefaultThreeMessageHandlerProvider;
 import com.enode.infrastructure.impl.DefaultTwoMessageHandlerProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
 
 import java.util.List;
 import java.util.Set;
@@ -21,7 +20,6 @@ import java.util.TreeSet;
  * 应用的核心引导启动类
  * 负责扫描在applicationContext.xml中配置的packages. 获取到Command，Event
  */
-@Import(value = {ENodeAutoConfiguration.class, InMemoryConfiguration.class})
 public class ENodeBootstrap {
 
     private List<String> packages;

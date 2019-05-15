@@ -12,7 +12,6 @@ import com.enode.queue.QueueMessageTypeCode;
 import com.enode.queue.TopicData;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.validation.constraints.NotNull;
 import java.util.concurrent.CompletableFuture;
 
 public abstract class DomainEventPublisher implements IMessagePublisher<DomainEventStreamMessage> {
@@ -23,7 +22,7 @@ public abstract class DomainEventPublisher implements IMessagePublisher<DomainEv
     @Autowired
     protected IEventSerializer eventSerializer;
 
-    @NotNull
+
     private TopicData topicData;
 
     public TopicData getTopicData() {

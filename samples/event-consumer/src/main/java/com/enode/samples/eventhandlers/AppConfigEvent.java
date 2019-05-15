@@ -3,12 +3,15 @@ package com.enode.samples.eventhandlers;
 import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
 import com.alibaba.rocketmq.client.producer.DefaultMQProducer;
 import com.enode.ENodeBootstrap;
+import com.enode.mysql.MysqlEventStore;
+import com.enode.mysql.MysqlPublishedVersionStore;
 import com.enode.queue.TopicData;
 import com.enode.rocketmq.message.RocketMQApplicationMessagePublisher;
 import com.enode.rocketmq.message.RocketMQDomainEventListener;
 import com.enode.rocketmq.message.RocketMQDomainEventPublisher;
 import com.enode.rocketmq.message.RocketMQPublishableExceptionPublisher;
 import com.google.common.collect.Lists;
+import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -22,7 +25,6 @@ import static com.enode.samples.Constant.NAMESRVADDR;
 
 @Configuration
 public class AppConfigEvent {
-
 
     @Bean(initMethod = "init")
     public ENodeBootstrap eNodeBootstrap() {
@@ -79,5 +81,16 @@ public class AppConfigEvent {
         domainEventPublisher.setProducer(eventProducer);
         domainEventPublisher.setTopicData(new TopicData(EVENT_TOPIC, "*"));
         return domainEventPublisher;
+    }
+
+    @Bean
+    public MysqlEventStore mysqlEventStore(HikariDataSource dataSource) {
+        MysqlEventStore mysqlEventStore = new MysqlEventStore(dataSource, null);
+        return mysqlEventStore;
+    }
+
+    @Bean
+    public MysqlPublishedVersionStore mysqlPublishedVersionStore(HikariDataSource dataSource) {
+        return new MysqlPublishedVersionStore(dataSource, null);
     }
 }

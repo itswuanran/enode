@@ -24,8 +24,8 @@ public class InMemoryEventStore implements IEventStore {
     private boolean supportBatchAppendEvent;
 
     public InMemoryEventStore() {
-        aggregateInfoDict = new ConcurrentHashMap<>();
-        supportBatchAppendEvent = true;
+        this.aggregateInfoDict = new ConcurrentHashMap<>();
+        this.supportBatchAppendEvent = true;
     }
 
     @Override
@@ -71,7 +71,7 @@ public class InMemoryEventStore implements IEventStore {
 
     @Override
     public CompletableFuture<AsyncTaskResult<DomainEventStream>> findAsync(String aggregateRootId, int version) {
-        return CompletableFuture.supplyAsync(() -> new AsyncTaskResult<DomainEventStream>(AsyncTaskStatus.Success, null, find(aggregateRootId, version)));
+        return CompletableFuture.supplyAsync(() -> new AsyncTaskResult<>(AsyncTaskStatus.Success, null, find(aggregateRootId, version)));
     }
 
     @Override
@@ -148,7 +148,7 @@ public class InMemoryEventStore implements IEventStore {
                     taskDict.remove(i);
 
                     if (taskDict.isEmpty()) {
-                        result.complete(new AsyncTaskResult<EventAppendResult>(AsyncTaskStatus.Success, EventAppendResult.Success));
+                        result.complete(new AsyncTaskResult<>(AsyncTaskStatus.Success, EventAppendResult.Success));
                     }
                 }
             });
@@ -166,8 +166,8 @@ public class InMemoryEventStore implements IEventStore {
         public ConcurrentMap<String, DomainEventStream> commandDict;
 
         public AggregateInfo() {
-            eventDict = new ConcurrentHashMap<>();
-            commandDict = new ConcurrentHashMap<>();
+            this.eventDict = new ConcurrentHashMap<>();
+            this.commandDict = new ConcurrentHashMap<>();
         }
 
         public boolean tryEnterEditing() {

@@ -9,6 +9,7 @@
     <modules>
         <module>enode</module>
         <module>kafka</module>
+        <module>mysql</module>
         <module>rocketmq</module>
         <module>samples</module>
     </modules>

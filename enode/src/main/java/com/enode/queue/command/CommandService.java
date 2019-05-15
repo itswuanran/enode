@@ -14,7 +14,6 @@ import com.enode.queue.QueueMessageTypeCode;
 import com.enode.queue.TopicData;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.validation.constraints.NotNull;
 import java.util.concurrent.CompletableFuture;
 
 public abstract class CommandService implements ICommandService {
@@ -26,10 +25,8 @@ public abstract class CommandService implements ICommandService {
     protected ICommandRoutingKeyProvider commandRouteKeyProvider;
 
     @Autowired
-    @NotNull
     protected CommandResultProcessor commandResultProcessor;
 
-    @NotNull
     protected TopicData topicData;
 
     public TopicData getTopicData() {

@@ -6,12 +6,15 @@ import com.enode.ENodeBootstrap;
 import com.enode.commanding.impl.DefaultCommandProcessor;
 import com.enode.commanding.impl.DefaultProcessingCommandHandler;
 import com.enode.eventing.impl.DefaultEventService;
+import com.enode.mysql.MysqlEventStore;
+import com.enode.mysql.MysqlPublishedVersionStore;
 import com.enode.queue.TopicData;
 import com.enode.rocketmq.message.RocketMQApplicationMessagePublisher;
 import com.enode.rocketmq.message.RocketMQCommandListener;
 import com.enode.rocketmq.message.RocketMQDomainEventPublisher;
 import com.enode.rocketmq.message.RocketMQPublishableExceptionPublisher;
 import com.google.common.collect.Lists;
+import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -60,7 +63,6 @@ public class AppConfigCommandConsumer {
     public RocketMQCommandListener rocketMQCommandListener() {
         return new RocketMQCommandListener();
     }
-
 
     @Bean(initMethod = "start", destroyMethod = "shutdown")
     public DefaultMQProducer eventProducer() {
@@ -118,4 +120,14 @@ public class AppConfigCommandConsumer {
         return bootstrap;
     }
 
+    @Bean
+    public MysqlEventStore mysqlEventStore(HikariDataSource dataSource) {
+        MysqlEventStore mysqlEventStore = new MysqlEventStore(dataSource, null);
+        return mysqlEventStore;
+    }
+
+    @Bean
+    public MysqlPublishedVersionStore mysqlPublishedVersionStore(HikariDataSource dataSource) {
+        return new MysqlPublishedVersionStore(dataSource, null);
+    }
 }

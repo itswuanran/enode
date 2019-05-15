@@ -17,7 +17,10 @@ import com.enode.domain.impl.DefaultAggregateSnapshotter;
 import com.enode.domain.impl.DefaultMemoryCache;
 import com.enode.domain.impl.DefaultRepository;
 import com.enode.domain.impl.EventSourcingAggregateStorage;
+import com.enode.eventing.IEventStore;
 import com.enode.eventing.impl.DefaultEventSerializer;
+import com.enode.eventing.impl.InMemoryEventStore;
+import com.enode.infrastructure.IPublishedVersionStore;
 import com.enode.infrastructure.impl.DefaultApplicationMessageProcessor;
 import com.enode.infrastructure.impl.DefaultDomainEventProcessor;
 import com.enode.infrastructure.impl.DefaultMessageDispatcher;
@@ -28,11 +31,13 @@ import com.enode.infrastructure.impl.DefaultPublishableExceptionProcessor;
 import com.enode.infrastructure.impl.DefaultThreeMessageHandlerProvider;
 import com.enode.infrastructure.impl.DefaultTwoMessageHandlerProvider;
 import com.enode.infrastructure.impl.DefaultTypeNameProvider;
+import com.enode.infrastructure.impl.InMemoryPublishedVersionStore;
 import com.enode.infrastructure.impl.MessageHandlerProxy1;
 import com.enode.infrastructure.impl.MessageHandlerProxy2;
 import com.enode.infrastructure.impl.MessageHandlerProxy3;
 import com.enode.queue.SendReplyService;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
@@ -208,6 +213,18 @@ public class ENodeAutoConfiguration {
     @Bean
     public EventSourcingAggregateStorage eventSourcingAggregateStorage() {
         return new EventSourcingAggregateStorage();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(IEventStore.class)
+    public InMemoryEventStore eventStore() {
+        return new InMemoryEventStore();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(IPublishedVersionStore.class)
+    public InMemoryPublishedVersionStore publishedVersionStore() {
+        return new InMemoryPublishedVersionStore();
     }
 }
 

@@ -3,22 +3,26 @@
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>samples</artifactId>
-        <groupId>com.enode.samples</groupId>
+        <artifactId>enode-java</artifactId>
+        <groupId>com.enode</groupId>
         <version>1.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>event-consumer</artifactId>
+    <artifactId>mysql</artifactId>
     <packaging>jar</packaging>
+    <version>1.0.0</version>
     <dependencies>
         <dependency>
-            <groupId>com.enode.samples</groupId>
-            <artifactId>domain</artifactId>
-            <version>1.0.0</version>
+            <groupId>com.enode</groupId>
+            <artifactId>enode</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-jdbc</artifactId>
+            <groupId>commons-dbutils</groupId>
+            <artifactId>commons-dbutils</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
         </dependency>
     </dependencies>
 </project>

@@ -1,4 +1,4 @@
-package com.enode.infrastructure.impl.mysql;
+package com.enode.mysql;
 
 import com.enode.common.function.Action;
 import com.enode.common.utilities.Ensure;

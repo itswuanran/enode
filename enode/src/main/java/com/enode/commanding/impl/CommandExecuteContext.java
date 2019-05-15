@@ -37,7 +37,7 @@ public class CommandExecuteContext implements ICommandExecuteContext {
             CommandMessage commandMessage,
             SendReplyService sendReplyService
     ) {
-        trackingAggregateRootDict = new ConcurrentHashMap<>();
+        this.trackingAggregateRootDict = new ConcurrentHashMap<>();
         this.repository = repository;
         this.aggregateRootStorage = aggregateRootStorage;
         this.sendReplyService = sendReplyService;

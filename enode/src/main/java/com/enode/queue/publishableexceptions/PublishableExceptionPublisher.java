@@ -10,7 +10,6 @@ import com.enode.queue.QueueMessageTypeCode;
 import com.enode.queue.TopicData;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.validation.constraints.NotNull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -20,7 +19,7 @@ public abstract class PublishableExceptionPublisher implements IMessagePublisher
     @Autowired
     protected IJsonSerializer jsonSerializer;
 
-    @NotNull
+
     protected TopicData topicData;
 
     public TopicData getTopicData() {

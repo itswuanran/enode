@@ -4,11 +4,8 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
-import javax.validation.constraints.NotNull;
-
 public class SpringObjectContainer implements IObjectContainer, ApplicationContextAware {
 
-    @NotNull
     private ApplicationContext applicationContext;
 
     @Override

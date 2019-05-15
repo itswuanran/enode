@@ -1,20 +1,3 @@
-CREATE TABLE `Command`
-(
-    `Sequence`        BIGINT AUTO_INCREMENT              NOT NULL,
-    `CommandId`       VARCHAR(36)                        NOT NULL,
-    `AggregateRootId` VARCHAR(36)                        NULL,
-    `MessagePayload`  MEDIUMTEXT
-                          CHARACTER SET utf8mb4
-                              COLLATE utf8mb4_unicode_ci NULL,
-    `MessageTypeName` VARCHAR(256)                       NOT NULL,
-    `CreatedOn`       DATETIME                           NOT NULL,
-    PRIMARY KEY (`Sequence`),
-    UNIQUE KEY `IX_Command_CommandId` (`CommandId`)
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 1
-    DEFAULT CHARSET = UTF8;
-
 CREATE TABLE `EventStream`
 (
     `Sequence`              BIGINT AUTO_INCREMENT              NOT NULL,
@@ -44,15 +27,6 @@ CREATE TABLE `PublishedVersion`
     `CreatedOn`             DATETIME              NOT NULL,
     PRIMARY KEY (`Sequence`),
     UNIQUE KEY `IX_PublishedVersion_AggId_Version` (`ProcessorName`, `AggregateRootId`, `Version`)
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 1
-    DEFAULT CHARSET = UTF8;
-
-CREATE TABLE `LockKey`
-(
-    `Name` VARCHAR(128) NOT NULL,
-    PRIMARY KEY (`Name`)
 )
     ENGINE = InnoDB
     AUTO_INCREMENT = 1

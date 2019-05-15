@@ -1,4 +1,4 @@
-package com.enode.infrastructure.impl.mysql;
+package com.enode.mysql;
 
 import com.enode.common.io.AsyncTaskResult;
 import com.enode.common.io.AsyncTaskStatus;
@@ -24,7 +24,6 @@ import java.util.concurrent.TimeUnit;
 public class MysqlPublishedVersionStore implements IPublishedVersionStore {
     private static final Logger logger = ENodeLogger.getLog();
 
-    private final DataSource ds;
     private final QueryRunner queryRunner;
     private final String tableName;
     private final String uniqueIndexName;
@@ -45,7 +44,6 @@ public class MysqlPublishedVersionStore implements IPublishedVersionStore {
         Ensure.notNull(tableName, "tableName");
         Ensure.notNull(uniqueIndexName, "uniqueIndexName");
 
-        this.ds = ds;
         queryRunner = new QueryRunner(ds);
         executor = new ThreadPoolExecutor(4, 4,
                 0L, TimeUnit.MILLISECONDS,
