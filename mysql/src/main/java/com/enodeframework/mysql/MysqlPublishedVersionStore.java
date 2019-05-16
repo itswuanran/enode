@@ -2,7 +2,6 @@ package com.enodeframework.mysql;
 
 import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.common.io.AsyncTaskStatus;
-import com.enodeframework.common.logging.ENodeLogger;
 import com.enodeframework.common.utilities.Ensure;
 import com.enodeframework.configurations.DefaultDBConfigurationSetting;
 import com.enodeframework.configurations.OptionSetting;
@@ -11,6 +10,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.ScalarHandler;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
@@ -22,7 +22,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class MysqlPublishedVersionStore implements IPublishedVersionStore {
-    private static final Logger logger = ENodeLogger.getLog();
+    private static final Logger logger = LoggerFactory.getLogger(MysqlPublishedVersionStore.class);
 
     private final QueryRunner queryRunner;
     private final String tableName;

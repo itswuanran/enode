@@ -1,6 +1,5 @@
 package com.enodeframework.infrastructure.impl;
 
-import com.enodeframework.common.logging.ENodeLogger;
 import com.enodeframework.common.scheduling.IScheduleService;
 import com.enodeframework.infrastructure.IMessage;
 import com.enodeframework.infrastructure.IMessageProcessor;
@@ -9,6 +8,7 @@ import com.enodeframework.infrastructure.IProcessingMessageHandler;
 import com.enodeframework.infrastructure.IProcessingMessageScheduler;
 import com.enodeframework.infrastructure.ProcessingMessageMailbox;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 public class DefaultMessageProcessor<X extends IProcessingMessage<X, Y>, Y extends IMessage> implements IMessageProcessor<X, Y> {
 
-    private static final Logger logger = ENodeLogger.getLog();
+    private static final Logger logger = LoggerFactory.getLogger(DefaultMessageProcessor.class);
 
     // AggregateRootMaxInactiveSeconds = 3600 * 24 * 3;
 

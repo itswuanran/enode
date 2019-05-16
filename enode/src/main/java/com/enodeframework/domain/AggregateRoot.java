@@ -4,6 +4,7 @@ import com.enodeframework.common.extensions.ApplicationContextHelper;
 import com.enodeframework.common.function.Action2;
 import com.enodeframework.eventing.DomainEventStream;
 import com.enodeframework.eventing.IDomainEvent;
+import com.enodeframework.infrastructure.WrappedRuntimeException;
 import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
@@ -87,7 +88,7 @@ public abstract class AggregateRoot<TAggregateRootId> implements IAggregateRoot 
         try {
             handler.apply(this, domainEvent);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new WrappedRuntimeException(e);
         }
     }
 

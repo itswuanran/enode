@@ -4,9 +4,9 @@ import com.enodeframework.commanding.ICommandProcessor;
 import com.enodeframework.commanding.IProcessingCommandHandler;
 import com.enodeframework.commanding.ProcessingCommand;
 import com.enodeframework.commanding.ProcessingCommandMailbox;
-import com.enodeframework.common.logging.ENodeLogger;
 import com.enodeframework.common.scheduling.IScheduleService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 public class DefaultCommandProcessor implements ICommandProcessor {
-    private static final Logger logger = ENodeLogger.getLog();
+    private static final Logger logger = LoggerFactory.getLogger(DefaultCommandProcessor.class);
 
     private final ConcurrentMap<String, ProcessingCommandMailbox> mailboxDict;
     private final int timeoutSeconds;

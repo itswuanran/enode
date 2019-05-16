@@ -9,15 +9,15 @@ import com.alibaba.rocketmq.common.message.MessageQueue;
 import com.alibaba.rocketmq.remoting.exception.RemotingException;
 import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.common.io.AsyncTaskStatus;
-import com.enodeframework.common.logging.ENodeLogger;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class SendRocketMQService {
 
-    private static Logger logger = ENodeLogger.getLog();
+    private static Logger logger = LoggerFactory.getLogger(SendRocketMQService.class);
 
     public static CompletableFuture<AsyncTaskResult> sendMessageAsync(DefaultMQProducer producer, Message message, String routingKey) {
 

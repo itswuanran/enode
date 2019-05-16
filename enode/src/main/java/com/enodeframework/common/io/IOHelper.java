@@ -4,20 +4,17 @@ import com.enodeframework.common.function.Action;
 import com.enodeframework.common.function.Action1;
 import com.enodeframework.common.function.DelayedTask;
 import com.enodeframework.common.function.Func;
-import com.enodeframework.common.logging.ENodeLogger;
 import com.enodeframework.common.utilities.Ensure;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 
 public class IOHelper {
-    private static final Logger logger = ENodeLogger.getLog();
+    private static final Logger logger = LoggerFactory.getLogger(IOHelper.class);
 
-    /**
-     * ========== TryAsyncActionRecursively =========
-     */
     public <TAsyncResult extends AsyncTaskResult> void tryAsyncActionRecursively(
             String asyncActionName,
             Func<CompletableFuture<TAsyncResult>> asyncAction,
@@ -53,8 +50,6 @@ public class IOHelper {
         Ensure.notNull(actionName, "actionName");
         try {
             action.apply();
-        } catch (IORuntimeException e) {
-            throw e;
         } catch (Exception ex) {
             throw new IORuntimeException(String.format("%s failed.", actionName), ex);
         }
@@ -65,8 +60,6 @@ public class IOHelper {
         Ensure.notNull(funcName, "funcName");
         try {
             return func.apply();
-        } catch (IORuntimeException e) {
-            throw e;
         } catch (Exception ex) {
             throw new IORuntimeException(String.format("%s failed.", funcName), ex);
         }
@@ -77,8 +70,6 @@ public class IOHelper {
         Ensure.notNull(funcName, "funcName");
         try {
             return func.apply();
-        } catch (IORuntimeException e) {
-            throw e;
         } catch (Exception ex) {
             throw new IORuntimeException(String.format("%s failed.", funcName), ex);
         }
@@ -122,23 +113,19 @@ public class IOHelper {
 
         @Override
         public void execute() {
-            CompletableFuture<TAsyncResult> asyncResult = null;
-            Exception ex = null;
-
+            CompletableFuture<TAsyncResult> asyncResult = new CompletableFuture<>();
             try {
                 asyncResult = asyncAction.apply();
-            } catch (Exception e) {
-                ex = e;
+            } catch (Exception ex) {
+                asyncResult.completeExceptionally(ex);
             }
-
-            if (ex != null) {
+            asyncResult.exceptionally(ex -> {
                 taskContinueAction(null, ex);
-            } else {
-                asyncResult.handleAsync((result, e) -> {
-                    taskContinueAction(result, e);
-                    return null;
-                });
-            }
+                return null;
+            }).handleAsync((result, e) -> {
+                taskContinueAction(result, e);
+                return null;
+            });
         }
     }
 

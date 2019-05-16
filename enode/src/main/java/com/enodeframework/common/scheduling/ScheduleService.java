@@ -1,9 +1,9 @@
 package com.enodeframework.common.scheduling;
 
 import com.enodeframework.common.function.Action;
-import com.enodeframework.common.logging.ENodeLogger;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ScheduleService implements IScheduleService {
 
-    private static final Logger logger = ENodeLogger.getLog();
+    private static final Logger logger = LoggerFactory.getLogger(ScheduleService.class);
 
     private Object lockObject = new Object();
 

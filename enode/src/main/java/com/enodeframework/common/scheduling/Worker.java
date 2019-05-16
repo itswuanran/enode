@@ -1,11 +1,11 @@
 package com.enodeframework.common.scheduling;
 
 import com.enodeframework.common.function.Action;
-import com.enodeframework.common.logging.ENodeLogger;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Worker {
-    private static final Logger logger = ENodeLogger.getLog();
+    private static final Logger logger = LoggerFactory.getLogger(Worker.class);
 
     private Object lockObject = new Object();
     private String actionName;

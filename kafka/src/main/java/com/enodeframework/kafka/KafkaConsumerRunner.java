@@ -1,17 +1,17 @@
 package com.enodeframework.kafka;
 
-import com.enodeframework.common.logging.ENodeLogger;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class KafkaConsumerRunner<K, V> implements Runnable {
-    private static final Logger logger = ENodeLogger.getLog();
+    private static final Logger logger = LoggerFactory.getLogger(KafkaConsumerRunner.class);
     private final AtomicBoolean closed = new AtomicBoolean(false);
     private KafkaConsumer<K, V> kafkaConsumer;
 

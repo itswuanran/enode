@@ -39,11 +39,8 @@ public class EventSourcingAggregateStorage implements IAggregateStorage {
         if (aggregateRootId == null) {
             throw new NullPointerException("aggregateRootId");
         }
-
         CompletableFuture<T> aggregateRootFuture = tryGetFromSnapshot(aggregateRootId, aggregateRootType);
-
-        // 使用
-        CompletableFuture<T> ret = aggregateRootFuture.thenCompose(aggregateRoot -> {
+        return aggregateRootFuture.thenCompose(aggregateRoot -> {
             if (aggregateRoot != null) {
                 return CompletableFuture.completedFuture(aggregateRoot);
             }
@@ -55,7 +52,6 @@ public class EventSourcingAggregateStorage implements IAggregateStorage {
                 return reAggregateRoot;
             });
         });
-        return ret;
     }
 
     private <T extends IAggregateRoot> CompletableFuture<T> tryGetFromSnapshot(String aggregateRootId, Class<T> aggregateRootType) {

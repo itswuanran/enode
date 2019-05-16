@@ -4,7 +4,6 @@ import com.enodeframework.common.function.Action2;
 import com.enodeframework.common.function.Action4;
 import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.common.io.IOHelper;
-import com.enodeframework.common.logging.ENodeLogger;
 import com.enodeframework.infrastructure.IMessage;
 import com.enodeframework.infrastructure.IMessageDispatcher;
 import com.enodeframework.infrastructure.IMessageHandlerProvider;
@@ -16,8 +15,10 @@ import com.enodeframework.infrastructure.IThreeMessageHandlerProvider;
 import com.enodeframework.infrastructure.ITwoMessageHandlerProvider;
 import com.enodeframework.infrastructure.ITypeNameProvider;
 import com.enodeframework.infrastructure.MessageHandlerData;
+import com.enodeframework.infrastructure.WrappedRuntimeException;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Arrays;
@@ -29,7 +30,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 public class DefaultMessageDispatcher implements IMessageDispatcher {
-    private static final Logger logger = ENodeLogger.getLog();
+    private static final Logger logger = LoggerFactory.getLogger(DefaultMessageDispatcher.class);
 
     @Autowired
     private ITypeNameProvider typeNameProvider;
@@ -112,7 +113,7 @@ public class DefaultMessageDispatcher implements IMessageDispatcher {
                     try {
                         dispatchAction.apply(multiMessageDispatching, handler, null, 0);
                     } catch (Exception e) {
-                        throw new RuntimeException(e);
+                        throw new WrappedRuntimeException(e);
                     }
                 });
             }

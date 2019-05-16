@@ -2,13 +2,11 @@ package com.enodeframework.samples.controller.bank;
 
 import com.enodeframework.commanding.CommandReturnType;
 import com.enodeframework.commanding.ICommandService;
-import com.enodeframework.common.logging.ENodeLogger;
 import com.enodeframework.common.utilities.ObjectId;
 import com.enodeframework.samples.commands.bank.CreateAccountCommand;
 import com.enodeframework.samples.commands.bank.StartDepositTransactionCommand;
 import com.enodeframework.samples.commands.bank.StartTransferTransactionCommand;
 import com.enodeframework.samples.domain.bank.transfertransaction.TransferTransactionInfo;
-import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,8 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/bank")
 public class BankController {
-
-    private Logger logger = ENodeLogger.getLog();
 
     @Autowired
     private ICommandService commandService;
