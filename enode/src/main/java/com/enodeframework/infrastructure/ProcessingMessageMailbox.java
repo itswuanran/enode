@@ -1,5 +1,6 @@
 package com.enodeframework.infrastructure;
 
+import com.enodeframework.common.io.Await;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +74,7 @@ public class ProcessingMessageMailbox<X extends IProcessingMessage<X, Y>, Y exte
             processingMessage = messageQueue.poll();
 
             if (processingMessage != null) {
-                messageHandler.handleAsync(processingMessage);
+                Await.get(messageHandler.handleAsync(processingMessage));
             }
         } catch (Exception ex) {
             logger.error(String.format("Message mailbox run has unknown exception, routingKey: %s, commandId: %s", routingKey, processingMessage != null ? processingMessage.getMessage().id() : ""), ex);

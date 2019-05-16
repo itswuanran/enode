@@ -1,5 +1,7 @@
 package com.enodeframework.infrastructure;
 
+import java.util.concurrent.CompletableFuture;
+
 public interface IProcessingMessageHandler<X extends IProcessingMessage<X, Y>, Y extends IMessage> {
-    void handleAsync(X processingMessage);
+    CompletableFuture handleAsync(X processingMessage);
 }

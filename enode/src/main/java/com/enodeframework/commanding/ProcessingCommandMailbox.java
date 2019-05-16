@@ -1,5 +1,6 @@
 package com.enodeframework.commanding;
 
+import com.enodeframework.common.io.Await;
 import com.enodeframework.common.threading.ManualResetEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,15 +55,15 @@ public class ProcessingCommandMailbox {
     public void enqueueMessage(ProcessingCommand message) {
         //TODO synchronized
         synchronized (lockObj) {
-            message.setSequence(this.nextSequence);
+            message.setSequence(nextSequence);
             message.setMailbox(this);
             // If the specified key is not already associated with a value (or is mapped to null) associates it with the given value and returns null, else returns the current value.
             ProcessingCommand processingCommand = messageDict.putIfAbsent(message.getSequence(), message);
             if (processingCommand == null) {
-                this.nextSequence++;
+                nextSequence++;
             }
         }
-        this.lastActiveTime = new Date();
+        lastActiveTime = new Date();
         tryRun();
     }
 
@@ -95,22 +96,20 @@ public class ProcessingCommandMailbox {
                 lastActiveTime = new Date();
                 if (processingCommand.getSequence() == consumedSequence + 1) {
                     messageDict.remove(processingCommand.getSequence());
-                    completeCommand(processingCommand, commandResult).get();
+                    Await.get(completeCommand(processingCommand, commandResult));
                     consumedSequence = processNextCompletedCommands(processingCommand.getSequence());
-                    return null;
                 } else if (processingCommand.getSequence() > consumedSequence + 1) {
                     requestToCompleteCommandDict.put(processingCommand.getSequence(), commandResult);
                 } else if (processingCommand.getSequence() < consumedSequence + 1) {
                     messageDict.remove(processingCommand.getSequence());
-                    completeCommand(processingCommand, commandResult).get();
+                    Await.get(completeCommand(processingCommand, commandResult));
                     requestToCompleteCommandDict.remove(processingCommand.getSequence());
                 }
             } catch (Exception ex) {
                 logger.error(String.format("Command mailbox complete command failed, commandId: %s, aggregateRootId: %s", processingCommand.getMessage().id(), processingCommand.getMessage().getAggregateRootId()), ex);
-                return CompletableFuture.completedFuture(false);
             }
         }
-        return CompletableFuture.completedFuture(true);
+        return CompletableFuture.completedFuture(null);
     }
 
     public void run() {
@@ -128,7 +127,7 @@ public class ProcessingCommandMailbox {
                 processingCommand = getProcessingCommand(consumingSequence);
                 if (processingCommand != null) {
                     // await 阻塞操作
-                    messageHandler.handle(processingCommand).get();
+                    Await.get(messageHandler.handle(processingCommand));
                 }
                 consumingSequence++;
                 count++;
@@ -186,7 +185,7 @@ public class ProcessingCommandMailbox {
 
     private void tryRun() {
         if (tryEnter()) {
-            CompletableFuture.runAsync(this::run);
+            CompletableFuture.runAsync(() -> this.run());
         }
     }
 

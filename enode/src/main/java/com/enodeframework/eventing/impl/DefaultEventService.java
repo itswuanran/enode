@@ -5,6 +5,7 @@ import com.enodeframework.commanding.CommandStatus;
 import com.enodeframework.commanding.ICommand;
 import com.enodeframework.commanding.ProcessingCommand;
 import com.enodeframework.commanding.ProcessingCommandMailbox;
+import com.enodeframework.common.io.Await;
 import com.enodeframework.common.io.IOHelper;
 import com.enodeframework.common.scheduling.IScheduleService;
 import com.enodeframework.domain.IMemoryCache;
@@ -198,7 +199,7 @@ public class DefaultEventService implements IEventService {
         commandMailBox.pause();
         try {
             // await 阻塞获取
-            refreshAggregateMemoryCacheToLatestVersion(context.getEventStream().aggregateRootTypeName(), context.getEventStream().aggregateRootId()).get();
+            Await.get(refreshAggregateMemoryCacheToLatestVersion(context.getEventStream().aggregateRootTypeName(), context.getEventStream().aggregateRootId()));
             commandMailBox.resetConsumingSequence(consumingSequence);
             eventMailBox.clear();
             eventMailBox.exit();

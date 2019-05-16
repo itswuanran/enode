@@ -1,6 +1,7 @@
 package com.enodeframework.infrastructure.impl;
 
 import com.enodeframework.common.io.AsyncTaskResult;
+import com.enodeframework.common.io.Await;
 import com.enodeframework.common.io.IOHelper;
 import com.enodeframework.eventing.DomainEventStreamMessage;
 import com.enodeframework.infrastructure.IMessage;
@@ -31,15 +32,13 @@ public class DefaultProcessingMessageHandler<X extends IProcessingMessage<X, Y>,
     private IOHelper ioHelper;
 
     @Override
-    public void handleAsync(X processingMessage) {
+    public CompletableFuture handleAsync(X processingMessage) {
         if (processingMessage instanceof ProcessingDomainEventStreamMessage) {
-            handleMessageAsync((ProcessingDomainEventStreamMessage) processingMessage, 0);
-            return;
+            return handleMessageAsync((ProcessingDomainEventStreamMessage) processingMessage, 0);
         }
-        CompletableFuture<AsyncTaskResult> asyncTaskResultCompletableFuture = dispatcher.dispatchMessageAsync(processingMessage.getMessage());
-        asyncTaskResultCompletableFuture.thenRun(() ->
-                processingMessage.complete()
-        );
+        Await.get(dispatcher.dispatchMessageAsync(processingMessage.getMessage()));
+        processingMessage.complete();
+        return CompletableFuture.completedFuture(null);
     }
 
     public String getName() {
@@ -50,7 +49,7 @@ public class DefaultProcessingMessageHandler<X extends IProcessingMessage<X, Y>,
         return dispatcher.dispatchMessagesAsync(processingMessage.getMessage().getEvents());
     }
 
-    private void handleMessageAsync(ProcessingDomainEventStreamMessage processingMessage, int retryTimes) {
+    private CompletableFuture handleMessageAsync(ProcessingDomainEventStreamMessage processingMessage, int retryTimes) {
         DomainEventStreamMessage message = processingMessage.getMessage();
 
         ioHelper.tryAsyncActionRecursively("GetPublishedVersionAsync",
@@ -72,6 +71,7 @@ public class DefaultProcessingMessageHandler<X extends IProcessingMessage<X, Y>,
                 errorMessage ->
                         logger.error(String.format("Get published version has unknown exception, the code should not be run to here, errorMessage: %s", errorMessage)),
                 retryTimes, true);
+        return CompletableFuture.completedFuture(null);
     }
 
     private void doDispatchProcessingMessageAsync(ProcessingDomainEventStreamMessage processingMessage, int retryTimes) {

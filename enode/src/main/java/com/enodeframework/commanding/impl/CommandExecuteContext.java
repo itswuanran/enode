@@ -4,6 +4,7 @@ import com.enodeframework.commanding.AggregateRootAlreadyExistException;
 import com.enodeframework.commanding.CommandResult;
 import com.enodeframework.commanding.CommandReturnType;
 import com.enodeframework.commanding.ICommandExecuteContext;
+import com.enodeframework.common.io.Await;
 import com.enodeframework.domain.IAggregateRoot;
 import com.enodeframework.domain.IAggregateStorage;
 import com.enodeframework.domain.IRepository;
@@ -104,12 +105,14 @@ public class CommandExecuteContext implements ICommandExecuteContext {
         } else {
             future = aggregateRootStorage.getAsync(aggregateRootType, aggregateRootId);
         }
-        return future.thenApply(aggregateRoot -> {
+        future = future.thenApply(aggregateRoot -> {
             if (aggregateRoot != null) {
                 trackingAggregateRootDict.putIfAbsent(aggregateRoot.uniqueId(), aggregateRoot);
             }
             return aggregateRoot;
         });
+        Await.get(future);
+        return future;
     }
 
     @Override
