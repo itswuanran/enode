@@ -1,5 +1,6 @@
 package com.enodeframework.domain.impl;
 
+import com.enodeframework.common.io.Await;
 import com.enodeframework.common.scheduling.IScheduleService;
 import com.enodeframework.domain.AggregateCacheInfo;
 import com.enodeframework.domain.IAggregateRoot;
@@ -53,6 +54,7 @@ public class DefaultMemoryCache implements IMemoryCache {
         }
         if (aggregateRoot.getChanges().size() > 0) {
             CompletableFuture<IAggregateRoot> lastestAggregateRootFuture = aggregateStorage.getAsync(aggregateRootType, aggregateRootId.toString());
+            Await.get(lastestAggregateRootFuture);
             return lastestAggregateRootFuture.thenApply(lastestAggregateRoot -> {
                 if (lastestAggregateRoot != null) {
                     setInternal(lastestAggregateRoot);
@@ -88,6 +90,7 @@ public class DefaultMemoryCache implements IMemoryCache {
                 return CompletableFuture.completedFuture(null);
             }
             CompletableFuture<IAggregateRoot> future = aggregateStorage.getAsync(aggregateRootType, aggregateRootId);
+            Await.get(future);
             future.thenAccept(aggregateRoot -> {
                 if (aggregateRoot != null) {
                     setInternal(aggregateRoot);

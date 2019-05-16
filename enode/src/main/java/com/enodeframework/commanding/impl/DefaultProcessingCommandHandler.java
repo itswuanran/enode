@@ -12,6 +12,7 @@ import com.enodeframework.commanding.IProcessingCommandHandler;
 import com.enodeframework.commanding.ProcessingCommand;
 import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.common.io.AsyncTaskStatus;
+import com.enodeframework.common.io.Await;
 import com.enodeframework.common.io.IOHelper;
 import com.enodeframework.common.io.IORuntimeException;
 import com.enodeframework.common.serializing.IJsonSerializer;
@@ -112,17 +113,21 @@ public class DefaultProcessingCommandHandler implements IProcessingCommandHandle
 
     private CompletableFuture handleCommand(ProcessingCommand processingCommand, ICommandHandlerProxy commandHandler) {
         ICommand command = processingCommand.getMessage();
-
         processingCommand.getCommandExecuteContext().clear();
-
-        //调用command handler执行当前command
-        CompletableFuture<Object> future = commandHandler.handleAsync(processingCommand.getCommandExecuteContext(), command);
-        if (logger.isDebugEnabled()) {
-            logger.debug("Handle command success. handlerType:{}, commandType:{}, commandId:{}, aggregateRootId:{}",
-                    commandHandler.getInnerObject().getClass().getName(),
-                    command.getClass().getName(),
-                    command.id(),
-                    command.getAggregateRootId());
+        CompletableFuture future = new CompletableFuture<>();
+        try {
+            //调用command handler执行当前command
+            future = commandHandler.handleAsync(processingCommand.getCommandExecuteContext(), command);
+            Await.get(future);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Handle command success. handlerType:{}, commandType:{}, commandId:{}, aggregateRootId:{}",
+                        commandHandler.getInnerObject().getClass().getName(),
+                        command.getClass().getName(),
+                        command.id(),
+                        command.getAggregateRootId());
+            }
+        } catch (Throwable e) {
+            future.completeExceptionally(e);
         }
         return future.thenApply(r -> {
             //如果command执行成功，则提交执行后的结果
@@ -130,12 +135,12 @@ public class DefaultProcessingCommandHandler implements IProcessingCommandHandle
                 commitAggregateChanges(processingCommand);
             } catch (Exception ex) {
                 logCommandExecuteException(processingCommand, commandHandler, ex);
-                completeCommand(processingCommand, CommandStatus.Failed, ex.getClass().getName(), "Unknown exception caught when committing changes of command.");
+                Await.get(completeCommand(processingCommand, CommandStatus.Failed, ex.getClass().getName(), "Unknown exception caught when committing changes of command."));
                 return false;
             }
             return true;
         }).exceptionally(ex -> {
-            handleExceptionAsync(processingCommand, commandHandler, new RuntimeException(ex), 0);
+            handleExceptionAsync(processingCommand, commandHandler, (Exception) ex, 0);
             return false;
         });
     }

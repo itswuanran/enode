@@ -17,9 +17,9 @@ public class ChangeNoteTitleCommandHandler implements ICommandHandler<ChangeNote
     @Override
     public CompletableFuture<Note> handleAsync(ICommandContext context, ChangeNoteTitleCommand command) {
         logger.info(command.getTitle());
-        CompletableFuture<Note> noteCompletableFuture = context.getAsync(command.getAggregateRootId(), true, Note.class);
+        CompletableFuture<Note> noteCompletableFuture = context.getAsync(command.getAggregateRootId(), false, Note.class);
         return noteCompletableFuture.thenApply(note -> {
-            logger.info("note:{}", note.toString());
+            logger.info("note:{}", note.id());
             note.changeTitle(command.getTitle());
             return note;
         });

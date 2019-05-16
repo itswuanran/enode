@@ -7,6 +7,7 @@ import com.enodeframework.commanding.CommandReturnType;
 import com.enodeframework.commanding.ICommand;
 import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.common.io.AsyncTaskStatus;
+import com.enodeframework.common.io.Await;
 import com.enodeframework.common.utilities.Ensure;
 import com.enodeframework.queue.QueueMessage;
 import com.enodeframework.queue.command.CommandService;
@@ -42,12 +43,14 @@ public class RocketMQCommandService extends CommandService {
             QueueMessage queueMessage = buildCommandMessage(command, true);
             Message message = RocketMQTool.covertToProducerRecord(queueMessage);
             CompletableFuture<AsyncTaskResult> sendMessageAsync = SendRocketMQService.sendMessageAsync(defaultMQProducer, message, queueMessage.getRouteKey());
+            Await.get(sendMessageAsync);
             sendMessageAsync.thenAccept(sendResult -> {
                 if (sendResult.getStatus().equals(AsyncTaskStatus.Success)) {
                     //_commandResultProcessor中会继续等命令或事件处理完成的状态
+                    Await.get(taskCompletionSource);
                 } else {
-                    taskCompletionSource.complete(new AsyncTaskResult<>(sendResult.getStatus(), sendResult.getErrorMessage()));
                     commandResultProcessor.processFailedSendingCommand(command);
+                    taskCompletionSource.complete(new AsyncTaskResult<>(sendResult.getStatus(), sendResult.getErrorMessage()));
                 }
             });
             return taskCompletionSource;
