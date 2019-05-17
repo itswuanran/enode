@@ -3,7 +3,6 @@ package com.enodeframework.infrastructure.impl;
 import com.enodeframework.common.container.IObjectContainer;
 import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.infrastructure.IMessage;
-import com.enodeframework.infrastructure.IMessageHandler;
 import com.enodeframework.infrastructure.IMessageHandlerProxy1;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -26,9 +25,8 @@ public class MessageHandlerProxy1 implements IMessageHandlerProxy1 {
 
     @Override
     public CompletableFuture<AsyncTaskResult> handleAsync(IMessage message) {
-        IMessageHandler handler = (IMessageHandler) getInnerObject();
         try {
-            return (CompletableFuture<AsyncTaskResult>) methodHandle.invoke(handler, message);
+            return (CompletableFuture<AsyncTaskResult>) methodHandle.invoke(getInnerObject(), message);
         } catch (Throwable throwable) {
             throw new RuntimeException(throwable);
         }

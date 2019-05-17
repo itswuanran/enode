@@ -1,17 +1,17 @@
 package com.enodeframework.samples.commandhandles.bank;
 
+import com.enodeframework.annotation.Command;
 import com.enodeframework.commanding.ICommandContext;
 import com.enodeframework.commanding.ICommandHandler;
 import com.enodeframework.samples.commands.bank.ConfirmDepositCommand;
 import com.enodeframework.samples.domain.bank.deposittransaction.DepositTransaction;
-import org.springframework.stereotype.Component;
 
 import java.util.concurrent.CompletableFuture;
 
 /**
  * 确认存款
  */
-@Component
+@Command
 public class ConfirmDepositCommandHandler implements ICommandHandler<ConfirmDepositCommand> {
     @Override
     public CompletableFuture handleAsync(ICommandContext context, ConfirmDepositCommand command) {

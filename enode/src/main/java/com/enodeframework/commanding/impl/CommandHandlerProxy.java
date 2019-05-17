@@ -2,7 +2,6 @@ package com.enodeframework.commanding.impl;
 
 import com.enodeframework.commanding.ICommand;
 import com.enodeframework.commanding.ICommandContext;
-import com.enodeframework.commanding.ICommandHandler;
 import com.enodeframework.commanding.ICommandHandlerProxy;
 import com.enodeframework.common.container.IObjectContainer;
 import com.enodeframework.infrastructure.WrappedRuntimeException;
@@ -27,15 +26,13 @@ public class CommandHandlerProxy implements ICommandHandlerProxy {
 
     @Override
     public CompletableFuture handleAsync(ICommandContext context, ICommand command) {
-        ICommandHandler handler = (ICommandHandler) getInnerObject();
-        CompletableFuture future = CompletableFuture.supplyAsync(() -> {
+        return CompletableFuture.supplyAsync(() -> {
             try {
-                return methodHandle.invoke(handler, context, command);
+                return methodHandle.invoke(getInnerObject(), context, command);
             } catch (Throwable throwable) {
                 throw new WrappedRuntimeException(throwable);
             }
         });
-        return future;
     }
 
     @Override

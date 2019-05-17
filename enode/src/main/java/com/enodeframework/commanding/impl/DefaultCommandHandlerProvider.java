@@ -37,10 +37,6 @@ public class DefaultCommandHandlerProvider extends AbstractHandlerProvider<Class
         return key.isAssignableFrom(handlerSource);
     }
 
-    protected boolean isHandleMethodMatchKey(Class[] argumentTypes, Class key) {
-        return argumentTypes.length == 1 && argumentTypes[0] == key;
-    }
-
     @Override
     protected boolean isHandleMethodMatch(Method method) {
         if (!Constants.COMMAND_HANDLE_METHOD.equals(method.getName())) {

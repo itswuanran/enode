@@ -1,12 +1,15 @@
 package com.enodeframework.infrastructure.impl;
 
+import com.enodeframework.annotation.Command;
+import com.enodeframework.annotation.Event;
+import com.enodeframework.annotation.Priority;
+import com.enodeframework.annotation.Subscribe;
 import com.enodeframework.common.Constants;
 import com.enodeframework.common.container.IObjectContainer;
 import com.enodeframework.infrastructure.IAssemblyInitializer;
 import com.enodeframework.infrastructure.IObjectProxy;
 import com.enodeframework.infrastructure.MessageHandlerData;
 import com.enodeframework.infrastructure.MethodInvocation;
-import com.enodeframework.infrastructure.Priority;
 import com.enodeframework.infrastructure.WrappedRuntimeException;
 import org.reflections.ReflectionUtils;
 
@@ -116,11 +119,22 @@ public abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface exten
         if (Modifier.isAbstract(type.getModifiers())) {
             return false;
         }
-        Class gen = getGenericHandlerType();
-        if (!gen.isAssignableFrom(type)) {
+        if (!containsHandleType(type)) {
             return false;
         }
         return true;
+    }
+
+    private boolean containsHandleType(Class type) {
+        return type.isAnnotationPresent(Command.class) || type.isAnnotationPresent(Event.class);
+    }
+
+    /**
+     * @param method
+     * @return
+     */
+    protected boolean isMethodAnnotationSubscribe(Method method) {
+        return method.isAnnotationPresent(Subscribe.class);
     }
 
     private void registerHandler(Class handlerType) {
@@ -137,9 +151,10 @@ public abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface exten
                 if (objectContainer == null) {
                     throw new NullPointerException("IObjectContainer is null");
                 }
-                THandlerProxyInterface handlerProxy = getObjectContainer().resolve(getHandlerProxyImplementationType());
+                // prototype
+                THandlerProxyInterface handlerProxy = objectContainer.resolve(getHandlerProxyImplementationType());
                 if (handlerProxy == null) {
-                    throw new NullPointerException("THandlerProxyInterface is null, class:" + getGenericHandlerType().getName());
+                    throw new RuntimeException("THandlerProxyInterface is null, " + getHandlerProxyImplementationType().getName());
                 }
                 handlerProxy.setHandlerType(handlerType);
                 handlerProxy.setMethod(method);

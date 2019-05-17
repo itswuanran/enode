@@ -6,7 +6,9 @@ import com.enodeframework.ENodeBootstrap;
 import com.enodeframework.mysql.MysqlEventStore;
 import com.enodeframework.mysql.MysqlPublishedVersionStore;
 import com.enodeframework.queue.TopicData;
+import com.enodeframework.queue.command.CommandResultProcessor;
 import com.enodeframework.rocketmq.message.RocketMQApplicationMessagePublisher;
+import com.enodeframework.rocketmq.message.RocketMQCommandService;
 import com.enodeframework.rocketmq.message.RocketMQDomainEventListener;
 import com.enodeframework.rocketmq.message.RocketMQDomainEventPublisher;
 import com.enodeframework.rocketmq.message.RocketMQPublishableExceptionPublisher;
@@ -18,6 +20,7 @@ import org.springframework.context.annotation.Configuration;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.enodeframework.samples.Constant.COMMAND_TOPIC;
 import static com.enodeframework.samples.Constant.EVENT_CONSUMER_GROUP;
 import static com.enodeframework.samples.Constant.EVENT_PRODUCER_GROUP;
 import static com.enodeframework.samples.Constant.EVENT_TOPIC;
@@ -31,6 +34,20 @@ public class AppConfigEvent {
         ENodeBootstrap bootstrap = new ENodeBootstrap();
         bootstrap.setPackages(Lists.newArrayList("com.enodeframework.samples"));
         return bootstrap;
+    }
+
+    @Bean
+    public RocketMQCommandService rocketMQCommandService(DefaultMQProducer eventProducer) {
+        RocketMQCommandService rocketMQCommandService = new RocketMQCommandService();
+        rocketMQCommandService.setDefaultMQProducer(eventProducer);
+        TopicData topicData = new TopicData(COMMAND_TOPIC, "*");
+        rocketMQCommandService.setTopicData(topicData);
+        return rocketMQCommandService;
+    }
+
+    @Bean(initMethod = "start", destroyMethod = "shutdown")
+    public CommandResultProcessor commandResultProcessor() {
+        return new CommandResultProcessor(6001);
     }
 
     @Bean
