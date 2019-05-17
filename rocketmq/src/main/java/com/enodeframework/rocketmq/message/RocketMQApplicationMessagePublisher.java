@@ -5,11 +5,11 @@ import com.alibaba.rocketmq.common.message.Message;
 import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.infrastructure.IApplicationMessage;
 import com.enodeframework.queue.QueueMessage;
-import com.enodeframework.queue.applicationmessage.ApplicationMessagePublisher;
+import com.enodeframework.queue.applicationmessage.AbstractApplicationMessagePublisher;
 
 import java.util.concurrent.CompletableFuture;
 
-public class RocketMQApplicationMessagePublisher extends ApplicationMessagePublisher {
+public class RocketMQApplicationMessagePublisher extends AbstractApplicationMessagePublisher {
 
     private DefaultMQProducer producer;
 

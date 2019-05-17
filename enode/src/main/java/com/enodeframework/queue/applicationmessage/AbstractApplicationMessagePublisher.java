@@ -1,6 +1,5 @@
 package com.enodeframework.queue.applicationmessage;
 
-import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.common.serializing.IJsonSerializer;
 import com.enodeframework.infrastructure.IApplicationMessage;
 import com.enodeframework.infrastructure.IMessagePublisher;
@@ -9,13 +8,10 @@ import com.enodeframework.queue.QueueMessageTypeCode;
 import com.enodeframework.queue.TopicData;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.concurrent.CompletableFuture;
-
-public abstract class ApplicationMessagePublisher implements IMessagePublisher<IApplicationMessage> {
+public abstract class AbstractApplicationMessagePublisher implements IMessagePublisher<IApplicationMessage> {
 
     @Autowired
     protected IJsonSerializer jsonSerializer;
-
 
     protected TopicData topicData;
 
@@ -25,11 +21,6 @@ public abstract class ApplicationMessagePublisher implements IMessagePublisher<I
 
     public void setTopicData(TopicData topicData) {
         this.topicData = topicData;
-    }
-
-    @Override
-    public CompletableFuture<AsyncTaskResult> publishAsync(IApplicationMessage message) {
-        return CompletableFuture.completedFuture(AsyncTaskResult.Success);
     }
 
     protected QueueMessage createApplicationMessage(IApplicationMessage message) {
@@ -43,7 +34,7 @@ public abstract class ApplicationMessagePublisher implements IMessagePublisher<I
         queueMessage.setCode(QueueMessageTypeCode.ApplicationMessage.getValue());
         queueMessage.setKey(message.id());
         queueMessage.setTopic(topicData.getTopic());
-        queueMessage.setTags(topicData.getTag());
+        queueMessage.setTags(topicData.getTags());
         return queueMessage;
     }
 }

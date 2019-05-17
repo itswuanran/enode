@@ -30,6 +30,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 public class DefaultMessageDispatcher implements IMessageDispatcher {
+
     private static final Logger logger = LoggerFactory.getLogger(DefaultMessageDispatcher.class);
 
     @Autowired
@@ -53,13 +54,12 @@ public class DefaultMessageDispatcher implements IMessageDispatcher {
         return dispatchMessages(messages);
     }
 
-
     private CompletableFuture<AsyncTaskResult> dispatchMessages(List<? extends IMessage> messages) {
         int messageCount = messages.size();
         if (messageCount == 0) {
             return CompletableFuture.completedFuture(AsyncTaskResult.Success);
         }
-        RootDisptaching rootDispatching = new RootDisptaching();
+        RootDispatching rootDispatching = new RootDispatching();
 
         //先对每个事件调用其Handler
         QueueMessageDispatching queueMessageDispatching = new QueueMessageDispatching(this, rootDispatching, messages);
@@ -97,14 +97,13 @@ public class DefaultMessageDispatcher implements IMessageDispatcher {
 
             if (messageHandlerData.QueuedHandlers != null && !messageHandlerData.QueuedHandlers.isEmpty()) {
                 QueuedHandler<IMessageHandlerProxy1> queueHandler = new QueuedHandler<>(messageHandlerData.QueuedHandlers, (queuedHandler, nextHandler) -> dispatchSingleMessageToHandlerAsync(singleMessageDispatching, nextHandler, queuedHandler, 0));
-
                 dispatchSingleMessageToHandlerAsync(singleMessageDispatching, queueHandler.dequeueHandler(), queueHandler, 0);
             }
         });
     }
 
     private <T extends IObjectProxy> void dispatchMultiMessage(List<? extends IMessage> messages, List<MessageHandlerData<T>> messageHandlerDataList,
-                                                               RootDisptaching rootDispatching, Action4<MultiMessageDisptaching, T, QueuedHandler<T>, Integer> dispatchAction) {
+                                                               RootDispatching rootDispatching, Action4<MultiMessageDisptaching, T, QueuedHandler<T>, Integer> dispatchAction) {
         messageHandlerDataList.forEach(messageHandlerData -> {
             MultiMessageDisptaching multiMessageDispatching = new MultiMessageDisptaching(messages, messageHandlerData.AllHandlers, rootDispatching, typeNameProvider);
 
@@ -126,7 +125,7 @@ public class DefaultMessageDispatcher implements IMessageDispatcher {
                 try {
                     dispatchAction.apply(multiMessageDispatching, queuedHandler.dequeueHandler(), queuedHandler, 0);
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    throw new WrappedRuntimeException(e);
                 }
             }
         });
@@ -235,11 +234,11 @@ public class DefaultMessageDispatcher implements IMessageDispatcher {
                 retryTimes, true);
     }
 
-    class RootDisptaching {
+    class RootDispatching {
         private CompletableFuture<AsyncTaskResult> taskCompletionSource;
         private ConcurrentMap<Object, Boolean> childDispatchingDict;
 
-        public RootDisptaching() {
+        public RootDispatching() {
             taskCompletionSource = new CompletableFuture<>();
             childDispatchingDict = new ConcurrentHashMap<>();
         }
@@ -263,10 +262,10 @@ public class DefaultMessageDispatcher implements IMessageDispatcher {
 
     class QueueMessageDispatching {
         private DefaultMessageDispatcher dispatcher;
-        private RootDisptaching rootDispatching;
+        private RootDispatching rootDispatching;
         private ConcurrentLinkedQueue<IMessage> messageQueue;
 
-        public QueueMessageDispatching(DefaultMessageDispatcher dispatcher, RootDisptaching rootDispatching, List<? extends IMessage> messages) {
+        public QueueMessageDispatching(DefaultMessageDispatcher dispatcher, RootDispatching rootDispatching, List<? extends IMessage> messages) {
             this.dispatcher = dispatcher;
             messageQueue = new ConcurrentLinkedQueue<>();
 
@@ -295,9 +294,9 @@ public class DefaultMessageDispatcher implements IMessageDispatcher {
     class MultiMessageDisptaching {
         private IMessage[] messages;
         private ConcurrentMap<String, IObjectProxy> handlerDict;
-        private RootDisptaching rootDispatching;
+        private RootDispatching rootDispatching;
 
-        public MultiMessageDisptaching(List<? extends IMessage> messages, List<? extends IObjectProxy> handlers, RootDisptaching rootDispatching, ITypeNameProvider typeNameProvider) {
+        public MultiMessageDisptaching(List<? extends IMessage> messages, List<? extends IObjectProxy> handlers, RootDispatching rootDispatching, ITypeNameProvider typeNameProvider) {
             this.messages = messages.toArray(new IMessage[0]);
             handlerDict = new ConcurrentHashMap<>();
             handlers.forEach(x -> handlerDict.putIfAbsent(typeNameProvider.getTypeName(x.getInnerObject().getClass()), x));
@@ -327,7 +326,7 @@ public class DefaultMessageDispatcher implements IMessageDispatcher {
         public SingleMessageDispatching(IMessage message, QueueMessageDispatching queueMessageDispatching, List<? extends IObjectProxy> handlers, ITypeNameProvider typeNameProvider) {
             this.message = message;
             this.queueMessageDispatching = queueMessageDispatching;
-            handlerDict = new ConcurrentHashMap<>();
+            this.handlerDict = new ConcurrentHashMap<>();
             handlers.forEach(x -> handlerDict.putIfAbsent(typeNameProvider.getTypeName(x.getInnerObject().getClass()), x));
         }
 
@@ -350,7 +349,7 @@ public class DefaultMessageDispatcher implements IMessageDispatcher {
 
         public QueuedHandler(List<T> handlers, Action2<QueuedHandler<T>, T> dispatchToNextHandler) {
             handlerQueue = new ConcurrentLinkedQueue<>();
-            handlers.forEach(handler -> handlerQueue.add(handler));
+            handlerQueue.addAll(handlers);
             this.dispatchToNextHandler = dispatchToNextHandler;
         }
 
@@ -364,7 +363,7 @@ public class DefaultMessageDispatcher implements IMessageDispatcher {
                 try {
                     dispatchToNextHandler.apply(this, nextHandler);
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    throw new WrappedRuntimeException(e);
                 }
             }
         }

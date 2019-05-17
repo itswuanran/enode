@@ -15,9 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public abstract class PublishableExceptionListener implements IMessageHandler {
+public abstract class AbstractPublishableExceptionListener implements IMessageHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(PublishableExceptionListener.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractPublishableExceptionListener.class);
 
     @Autowired
     protected IJsonSerializer jsonSerializer;

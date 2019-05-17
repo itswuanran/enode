@@ -3,14 +3,14 @@ package com.enodeframework.kafka;
 import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.infrastructure.IPublishableException;
 import com.enodeframework.queue.QueueMessage;
-import com.enodeframework.queue.publishableexceptions.PublishableExceptionPublisher;
+import com.enodeframework.queue.publishableexceptions.AbstractPublishableExceptionPublisher;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.CompletableFuture;
 
-public class KafkaPublishableExceptionPublisher extends PublishableExceptionPublisher {
+public class KafkaPublishableExceptionPublisher extends AbstractPublishableExceptionPublisher {
 
     @Autowired
     protected SendMessageService sendMessageService;

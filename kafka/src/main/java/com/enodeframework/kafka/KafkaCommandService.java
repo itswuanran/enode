@@ -7,14 +7,14 @@ import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.common.io.AsyncTaskStatus;
 import com.enodeframework.common.utilities.Ensure;
 import com.enodeframework.queue.QueueMessage;
-import com.enodeframework.queue.command.CommandService;
+import com.enodeframework.queue.command.AbstractCommandService;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.CompletableFuture;
 
-public class KafkaCommandService extends CommandService {
+public class KafkaCommandService extends AbstractCommandService {
 
     private KafkaProducer<String, String> producer;
     @Autowired

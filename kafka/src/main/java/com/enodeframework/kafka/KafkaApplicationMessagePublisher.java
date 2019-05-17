@@ -3,14 +3,14 @@ package com.enodeframework.kafka;
 import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.infrastructure.IApplicationMessage;
 import com.enodeframework.queue.QueueMessage;
-import com.enodeframework.queue.applicationmessage.ApplicationMessagePublisher;
+import com.enodeframework.queue.applicationmessage.AbstractApplicationMessagePublisher;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.CompletableFuture;
 
-public class KafkaApplicationMessagePublisher extends ApplicationMessagePublisher {
+public class KafkaApplicationMessagePublisher extends AbstractApplicationMessagePublisher {
 
     @Autowired
     private SendMessageService sendMessageService;

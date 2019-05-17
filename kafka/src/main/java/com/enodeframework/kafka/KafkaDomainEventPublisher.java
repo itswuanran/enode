@@ -3,14 +3,14 @@ package com.enodeframework.kafka;
 import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.eventing.DomainEventStreamMessage;
 import com.enodeframework.queue.QueueMessage;
-import com.enodeframework.queue.domainevent.DomainEventPublisher;
+import com.enodeframework.queue.domainevent.AbstractDomainEventPublisher;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.CompletableFuture;
 
-public class KafkaDomainEventPublisher extends DomainEventPublisher {
+public class KafkaDomainEventPublisher extends AbstractDomainEventPublisher {
 
     @Autowired
     protected SendMessageService sendMessageService;

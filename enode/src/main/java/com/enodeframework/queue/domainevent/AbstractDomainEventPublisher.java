@@ -1,10 +1,8 @@
 package com.enodeframework.queue.domainevent;
 
-import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.common.serializing.IJsonSerializer;
 import com.enodeframework.common.utilities.Ensure;
 import com.enodeframework.eventing.DomainEventStreamMessage;
-import com.enodeframework.eventing.IDomainEvent;
 import com.enodeframework.eventing.IEventSerializer;
 import com.enodeframework.infrastructure.IMessagePublisher;
 import com.enodeframework.queue.QueueMessage;
@@ -12,16 +10,13 @@ import com.enodeframework.queue.QueueMessageTypeCode;
 import com.enodeframework.queue.TopicData;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.concurrent.CompletableFuture;
-
-public abstract class DomainEventPublisher implements IMessagePublisher<DomainEventStreamMessage> {
+public abstract class AbstractDomainEventPublisher implements IMessagePublisher<DomainEventStreamMessage> {
 
     @Autowired
     protected IJsonSerializer jsonSerializer;
 
     @Autowired
     protected IEventSerializer eventSerializer;
-
 
     private TopicData topicData;
 
@@ -33,21 +28,15 @@ public abstract class DomainEventPublisher implements IMessagePublisher<DomainEv
         this.topicData = topicData;
     }
 
-    @Override
-    public CompletableFuture<AsyncTaskResult> publishAsync(DomainEventStreamMessage eventStream) {
-        return CompletableFuture.completedFuture(AsyncTaskResult.Success);
-    }
-
     protected QueueMessage createDomainEventStreamMessage(DomainEventStreamMessage eventStream) {
         Ensure.notNull(eventStream.aggregateRootId(), "aggregateRootId");
         EventStreamMessage eventMessage = createEventMessage(eventStream);
-        IDomainEvent domainEvent = eventStream.getEvents().size() > 0 ? eventStream.getEvents().get(0) : null;
         String data = jsonSerializer.serialize(eventMessage);
         String routeKey = eventStream.getRoutingKey() != null ? eventStream.getRoutingKey() : eventMessage.getAggregateRootId();
         QueueMessage queueMessage = new QueueMessage();
         queueMessage.setCode(QueueMessageTypeCode.DomainEventStreamMessage.getValue());
         queueMessage.setTopic(topicData.getTopic());
-        queueMessage.setTags(topicData.getTag());
+        queueMessage.setTags(topicData.getTags());
         queueMessage.setBody(data);
         queueMessage.setKey(eventStream.id());
         queueMessage.setRouteKey(routeKey);

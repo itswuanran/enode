@@ -10,11 +10,11 @@ import com.enodeframework.common.io.AsyncTaskStatus;
 import com.enodeframework.common.io.Await;
 import com.enodeframework.common.utilities.Ensure;
 import com.enodeframework.queue.QueueMessage;
-import com.enodeframework.queue.command.CommandService;
+import com.enodeframework.queue.command.AbstractCommandService;
 
 import java.util.concurrent.CompletableFuture;
 
-public class RocketMQCommandService extends CommandService {
+public class RocketMQCommandService extends AbstractCommandService {
 
     private DefaultMQProducer defaultMQProducer;
 

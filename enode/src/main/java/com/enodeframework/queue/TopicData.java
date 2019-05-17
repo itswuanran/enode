@@ -3,11 +3,11 @@ package com.enodeframework.queue;
 public class TopicData {
 
     private String topic;
-    private String tag;
+    private String tags;
 
-    public TopicData(String topic, String tag) {
+    public TopicData(String topic, String tags) {
         this.topic = topic;
-        this.tag = tag;
+        this.tags = tags;
     }
 
     public String getTopic() {
@@ -18,36 +18,11 @@ public class TopicData {
         this.topic = topic;
     }
 
-    public String getTag() {
-        return tag;
+    public String getTags() {
+        return tags;
     }
 
-    public void setTag(String tag) {
-        this.tag = tag;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        TopicData that = (TopicData) o;
-
-        if (topic == null || tag == null) {
-            return false;
-        }
-
-        if (!topic.equals(that.topic)) {
-            return false;
-        }
-        return tag.equals(that.tag);
-    }
-
-    @Override
-    public int hashCode() {
-        return super.hashCode();
+    public void setTags(String tags) {
+        this.tags = tags;
     }
 }

@@ -16,7 +16,6 @@ import static com.enodeframework.samples.Constant.NAMESRVADDR;
 @Configuration
 public class AppConfigCommand {
 
-
     @Bean
     public RocketMQCommandService rocketMQCommandService(DefaultMQProducer producer) {
         RocketMQCommandService rocketMQCommandService = new RocketMQCommandService();

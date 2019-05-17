@@ -19,9 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class CommandListener implements IMessageHandler {
+public abstract class AbstractCommandListener implements IMessageHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(CommandListener.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractCommandListener.class);
 
     @Autowired
     protected SendReplyService sendReplyService;
@@ -33,7 +33,7 @@ public abstract class CommandListener implements IMessageHandler {
     protected ITypeNameProvider typeNameProvider;
 
     @Autowired
-    protected ICommandProcessor processor;
+    protected ICommandProcessor commandProcessor;
 
     @Autowired
     protected IRepository repository;
@@ -50,6 +50,6 @@ public abstract class CommandListener implements IMessageHandler {
         CommandExecuteContext commandExecuteContext = new CommandExecuteContext(repository, aggregateRootStorage, queueMessage, context, commandMessage, sendReplyService);
         commandItems.put("CommandReplyAddress", commandMessage.getReplyAddress());
         logger.info("ENode command message received, messageId: {}, aggregateRootId: {}", command.id(), command.getAggregateRootId());
-        processor.process(new ProcessingCommand(command, commandExecuteContext, commandItems));
+        commandProcessor.process(new ProcessingCommand(command, commandExecuteContext, commandItems));
     }
 }

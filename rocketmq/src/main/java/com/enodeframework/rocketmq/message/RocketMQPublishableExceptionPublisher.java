@@ -5,11 +5,11 @@ import com.alibaba.rocketmq.common.message.Message;
 import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.infrastructure.IPublishableException;
 import com.enodeframework.queue.QueueMessage;
-import com.enodeframework.queue.publishableexceptions.PublishableExceptionPublisher;
+import com.enodeframework.queue.publishableexceptions.AbstractPublishableExceptionPublisher;
 
 import java.util.concurrent.CompletableFuture;
 
-public class RocketMQPublishableExceptionPublisher extends PublishableExceptionPublisher {
+public class RocketMQPublishableExceptionPublisher extends AbstractPublishableExceptionPublisher {
 
     private DefaultMQProducer producer;
 

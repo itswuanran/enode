@@ -9,6 +9,7 @@ import com.enodeframework.common.remoting.exception.RemotingSendRequestException
 import com.enodeframework.common.remoting.exception.RemotingTimeoutException;
 import com.enodeframework.common.remoting.exception.RemotingTooMuchRequestException;
 import com.enodeframework.common.remoting.protocol.RemotingCommand;
+import com.enodeframework.infrastructure.WrappedRuntimeException;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -165,7 +166,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
             this.bindAddress = addr;
             this.port = addr.getPort();
         } catch (InterruptedException e1) {
-            throw new RuntimeException("this.serverBootstrap.bind().sync() InterruptedException", e1);
+            throw new WrappedRuntimeException("this.serverBootstrap.bind().sync() InterruptedException", e1);
         }
 
         if (this.channelEventListener != null) {

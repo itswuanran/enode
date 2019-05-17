@@ -5,11 +5,11 @@ import com.alibaba.rocketmq.common.message.Message;
 import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.eventing.DomainEventStreamMessage;
 import com.enodeframework.queue.QueueMessage;
-import com.enodeframework.queue.domainevent.DomainEventPublisher;
+import com.enodeframework.queue.domainevent.AbstractDomainEventPublisher;
 
 import java.util.concurrent.CompletableFuture;
 
-public class RocketMQDomainEventPublisher extends DomainEventPublisher {
+public class RocketMQDomainEventPublisher extends AbstractDomainEventPublisher {
 
     private DefaultMQProducer producer;
 

@@ -1,5 +1,7 @@
 package com.enodeframework.common.utilities;
 
+import com.enodeframework.infrastructure.WrappedRuntimeException;
+
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.net.InetAddress;
@@ -116,7 +118,7 @@ public class ObjectId {
             // use first 3 bytes of hash
             return ((hash[0] & 0xff) << 16) | ((hash[1] & 0xff) << 8) | hash[2] & 0xff;
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new WrappedRuntimeException(ex);
         }
     }
 
