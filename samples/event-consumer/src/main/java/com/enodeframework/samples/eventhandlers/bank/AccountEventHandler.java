@@ -1,5 +1,7 @@
 package com.enodeframework.samples.eventhandlers.bank;
 
+import com.enodeframework.annotation.Event;
+import com.enodeframework.annotation.Subscribe;
 import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.samples.applicationmessages.AccountValidateFailedMessage;
 import com.enodeframework.samples.applicationmessages.AccountValidatePassedMessage;
@@ -19,26 +21,31 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CompletableFuture;
 
-public class AbstractEventHandler {
+@Event
+public class AccountEventHandler {
 
-    public static Logger logger = LoggerFactory.getLogger(AbstractEventHandler.class);
+    public static Logger logger = LoggerFactory.getLogger(AccountEventHandler.class);
 
-    public CompletableFuture<AsyncTaskResult> handleAsyncInternal(AccountCreatedEvent evnt) {
+    @Subscribe
+    public CompletableFuture<AsyncTaskResult> handleAsync(AccountCreatedEvent evnt) {
         logger.info("账户已创建，账户：{}，所有者：{}", evnt.aggregateRootId(), evnt.Owner);
         return CompletableFuture.completedFuture(AsyncTaskResult.Success);
     }
 
-    public CompletableFuture<AsyncTaskResult> handleAsyncInternal(AccountValidatePassedMessage message) {
+    @Subscribe
+    public CompletableFuture<AsyncTaskResult> handleAsync(AccountValidatePassedMessage message) {
         logger.info("账户验证已通过，交易ID：{}，账户：{}", message.TransactionId, message.AccountId);
         return CompletableFuture.completedFuture(AsyncTaskResult.Success);
     }
 
-    public CompletableFuture<AsyncTaskResult> handleAsyncInternal(AccountValidateFailedMessage message) {
+    @Subscribe
+    public CompletableFuture<AsyncTaskResult> handleAsync(AccountValidateFailedMessage message) {
         logger.info("无效的银行账户，交易ID：{}，账户：{}，理由：{}", message.TransactionId, message.AccountId, message.Reason);
         return CompletableFuture.completedFuture(AsyncTaskResult.Success);
     }
 
-    public CompletableFuture<AsyncTaskResult> handleAsyncInternal(TransactionPreparationAddedEvent evnt) {
+    @Subscribe
+    public CompletableFuture<AsyncTaskResult> handleAsync(TransactionPreparationAddedEvent evnt) {
         if (evnt.TransactionPreparation.transactionType == TransactionType.TransferTransaction) {
             if (evnt.TransactionPreparation.preparationType == PreparationType.DebitPreparation) {
                 logger.info("账户预转出成功，交易ID：{}，账户：{}，金额：{}", evnt.TransactionPreparation.TransactionId, evnt.TransactionPreparation.AccountId, evnt.TransactionPreparation.Amount);
@@ -49,7 +56,8 @@ public class AbstractEventHandler {
         return CompletableFuture.completedFuture(AsyncTaskResult.Success);
     }
 
-    public CompletableFuture<AsyncTaskResult> handleAsyncInternal(TransactionPreparationCommittedEvent evnt) {
+    @Subscribe
+    public CompletableFuture<AsyncTaskResult> handleAsync(TransactionPreparationCommittedEvent evnt) {
         if (evnt.TransactionPreparation.transactionType == TransactionType.DepositTransaction) {
             if (evnt.TransactionPreparation.preparationType == PreparationType.CreditPreparation) {
                 logger.info("账户存款已成功，账户：{}，金额：{}，当前余额：{}", evnt.TransactionPreparation.AccountId, evnt.TransactionPreparation.Amount, evnt.CurrentBalance);
@@ -66,32 +74,38 @@ public class AbstractEventHandler {
         return CompletableFuture.completedFuture(AsyncTaskResult.Success);
     }
 
-    public CompletableFuture<AsyncTaskResult> handleAsyncInternal(TransferTransactionStartedEvent evnt) {
+    @Subscribe
+    public CompletableFuture<AsyncTaskResult> handleAsync(TransferTransactionStartedEvent evnt) {
         logger.info("转账交易已开始，交易ID：{}，源账户：{}，目标账户：{}，转账金额：{}", evnt.aggregateRootId(), evnt.TransactionInfo.SourceAccountId, evnt.TransactionInfo.TargetAccountId, evnt.TransactionInfo.Amount);
         return CompletableFuture.completedFuture(AsyncTaskResult.Success);
     }
 
-    public CompletableFuture<AsyncTaskResult> handleAsyncInternal(TransferOutPreparationConfirmedEvent evnt) {
+    @Subscribe
+    public CompletableFuture<AsyncTaskResult> handleAsync(TransferOutPreparationConfirmedEvent evnt) {
         logger.info("预转出确认成功，交易ID：{}，账户：{}", evnt.aggregateRootId(), evnt.TransactionInfo.SourceAccountId);
         return CompletableFuture.completedFuture(AsyncTaskResult.Success);
     }
 
-    public CompletableFuture<AsyncTaskResult> handleAsyncInternal(TransferInPreparationConfirmedEvent evnt) {
+    @Subscribe
+    public CompletableFuture<AsyncTaskResult> handleAsync(TransferInPreparationConfirmedEvent evnt) {
         logger.info("预转入确认成功，交易ID：{}，账户：{}", evnt.aggregateRootId(), evnt.TransactionInfo.TargetAccountId);
         return CompletableFuture.completedFuture(AsyncTaskResult.Success);
     }
 
-    public CompletableFuture<AsyncTaskResult> handleAsyncInternal(TransferTransactionCompletedEvent evnt) {
+    @Subscribe
+    public CompletableFuture<AsyncTaskResult> handleAsync(TransferTransactionCompletedEvent evnt) {
         logger.info("转账交易已完成，交易ID：{}", evnt.aggregateRootId());
         return CompletableFuture.completedFuture(AsyncTaskResult.Success);
     }
 
-    public CompletableFuture<AsyncTaskResult> handleAsyncInternal(InsufficientBalanceException exception) {
+    @Subscribe
+    public CompletableFuture<AsyncTaskResult> handleAsync(InsufficientBalanceException exception) {
         logger.info("账户的余额不足，交易ID：{}，账户：{}，可用余额：{}，转出金额：{}", exception.TransactionId, exception.AccountId, exception.CurrentAvailableBalance, exception.Amount);
         return CompletableFuture.completedFuture(AsyncTaskResult.Success);
     }
 
-    public CompletableFuture<AsyncTaskResult> handleAsyncInternal(TransferTransactionCanceledEvent evnt) {
+    @Subscribe
+    public CompletableFuture<AsyncTaskResult> handleAsync(TransferTransactionCanceledEvent evnt) {
         logger.info("转账交易已取消，交易ID：{}", evnt.aggregateRootId());
         return CompletableFuture.completedFuture(AsyncTaskResult.Success);
     }

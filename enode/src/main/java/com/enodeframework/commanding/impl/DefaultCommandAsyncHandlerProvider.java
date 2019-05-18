@@ -44,6 +44,9 @@ public class DefaultCommandAsyncHandlerProvider extends AbstractHandlerProvider<
         if (method.getParameterTypes().length != 1) {
             return false;
         }
+        if (ICommand.class.equals(method.getParameterTypes()[0])) {
+            return false;
+        }
         if (!ICommand.class.isAssignableFrom(method.getParameterTypes()[0])) {
             return false;
         }

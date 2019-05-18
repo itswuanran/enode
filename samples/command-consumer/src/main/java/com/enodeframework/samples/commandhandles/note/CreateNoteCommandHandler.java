@@ -1,20 +1,15 @@
 package com.enodeframework.samples.commandhandles.note;
 
+import com.enodeframework.annotation.Command;
 import com.enodeframework.commanding.ICommandContext;
 import com.enodeframework.commanding.ICommandHandler;
 import com.enodeframework.samples.commands.note.CreateNoteCommand;
 import com.enodeframework.samples.domain.note.Note;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import java.util.concurrent.CompletableFuture;
 
-@Component
+@Command
 public class CreateNoteCommandHandler implements ICommandHandler<CreateNoteCommand> {
-
-    private static Logger logger = LoggerFactory.getLogger(CreateNoteCommandHandler.class);
-
     /**
      * Handle the given aggregate command.
      *

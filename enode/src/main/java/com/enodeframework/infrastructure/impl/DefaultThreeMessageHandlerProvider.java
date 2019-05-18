@@ -49,11 +49,25 @@ public class DefaultThreeMessageHandlerProvider extends AbstractHandlerProvider<
 
     @Override
     protected boolean isHandleMethodMatch(Method method) {
-        return Constants.COMMAND_HANDLE_METHOD.equals(method.getName())
-                && method.getParameterTypes().length == 3
-                && IDomainEvent.class.isAssignableFrom(method.getParameterTypes()[0])
-                && IDomainEvent.class.isAssignableFrom(method.getParameterTypes()[1])
-                && IDomainEvent.class.isAssignableFrom(method.getParameterTypes()[2]);
+        if (!Constants.EVENT_HANDLE_METHOD.equals(method.getName())) {
+            return false;
+        }
+        if (method.getParameterTypes().length != 3) {
+            return false;
+        }
+        if (!IDomainEvent.class.isAssignableFrom(method.getParameterTypes()[0])) {
+            return false;
+        }
+        if (!IDomainEvent.class.isAssignableFrom(method.getParameterTypes()[1])) {
+            return false;
+        }
+        if (!IDomainEvent.class.isAssignableFrom(method.getParameterTypes()[2])) {
+            return false;
+        }
+        if (!isMethodAnnotationSubscribe(method)) {
+            return false;
+        }
+        return true;
     }
 
     @Override

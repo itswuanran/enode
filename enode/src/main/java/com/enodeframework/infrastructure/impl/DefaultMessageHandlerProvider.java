@@ -37,7 +37,7 @@ public class DefaultMessageHandlerProvider extends AbstractHandlerProvider<Class
 
     @Override
     protected boolean isHandleMethodMatch(Method method) {
-        if (!Constants.COMMAND_HANDLE_METHOD.equals(method.getName())) {
+        if (!Constants.EVENT_HANDLE_METHOD.equals(method.getName())) {
             return false;
         }
         if (method.getParameterTypes().length != 1) {
@@ -47,6 +47,9 @@ public class DefaultMessageHandlerProvider extends AbstractHandlerProvider<Class
             return false;
         }
         if (!IMessage.class.isAssignableFrom(method.getParameterTypes()[0])) {
+            return false;
+        }
+        if (!isMethodAnnotationSubscribe(method)) {
             return false;
         }
         return true;

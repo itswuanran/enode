@@ -1,7 +1,6 @@
 package com.enodeframework.commanding.impl;
 
 import com.enodeframework.commanding.ICommand;
-import com.enodeframework.commanding.ICommandAsyncHandler;
 import com.enodeframework.commanding.ICommandAsyncHandlerProxy;
 import com.enodeframework.common.container.IObjectContainer;
 import com.enodeframework.common.io.AsyncTaskResult;
@@ -27,9 +26,8 @@ public class CommandAsyncHandlerProxy implements ICommandAsyncHandlerProxy {
 
     @Override
     public CompletableFuture<AsyncTaskResult<IApplicationMessage>> handleAsync(ICommand command) {
-        ICommandAsyncHandler handler = (ICommandAsyncHandler) getInnerObject();
         try {
-            return (CompletableFuture<AsyncTaskResult<IApplicationMessage>>) methodHandle.invoke(handler, command);
+            return (CompletableFuture<AsyncTaskResult<IApplicationMessage>>) methodHandle.invoke(getInnerObject(), command);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
