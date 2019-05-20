@@ -35,10 +35,7 @@ public class DefaultProcessingMessageHandler<X extends IProcessingMessage<X, Y>,
         if (processingMessage instanceof ProcessingDomainEventStreamMessage) {
             return handleMessageAsync((ProcessingDomainEventStreamMessage) processingMessage, 0);
         }
-        dispatcher.dispatchMessageAsync(processingMessage.getMessage()).thenAccept(r -> {
-            processingMessage.complete();
-        });
-        return CompletableFuture.completedFuture(null);
+        return dispatcher.dispatchMessageAsync(processingMessage.getMessage()).thenAccept(r -> processingMessage.complete());
     }
 
     public String getName() {

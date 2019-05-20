@@ -103,7 +103,7 @@ public class ProcessingCommandMailbox {
                     requestToCompleteCommandDict.put(processingCommand.getSequence(), commandResult);
                 } else if (processingCommand.getSequence() < consumedSequence + 1) {
                     messageDict.remove(processingCommand.getSequence());
-                    completeCommand(processingCommand, commandResult).thenApply(r ->
+                    return completeCommand(processingCommand, commandResult).thenAccept(r ->
                             requestToCompleteCommandDict.remove(processingCommand.getSequence())
                     );
                 }

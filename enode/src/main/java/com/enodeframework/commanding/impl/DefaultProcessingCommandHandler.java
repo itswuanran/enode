@@ -127,7 +127,7 @@ public class DefaultProcessingCommandHandler implements IProcessingCommandHandle
         } catch (Throwable e) {
             future.completeExceptionally(e);
         }
-        future.thenAccept(r -> {
+        return future.thenAccept(r -> {
             //如果command执行成功，则提交执行后的结果
             try {
                 commitAggregateChanges(processingCommand);
@@ -140,7 +140,6 @@ public class DefaultProcessingCommandHandler implements IProcessingCommandHandle
             handleExceptionAsync(processingCommand, commandHandler, (Exception) ex, 0);
             return null;
         });
-        return CompletableFuture.completedFuture(null);
     }
 
     private void commitAggregateChanges(ProcessingCommand processingCommand) {

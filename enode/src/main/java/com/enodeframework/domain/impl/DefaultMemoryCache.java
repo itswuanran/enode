@@ -88,11 +88,10 @@ public class DefaultMemoryCache implements IMemoryCache {
                 return CompletableFuture.completedFuture(null);
             }
             CompletableFuture<IAggregateRoot> future = aggregateStorage.getAsync(aggregateRootType, aggregateRootId);
-            future.thenApply(aggregateRoot -> {
+            return future.thenAccept(aggregateRoot -> {
                 if (aggregateRoot != null) {
                     setInternal(aggregateRoot);
                 }
-                return aggregateRoot;
             });
         } catch (Exception ex) {
             logger.error(String.format("Refresh aggregate from event store has unknown exception, aggregateRootTypeName:%s, aggregateRootId:%s", aggregateRootTypeName, aggregateRootId), ex);
