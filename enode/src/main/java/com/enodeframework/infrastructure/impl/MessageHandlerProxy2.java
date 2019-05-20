@@ -28,15 +28,17 @@ public class MessageHandlerProxy2 implements IMessageHandlerProxy2 {
 
     @Override
     public CompletableFuture<AsyncTaskResult> handleAsync(IMessage message1, IMessage message2) {
-        try {
-            if (methodParameterTypes[0].isAssignableFrom(message1.getClass())) {
-                return (CompletableFuture<AsyncTaskResult>) methodHandle.invoke(getInnerObject(), message1, message2);
-            } else {
-                return (CompletableFuture<AsyncTaskResult>) methodHandle.invoke(getInnerObject(), message2, message1);
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                if (methodParameterTypes[0].isAssignableFrom(message1.getClass())) {
+                    return (AsyncTaskResult) methodHandle.invoke(getInnerObject(), message1, message2);
+                } else {
+                    return (AsyncTaskResult) methodHandle.invoke(getInnerObject(), message2, message1);
+                }
+            } catch (Throwable throwable) {
+                throw new WrappedRuntimeException(throwable);
             }
-        } catch (Throwable throwable) {
-            throw new WrappedRuntimeException(throwable);
-        }
+        });
     }
 
 

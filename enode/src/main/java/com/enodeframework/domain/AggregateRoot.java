@@ -1,6 +1,6 @@
 package com.enodeframework.domain;
 
-import com.enodeframework.common.extensions.ApplicationContextHelper;
+import com.enodeframework.common.container.SpringObjectContainer;
 import com.enodeframework.common.function.Action2;
 import com.enodeframework.eventing.DomainEventStream;
 import com.enodeframework.eventing.IDomainEvent;
@@ -76,7 +76,7 @@ public abstract class AggregateRoot<TAggregateRootId> implements IAggregateRoot 
 
     private void handleEvent(IDomainEvent domainEvent) {
         if (eventHandlerProvider == null) {
-            eventHandlerProvider = ApplicationContextHelper.getBean(IAggregateRootInternalHandlerProvider.class);
+            eventHandlerProvider = SpringObjectContainer.resolveStatic(IAggregateRootInternalHandlerProvider.class);
         }
         Action2<IAggregateRoot, IDomainEvent> handler = eventHandlerProvider.getInternalEventHandler(getClass(), domainEvent.getClass());
         if (handler == null) {

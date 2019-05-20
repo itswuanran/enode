@@ -1,6 +1,5 @@
 package com.enodeframework.domain.impl;
 
-import com.enodeframework.common.io.Await;
 import com.enodeframework.common.scheduling.IScheduleService;
 import com.enodeframework.domain.AggregateCacheInfo;
 import com.enodeframework.domain.IAggregateRoot;
@@ -54,7 +53,6 @@ public class DefaultMemoryCache implements IMemoryCache {
         }
         if (aggregateRoot.getChanges().size() > 0) {
             CompletableFuture<IAggregateRoot> lastestAggregateRootFuture = aggregateStorage.getAsync(aggregateRootType, aggregateRootId.toString());
-            Await.get(lastestAggregateRootFuture);
             return lastestAggregateRootFuture.thenApply(lastestAggregateRoot -> {
                 if (lastestAggregateRoot != null) {
                     setInternal(lastestAggregateRoot);
@@ -82,7 +80,7 @@ public class DefaultMemoryCache implements IMemoryCache {
     }
 
     @Override
-    public CompletableFuture refreshAggregateFromEventStoreAsync(String aggregateRootTypeName, String aggregateRootId) {
+    public CompletableFuture<Void> refreshAggregateFromEventStoreAsync(String aggregateRootTypeName, String aggregateRootId) {
         try {
             Class aggregateRootType = typeNameProvider.getType(aggregateRootTypeName);
             if (aggregateRootType == null) {
@@ -90,13 +88,12 @@ public class DefaultMemoryCache implements IMemoryCache {
                 return CompletableFuture.completedFuture(null);
             }
             CompletableFuture<IAggregateRoot> future = aggregateStorage.getAsync(aggregateRootType, aggregateRootId);
-            Await.get(future);
-            future.thenAccept(aggregateRoot -> {
+            future.thenApply(aggregateRoot -> {
                 if (aggregateRoot != null) {
                     setInternal(aggregateRoot);
                 }
+                return aggregateRoot;
             });
-            return future;
         } catch (Exception ex) {
             logger.error(String.format("Refresh aggregate from event store has unknown exception, aggregateRootTypeName:%s, aggregateRootId:%s", aggregateRootTypeName, aggregateRootId), ex);
         }

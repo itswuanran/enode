@@ -18,7 +18,7 @@ public interface ICommandContext {
      * @param aggregateRoot
      * @return
      */
-    CompletableFuture addAsync(IAggregateRoot aggregateRoot);
+    CompletableFuture<Void> addAsync(IAggregateRoot aggregateRoot);
 
     /**
      * Get an aggregate from the current command context.
@@ -28,9 +28,9 @@ public interface ICommandContext {
      * @param firstFromCache
      * @return
      */
-    <T extends IAggregateRoot> CompletableFuture getAsync(Object id, boolean firstFromCache, Class<T> clazz);
+    <T extends IAggregateRoot> CompletableFuture<T> getAsync(Object id, boolean firstFromCache, Class<T> clazz);
 
-    <T extends IAggregateRoot> CompletableFuture getAsync(Object id, Class<T> clazz);
+    <T extends IAggregateRoot> CompletableFuture<T> getAsync(Object id, Class<T> clazz);
 
     String getResult();
 

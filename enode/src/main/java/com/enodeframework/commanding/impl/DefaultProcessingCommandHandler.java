@@ -12,7 +12,6 @@ import com.enodeframework.commanding.IProcessingCommandHandler;
 import com.enodeframework.commanding.ProcessingCommand;
 import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.common.io.AsyncTaskStatus;
-import com.enodeframework.common.io.Await;
 import com.enodeframework.common.io.IOHelper;
 import com.enodeframework.common.io.IORuntimeException;
 import com.enodeframework.common.serializing.IJsonSerializer;
@@ -75,7 +74,7 @@ public class DefaultProcessingCommandHandler implements IProcessingCommandHandle
     private IOHelper ioHelper;
 
     @Override
-    public CompletableFuture handle(ProcessingCommand processingCommand) {
+    public CompletableFuture<Void> handle(ProcessingCommand processingCommand) {
         ICommand command = processingCommand.getMessage();
         if (Strings.isNullOrEmpty(command.getAggregateRootId())) {
             String errorMessage = String.format("The aggregateRootId of command cannot be null or empty. commandType:%s, commandId:%s", command.getClass().getName(), command.id());
@@ -111,14 +110,13 @@ public class DefaultProcessingCommandHandler implements IProcessingCommandHandle
         return CompletableFuture.completedFuture(null);
     }
 
-    private CompletableFuture handleCommand(ProcessingCommand processingCommand, ICommandHandlerProxy commandHandler) {
+    private CompletableFuture<Void> handleCommand(ProcessingCommand processingCommand, ICommandHandlerProxy commandHandler) {
         ICommand command = processingCommand.getMessage();
         processingCommand.getCommandExecuteContext().clear();
-        CompletableFuture future = new CompletableFuture<>();
+        CompletableFuture<Void> future = new CompletableFuture<>();
         try {
             //调用command handler执行当前command
             future = commandHandler.handleAsync(processingCommand.getCommandExecuteContext(), command);
-            Await.get(future);
             if (logger.isDebugEnabled()) {
                 logger.debug("Handle command success. handlerType:{}, commandType:{}, commandId:{}, aggregateRootId:{}",
                         commandHandler.getInnerObject().getClass().getName(),
@@ -129,20 +127,20 @@ public class DefaultProcessingCommandHandler implements IProcessingCommandHandle
         } catch (Throwable e) {
             future.completeExceptionally(e);
         }
-        return future.thenApply(r -> {
+        future.thenAccept(r -> {
             //如果command执行成功，则提交执行后的结果
             try {
                 commitAggregateChanges(processingCommand);
             } catch (Exception ex) {
                 logCommandExecuteException(processingCommand, commandHandler, ex);
-                Await.get(completeCommand(processingCommand, CommandStatus.Failed, ex.getClass().getName(), "Unknown exception caught when committing changes of command."));
-                return false;
+                // await
+                completeCommand(processingCommand, CommandStatus.Failed, ex.getClass().getName(), "Unknown exception caught when committing changes of command.");
             }
-            return true;
         }).exceptionally(ex -> {
             handleExceptionAsync(processingCommand, commandHandler, (Exception) ex, 0);
-            return false;
+            return null;
         });
+        return CompletableFuture.completedFuture(null);
     }
 
     private void commitAggregateChanges(ProcessingCommand processingCommand) {
@@ -293,11 +291,11 @@ public class DefaultProcessingCommandHandler implements IProcessingCommandHandle
         logger.error(errorMessage, exception);
     }
 
-    private CompletableFuture handleCommand(ProcessingCommand processingCommand, ICommandAsyncHandlerProxy commandHandler) {
+    private CompletableFuture<Void> handleCommand(ProcessingCommand processingCommand, ICommandAsyncHandlerProxy commandHandler) {
         return handleCommandAsync(processingCommand, commandHandler, 0);
     }
 
-    private CompletableFuture handleCommandAsync(ProcessingCommand processingCommand, ICommandAsyncHandlerProxy commandHandler, int retryTimes) {
+    private CompletableFuture<Void> handleCommandAsync(ProcessingCommand processingCommand, ICommandAsyncHandlerProxy commandHandler, int retryTimes) {
         ICommand command = processingCommand.getMessage();
         ioHelper.tryAsyncActionRecursively("HandleCommandAsync",
                 () ->
@@ -329,8 +327,7 @@ public class DefaultProcessingCommandHandler implements IProcessingCommandHandle
                     }
                 },
                 currentRetryTimes -> handleCommandAsync(processingCommand, commandHandler, currentRetryTimes),
-                result ->
-                        commitChangesAsync(processingCommand, true, result.getData(), null),
+                result -> commitChangesAsync(processingCommand, true, result.getData(), null),
                 () -> String.format("[command:[id:%s,type:%s],handlerType:%s]", command.id(), command.getClass().getName(), commandHandler.getInnerObject().getClass().getName()),
                 errorMessage -> commitChangesAsync(processingCommand, false, null, errorMessage),
                 retryTimes, false);
@@ -384,7 +381,7 @@ public class DefaultProcessingCommandHandler implements IProcessingCommandHandle
         return new HandlerFindResult<>(HandlerFindStatus.Found, handlerProxy);
     }
 
-    private CompletableFuture completeCommand(ProcessingCommand processingCommand, CommandStatus commandStatus, String resultType, String result) {
+    private CompletableFuture<Void> completeCommand(ProcessingCommand processingCommand, CommandStatus commandStatus, String resultType, String result) {
         CommandResult commandResult = new CommandResult(commandStatus, processingCommand.getMessage().id(), processingCommand.getMessage().getAggregateRootId(), result, resultType);
         return processingCommand.getMailbox().completeMessage(processingCommand, commandResult);
     }

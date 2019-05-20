@@ -1,7 +1,5 @@
 package com.enodeframework.commanding;
 
-import java.util.concurrent.CompletableFuture;
-
 public interface ICommandHandler<T extends ICommand> {
     /**
      * Handle the given aggregate command.
@@ -10,5 +8,5 @@ public interface ICommandHandler<T extends ICommand> {
      * @param command
      * @return
      */
-    CompletableFuture handleAsync(ICommandContext context, T command);
+    void handleAsync(ICommandContext context, T command);
 }

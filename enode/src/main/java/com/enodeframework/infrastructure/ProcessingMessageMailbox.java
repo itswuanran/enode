@@ -81,7 +81,7 @@ public class ProcessingMessageMailbox<X extends IProcessingMessage<X, Y>, Y exte
             try {
                 Thread.sleep(1);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                // ignore e
             }
         } finally {
             if (processingMessage == null) {

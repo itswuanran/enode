@@ -44,7 +44,7 @@ public class DefaultAggregateRepositoryProvider implements IAggregateRepositoryP
 
         IAggregateRepository resolve = (IAggregateRepository) objectContainer.resolve(aggregateRepositoryType);
 
-        AggregateRepositoryProxy<IAggregateRoot> aggregateRepositoryProxy = new AggregateRepositoryProxy<>(resolve);
+        AggregateRepositoryProxy aggregateRepositoryProxy = new AggregateRepositoryProxy(resolve);
 
         repositoryDict.put((Class) superGenericInterfaceType.getActualTypeArguments()[0], aggregateRepositoryProxy);
     }

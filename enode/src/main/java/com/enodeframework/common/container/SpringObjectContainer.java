@@ -4,9 +4,20 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
+/**
+ * Spring Ioc容器
+ */
 public class SpringObjectContainer implements IObjectContainer, ApplicationContextAware {
 
-    private ApplicationContext applicationContext;
+    private static ApplicationContext applicationContext;
+
+    public static <T> T resolveStatic(Class<T> targetClz) {
+        return applicationContext.getBean(targetClz);
+    }
+
+    public static <T> T resolveStatic(String beanName, Class<T> targetClz) {
+        return applicationContext.getBean(beanName, targetClz);
+    }
 
     @Override
     public <TService> TService resolve(Class<TService> serviceType) {
@@ -15,6 +26,6 @@ public class SpringObjectContainer implements IObjectContainer, ApplicationConte
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
+        SpringObjectContainer.applicationContext = applicationContext;
     }
 }

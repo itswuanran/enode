@@ -1,7 +1,6 @@
 package com.enodeframework.infrastructure.impl;
 
 import com.enodeframework.common.io.AsyncTaskResult;
-import com.enodeframework.common.io.Await;
 import com.enodeframework.common.io.IOHelper;
 import com.enodeframework.eventing.DomainEventStreamMessage;
 import com.enodeframework.infrastructure.IMessage;
@@ -32,12 +31,13 @@ public class DefaultProcessingMessageHandler<X extends IProcessingMessage<X, Y>,
     private IOHelper ioHelper;
 
     @Override
-    public CompletableFuture handleAsync(X processingMessage) {
+    public CompletableFuture<Void> handleAsync(X processingMessage) {
         if (processingMessage instanceof ProcessingDomainEventStreamMessage) {
             return handleMessageAsync((ProcessingDomainEventStreamMessage) processingMessage, 0);
         }
-        Await.get(dispatcher.dispatchMessageAsync(processingMessage.getMessage()));
-        processingMessage.complete();
+        dispatcher.dispatchMessageAsync(processingMessage.getMessage()).thenAccept(r -> {
+            processingMessage.complete();
+        });
         return CompletableFuture.completedFuture(null);
     }
 
@@ -49,9 +49,8 @@ public class DefaultProcessingMessageHandler<X extends IProcessingMessage<X, Y>,
         return dispatcher.dispatchMessagesAsync(processingMessage.getMessage().getEvents());
     }
 
-    private CompletableFuture handleMessageAsync(ProcessingDomainEventStreamMessage processingMessage, int retryTimes) {
+    private CompletableFuture<Void> handleMessageAsync(ProcessingDomainEventStreamMessage processingMessage, int retryTimes) {
         DomainEventStreamMessage message = processingMessage.getMessage();
-
         ioHelper.tryAsyncActionRecursively("GetPublishedVersionAsync",
                 () -> publishedVersionStore.getPublishedVersionAsync(getName(), message.aggregateRootTypeName(), message.aggregateRootStringId()),
                 currentRetryTimes -> handleMessageAsync(processingMessage, currentRetryTimes),

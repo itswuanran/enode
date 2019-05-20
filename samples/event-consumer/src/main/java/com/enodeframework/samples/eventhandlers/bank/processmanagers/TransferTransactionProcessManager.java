@@ -4,6 +4,7 @@ import com.enodeframework.annotation.Event;
 import com.enodeframework.annotation.Subscribe;
 import com.enodeframework.commanding.ICommandService;
 import com.enodeframework.common.io.AsyncTaskResult;
+import com.enodeframework.common.io.Await;
 import com.enodeframework.samples.applicationmessages.AccountValidateFailedMessage;
 import com.enodeframework.samples.applicationmessages.AccountValidatePassedMessage;
 import com.enodeframework.samples.commands.bank.AddTransactionPreparationCommand;
@@ -35,7 +36,7 @@ public class TransferTransactionProcessManager {
     private ICommandService _commandService;
 
     @Subscribe
-    public CompletableFuture<AsyncTaskResult> handleAsync(TransferTransactionStartedEvent evnt) {
+    public AsyncTaskResult handleAsync(TransferTransactionStartedEvent evnt) {
         ValidateAccountCommand command = new ValidateAccountCommand(evnt.TransactionInfo.SourceAccountId, evnt.aggregateRootId());
         command.setId(evnt.id());
         ValidateAccountCommand targetCommand = new ValidateAccountCommand(evnt.TransactionInfo.TargetAccountId, evnt.aggregateRootId());
@@ -43,25 +44,26 @@ public class TransferTransactionProcessManager {
         CompletableFuture task1 = _commandService.sendAsync(command);
         CompletableFuture task2 = _commandService.sendAsync(targetCommand);
         CompletableFuture.allOf(task1, task2);
-        return CompletableFuture.completedFuture(AsyncTaskResult.Success);
+        return (AsyncTaskResult.Success);
     }
 
     @Subscribe
-    public CompletableFuture<AsyncTaskResult> handleAsync(AccountValidatePassedMessage message) {
+    public AsyncTaskResult handleAsync(AccountValidatePassedMessage message) {
         ConfirmAccountValidatePassedCommand command = new ConfirmAccountValidatePassedCommand(message.TransactionId, message.AccountId);
         command.setId(message.id());
-        return _commandService.sendAsync(command);
+        return Await.get(_commandService.sendAsync(command));
+
     }
 
     @Subscribe
-    public CompletableFuture<AsyncTaskResult> handleAsync(AccountValidateFailedMessage message) {
+    public AsyncTaskResult handleAsync(AccountValidateFailedMessage message) {
         CancelTransferTransactionCommand command = new CancelTransferTransactionCommand(message.TransactionId);
         command.setId(message.id());
-        return _commandService.sendAsync(command);
+        return Await.get(_commandService.sendAsync(command));
     }
 
     @Subscribe
-    public CompletableFuture<AsyncTaskResult> handleAsync(AccountValidatePassedConfirmCompletedEvent evnt) {
+    public AsyncTaskResult handleAsync(AccountValidatePassedConfirmCompletedEvent evnt) {
         AddTransactionPreparationCommand command = new AddTransactionPreparationCommand(
                 evnt.TransactionInfo.SourceAccountId,
                 evnt.aggregateRootId(),
@@ -69,37 +71,38 @@ public class TransferTransactionProcessManager {
                 PreparationType.DebitPreparation,
                 evnt.TransactionInfo.Amount);
         command.setId(evnt.id());
-        return _commandService.sendAsync(command);
+        return Await.get(_commandService.sendAsync(command));
+
     }
 
     @Subscribe
-    public CompletableFuture<AsyncTaskResult> handleAsync(TransactionPreparationAddedEvent evnt) {
+    public AsyncTaskResult handleAsync(TransactionPreparationAddedEvent evnt) {
         if (evnt.TransactionPreparation.transactionType == TransactionType.TransferTransaction) {
             if (evnt.TransactionPreparation.preparationType == PreparationType.DebitPreparation) {
                 ConfirmTransferOutPreparationCommand command = new ConfirmTransferOutPreparationCommand(evnt.TransactionPreparation.TransactionId);
                 command.setId(evnt.id());
-                return _commandService.sendAsync(command);
+                return Await.get(_commandService.sendAsync(command));
             } else if (evnt.TransactionPreparation.preparationType == PreparationType.CreditPreparation) {
                 ConfirmTransferInPreparationCommand command = new ConfirmTransferInPreparationCommand(evnt.TransactionPreparation.TransactionId);
                 command.setId(evnt.id());
-                return _commandService.sendAsync(command);
+                return Await.get(_commandService.sendAsync(command));
             }
         }
-        return CompletableFuture.completedFuture(AsyncTaskResult.Success);
+        return (AsyncTaskResult.Success);
     }
 
     @Subscribe
-    public CompletableFuture<AsyncTaskResult> handleAsync(InsufficientBalanceException exception) {
+    public AsyncTaskResult handleAsync(InsufficientBalanceException exception) {
         if (exception.TransactionType == TransactionType.TransferTransaction) {
             CancelTransferTransactionCommand command = new CancelTransferTransactionCommand(exception.TransactionId);
             command.setId(exception.id());
-            return _commandService.sendAsync(command);
+            return Await.get(_commandService.sendAsync(command));
         }
-        return CompletableFuture.completedFuture(AsyncTaskResult.Success);
+        return (AsyncTaskResult.Success);
     }
 
     @Subscribe
-    public CompletableFuture<AsyncTaskResult> handleAsync(TransferOutPreparationConfirmedEvent evnt) {
+    public AsyncTaskResult handleAsync(TransferOutPreparationConfirmedEvent evnt) {
         AddTransactionPreparationCommand command = new AddTransactionPreparationCommand(
                 evnt.TransactionInfo.TargetAccountId,
                 evnt.aggregateRootId(),
@@ -107,33 +110,33 @@ public class TransferTransactionProcessManager {
                 PreparationType.CreditPreparation,
                 evnt.TransactionInfo.Amount);
         command.setId(evnt.id());
-        return _commandService.sendAsync(command);
+        return Await.get(_commandService.sendAsync(command));
     }
 
     @Subscribe
-    public CompletableFuture<AsyncTaskResult> handleAsync(TransferInPreparationConfirmedEvent evnt) {
+    public AsyncTaskResult handleAsync(TransferInPreparationConfirmedEvent evnt) {
         CommitTransactionPreparationCommand command = new CommitTransactionPreparationCommand(evnt.TransactionInfo.SourceAccountId, evnt.aggregateRootId());
         command.setId(evnt.id());
         CommitTransactionPreparationCommand targetCommand = new CommitTransactionPreparationCommand(evnt.TransactionInfo.TargetAccountId, evnt.aggregateRootId());
         targetCommand.setId(evnt.id());
         CompletableFuture task1 = _commandService.sendAsync(command);
         CompletableFuture task2 = _commandService.sendAsync(targetCommand);
-        return CompletableFuture.completedFuture(AsyncTaskResult.Success);
+        return (AsyncTaskResult.Success);
     }
 
     @Subscribe
-    public CompletableFuture<AsyncTaskResult> handleAsync(TransactionPreparationCommittedEvent evnt) {
+    public AsyncTaskResult handleAsync(TransactionPreparationCommittedEvent evnt) {
         if (evnt.TransactionPreparation.transactionType == TransactionType.TransferTransaction) {
             if (evnt.TransactionPreparation.preparationType == PreparationType.DebitPreparation) {
                 ConfirmTransferOutCommand command = new ConfirmTransferOutCommand(evnt.TransactionPreparation.TransactionId);
                 command.setId(evnt.id());
-                return _commandService.sendAsync(command);
+                return Await.get(_commandService.sendAsync(command));
             } else if (evnt.TransactionPreparation.preparationType == PreparationType.CreditPreparation) {
                 ConfirmTransferInCommand command = new ConfirmTransferInCommand(evnt.TransactionPreparation.TransactionId);
                 command.setId(evnt.id());
-                return _commandService.sendAsync(command);
+                return Await.get(_commandService.sendAsync(command));
             }
         }
-        return CompletableFuture.completedFuture(AsyncTaskResult.Success);
+        return (AsyncTaskResult.Success);
     }
 }

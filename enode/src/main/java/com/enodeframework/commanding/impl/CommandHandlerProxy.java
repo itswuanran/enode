@@ -25,10 +25,10 @@ public class CommandHandlerProxy implements ICommandHandlerProxy {
     private Method method;
 
     @Override
-    public CompletableFuture handleAsync(ICommandContext context, ICommand command) {
-        return CompletableFuture.supplyAsync(() -> {
+    public CompletableFuture<Void> handleAsync(ICommandContext context, ICommand command) {
+        return CompletableFuture.runAsync(() -> {
             try {
-                return methodHandle.invoke(getInnerObject(), context, command);
+                methodHandle.invoke(getInnerObject(), context, command);
             } catch (Throwable throwable) {
                 throw new WrappedRuntimeException(throwable);
             }

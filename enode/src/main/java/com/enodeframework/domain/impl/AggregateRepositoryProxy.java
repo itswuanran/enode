@@ -1,6 +1,5 @@
 package com.enodeframework.domain.impl;
 
-import com.enodeframework.common.io.Await;
 import com.enodeframework.domain.IAggregateRepository;
 import com.enodeframework.domain.IAggregateRepositoryProxy;
 import com.enodeframework.domain.IAggregateRoot;
@@ -22,7 +21,6 @@ public class AggregateRepositoryProxy<TAggregateRoot extends IAggregateRoot> imp
 
     @Override
     public CompletableFuture<IAggregateRoot> getAsync(String aggregateRootId) {
-        TAggregateRoot aggregateRoot = Await.get(aggregateRepository.getAsync(aggregateRootId));
-        return CompletableFuture.completedFuture(aggregateRoot);
+        return (CompletableFuture<IAggregateRoot>) aggregateRepository.getAsync(aggregateRootId);
     }
 }
