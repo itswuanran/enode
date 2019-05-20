@@ -19,33 +19,31 @@ import com.enodeframework.samples.domain.bank.transfertransaction.TransferTransa
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.CompletableFuture;
-
 @Event
 public class AccountEventHandler {
 
     public static Logger logger = LoggerFactory.getLogger(AccountEventHandler.class);
 
     @Subscribe
-    public CompletableFuture<AsyncTaskResult> handleAsync(AccountCreatedEvent evnt) {
+    public AsyncTaskResult handleAsync(AccountCreatedEvent evnt) {
         logger.info("账户已创建，账户：{}，所有者：{}", evnt.aggregateRootId(), evnt.Owner);
-        return CompletableFuture.completedFuture(AsyncTaskResult.Success);
+        return (AsyncTaskResult.Success);
     }
 
     @Subscribe
-    public CompletableFuture<AsyncTaskResult> handleAsync(AccountValidatePassedMessage message) {
+    public AsyncTaskResult handleAsync(AccountValidatePassedMessage message) {
         logger.info("账户验证已通过，交易ID：{}，账户：{}", message.TransactionId, message.AccountId);
-        return CompletableFuture.completedFuture(AsyncTaskResult.Success);
+        return (AsyncTaskResult.Success);
     }
 
     @Subscribe
-    public CompletableFuture<AsyncTaskResult> handleAsync(AccountValidateFailedMessage message) {
+    public AsyncTaskResult handleAsync(AccountValidateFailedMessage message) {
         logger.info("无效的银行账户，交易ID：{}，账户：{}，理由：{}", message.TransactionId, message.AccountId, message.Reason);
-        return CompletableFuture.completedFuture(AsyncTaskResult.Success);
+        return (AsyncTaskResult.Success);
     }
 
     @Subscribe
-    public CompletableFuture<AsyncTaskResult> handleAsync(TransactionPreparationAddedEvent evnt) {
+    public AsyncTaskResult handleAsync(TransactionPreparationAddedEvent evnt) {
         if (evnt.TransactionPreparation.transactionType == TransactionType.TransferTransaction) {
             if (evnt.TransactionPreparation.preparationType == PreparationType.DebitPreparation) {
                 logger.info("账户预转出成功，交易ID：{}，账户：{}，金额：{}", evnt.TransactionPreparation.TransactionId, evnt.TransactionPreparation.AccountId, evnt.TransactionPreparation.Amount);
@@ -53,11 +51,11 @@ public class AccountEventHandler {
                 logger.info("账户预转入成功，交易ID：{}，账户：{}，金额：{}", evnt.TransactionPreparation.TransactionId, evnt.TransactionPreparation.AccountId, evnt.TransactionPreparation.Amount);
             }
         }
-        return CompletableFuture.completedFuture(AsyncTaskResult.Success);
+        return (AsyncTaskResult.Success);
     }
 
     @Subscribe
-    public CompletableFuture<AsyncTaskResult> handleAsync(TransactionPreparationCommittedEvent evnt) {
+    public AsyncTaskResult handleAsync(TransactionPreparationCommittedEvent evnt) {
         if (evnt.TransactionPreparation.transactionType == TransactionType.DepositTransaction) {
             if (evnt.TransactionPreparation.preparationType == PreparationType.CreditPreparation) {
                 logger.info("账户存款已成功，账户：{}，金额：{}，当前余额：{}", evnt.TransactionPreparation.AccountId, evnt.TransactionPreparation.Amount, evnt.CurrentBalance);
@@ -71,42 +69,42 @@ public class AccountEventHandler {
                 logger.info("账户转入已成功，交易ID：{}，账户：{}，金额：{}，当前余额：{}", evnt.TransactionPreparation.TransactionId, evnt.TransactionPreparation.AccountId, evnt.TransactionPreparation.Amount, evnt.CurrentBalance);
             }
         }
-        return CompletableFuture.completedFuture(AsyncTaskResult.Success);
+        return (AsyncTaskResult.Success);
     }
 
     @Subscribe
-    public CompletableFuture<AsyncTaskResult> handleAsync(TransferTransactionStartedEvent evnt) {
+    public AsyncTaskResult handleAsync(TransferTransactionStartedEvent evnt) {
         logger.info("转账交易已开始，交易ID：{}，源账户：{}，目标账户：{}，转账金额：{}", evnt.aggregateRootId(), evnt.TransactionInfo.SourceAccountId, evnt.TransactionInfo.TargetAccountId, evnt.TransactionInfo.Amount);
-        return CompletableFuture.completedFuture(AsyncTaskResult.Success);
+        return (AsyncTaskResult.Success);
     }
 
     @Subscribe
-    public CompletableFuture<AsyncTaskResult> handleAsync(TransferOutPreparationConfirmedEvent evnt) {
+    public AsyncTaskResult handleAsync(TransferOutPreparationConfirmedEvent evnt) {
         logger.info("预转出确认成功，交易ID：{}，账户：{}", evnt.aggregateRootId(), evnt.TransactionInfo.SourceAccountId);
-        return CompletableFuture.completedFuture(AsyncTaskResult.Success);
+        return (AsyncTaskResult.Success);
     }
 
     @Subscribe
-    public CompletableFuture<AsyncTaskResult> handleAsync(TransferInPreparationConfirmedEvent evnt) {
+    public AsyncTaskResult handleAsync(TransferInPreparationConfirmedEvent evnt) {
         logger.info("预转入确认成功，交易ID：{}，账户：{}", evnt.aggregateRootId(), evnt.TransactionInfo.TargetAccountId);
-        return CompletableFuture.completedFuture(AsyncTaskResult.Success);
+        return (AsyncTaskResult.Success);
     }
 
     @Subscribe
-    public CompletableFuture<AsyncTaskResult> handleAsync(TransferTransactionCompletedEvent evnt) {
+    public AsyncTaskResult handleAsync(TransferTransactionCompletedEvent evnt) {
         logger.info("转账交易已完成，交易ID：{}", evnt.aggregateRootId());
-        return CompletableFuture.completedFuture(AsyncTaskResult.Success);
+        return (AsyncTaskResult.Success);
     }
 
     @Subscribe
-    public CompletableFuture<AsyncTaskResult> handleAsync(InsufficientBalanceException exception) {
+    public AsyncTaskResult handleAsync(InsufficientBalanceException exception) {
         logger.info("账户的余额不足，交易ID：{}，账户：{}，可用余额：{}，转出金额：{}", exception.TransactionId, exception.AccountId, exception.CurrentAvailableBalance, exception.Amount);
-        return CompletableFuture.completedFuture(AsyncTaskResult.Success);
+        return (AsyncTaskResult.Success);
     }
 
     @Subscribe
-    public CompletableFuture<AsyncTaskResult> handleAsync(TransferTransactionCanceledEvent evnt) {
+    public AsyncTaskResult handleAsync(TransferTransactionCanceledEvent evnt) {
         logger.info("转账交易已取消，交易ID：{}", evnt.aggregateRootId());
-        return CompletableFuture.completedFuture(AsyncTaskResult.Success);
+        return (AsyncTaskResult.Success);
     }
 }

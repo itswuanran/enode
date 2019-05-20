@@ -34,7 +34,7 @@ public interface IMemoryCache {
      * @param aggregateRootTypeName
      * @param aggregateRootId
      */
-    CompletableFuture refreshAggregateFromEventStoreAsync(String aggregateRootTypeName, String aggregateRootId);
+    CompletableFuture<Void> refreshAggregateFromEventStoreAsync(String aggregateRootTypeName, String aggregateRootId);
 
     /**
      * Start background tasks.

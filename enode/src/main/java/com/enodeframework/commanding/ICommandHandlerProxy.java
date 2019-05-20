@@ -6,5 +6,5 @@ import com.enodeframework.infrastructure.MethodInvocation;
 import java.util.concurrent.CompletableFuture;
 
 public interface ICommandHandlerProxy extends IObjectProxy, MethodInvocation {
-    CompletableFuture handleAsync(ICommandContext context, ICommand command);
+    CompletableFuture<Void> handleAsync(ICommandContext context, ICommand command);
 }

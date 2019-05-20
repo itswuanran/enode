@@ -32,6 +32,7 @@ public abstract class AbstractDomainEventListener implements IMessageHandler {
     @Autowired
     protected IMessageProcessor<ProcessingDomainEventStreamMessage, DomainEventStreamMessage> domainEventMessageProcessor;
 
+
     protected boolean sendEventHandledMessage = true;
 
     public SendReplyService getSendReplyService() {

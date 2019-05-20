@@ -90,20 +90,22 @@ public class ProcessingCommandMailbox {
         this.requestToCompleteCommandDict.clear();
     }
 
-    public CompletableFuture completeMessage(ProcessingCommand processingCommand, CommandResult commandResult) {
+    public CompletableFuture<Void> completeMessage(ProcessingCommand processingCommand, CommandResult commandResult) {
         synchronized (lockObj2) {
             try {
                 lastActiveTime = new Date();
                 if (processingCommand.getSequence() == consumedSequence + 1) {
                     messageDict.remove(processingCommand.getSequence());
-                    Await.get(completeCommand(processingCommand, commandResult));
-                    consumedSequence = processNextCompletedCommands(processingCommand.getSequence());
+                    return completeCommand(processingCommand, commandResult).thenAccept(r ->
+                            consumedSequence = processNextCompletedCommands(processingCommand.getSequence())
+                    );
                 } else if (processingCommand.getSequence() > consumedSequence + 1) {
                     requestToCompleteCommandDict.put(processingCommand.getSequence(), commandResult);
                 } else if (processingCommand.getSequence() < consumedSequence + 1) {
                     messageDict.remove(processingCommand.getSequence());
-                    Await.get(completeCommand(processingCommand, commandResult));
-                    requestToCompleteCommandDict.remove(processingCommand.getSequence());
+                    completeCommand(processingCommand, commandResult).thenApply(r ->
+                            requestToCompleteCommandDict.remove(processingCommand.getSequence())
+                    );
                 }
             } catch (Exception ex) {
                 logger.error(String.format("Command mailbox complete command failed, commandId: %s, aggregateRootId: %s", processingCommand.getMessage().id(), processingCommand.getMessage().getAggregateRootId()), ex);
@@ -176,16 +178,23 @@ public class ProcessingCommandMailbox {
         return returnSequence;
     }
 
-    private CompletableFuture completeCommand(ProcessingCommand processingCommand, CommandResult commandResult) {
-        return processingCommand.completeAsync(commandResult).exceptionally(ex -> {
+    private CompletableFuture<Void> completeCommand(ProcessingCommand processingCommand, CommandResult commandResult) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        try {
+            future = processingCommand.completeAsync(commandResult);
+        } catch (Exception e) {
+            future.completeExceptionally(e);
+        }
+        future.exceptionally(ex -> {
             logger.error("Failed to complete command, commandId: {}, aggregateRootId: {}", processingCommand.getMessage().id(), processingCommand.getMessage().getAggregateRootId(), ex);
             return null;
         });
+        return future;
     }
 
     private void tryRun() {
         if (tryEnter()) {
-            CompletableFuture.runAsync(() -> this.run());
+            CompletableFuture.runAsync(this::run);
         }
     }
 

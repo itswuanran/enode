@@ -3,6 +3,7 @@ package com.enodeframework.samples.controller.note;
 import com.enodeframework.commanding.CommandResult;
 import com.enodeframework.commanding.CommandReturnType;
 import com.enodeframework.common.io.AsyncTaskResult;
+import com.enodeframework.common.io.Await;
 import com.enodeframework.rocketmq.message.RocketMQCommandService;
 import com.enodeframework.samples.commands.note.ChangeNoteTitleCommand;
 import com.enodeframework.samples.commands.note.CreateNoteCommand;
@@ -22,7 +23,7 @@ public class NoteController {
     public Object create(@RequestParam("id") String noteId, @RequestParam("t") String title, @RequestParam("c") String cid) {
         CreateNoteCommand command1 = new CreateNoteCommand(noteId, title);
         command1.setId(cid);
-        AsyncTaskResult<CommandResult> promise = CompletableFutureUtil.getValue(commandService.executeAsync(command1, CommandReturnType.EventHandled));
+        AsyncTaskResult<CommandResult> promise = Await.get(commandService.executeAsync(command1, CommandReturnType.EventHandled));
         return promise;
     }
 
@@ -30,7 +31,7 @@ public class NoteController {
     public Object change(@RequestParam("id") String noteId, @RequestParam("t") String title, @RequestParam("c") String cid) {
         ChangeNoteTitleCommand command2 = new ChangeNoteTitleCommand(noteId, title);
         command2.setId(cid);
-        AsyncTaskResult<CommandResult> promise = CompletableFutureUtil.getValue(commandService.executeAsync(command2, CommandReturnType.EventHandled));
+        AsyncTaskResult<CommandResult> promise = Await.get(commandService.executeAsync(command2, CommandReturnType.EventHandled));
         return promise;
     }
 }

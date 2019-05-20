@@ -6,20 +6,18 @@ import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.samples.domain.note.NoteTitleChanged;
 import com.enodeframework.samples.domain.note.NoteTitleChanged2;
 
-import java.util.concurrent.CompletableFuture;
-
 @Event
 public class NoteEventHandler {
 
     @Subscribe
-    public CompletableFuture<AsyncTaskResult> handleAsync(NoteTitleChanged evnt) {
+    public AsyncTaskResult handleAsync(NoteTitleChanged evnt) {
         System.out.println(String.format("Note denormalizered, title：%s, Version: %d", evnt.getTitle(), evnt.version()));
-        return CompletableFuture.completedFuture(AsyncTaskResult.Success);
+        return (AsyncTaskResult.Success);
     }
 
     @Subscribe
-    public CompletableFuture<AsyncTaskResult> handleAsync(NoteTitleChanged2 evnt) {
+    public AsyncTaskResult handleAsync(NoteTitleChanged2 evnt) {
         System.out.println(String.format("Note denormalizered1, title：%s, Version: %d", evnt.getTitle(), evnt.version()));
-        return CompletableFuture.completedFuture(AsyncTaskResult.Success);
+        return (AsyncTaskResult.Success);
     }
 }

@@ -12,5 +12,5 @@ public interface ICommandExecuteContext extends ICommandContext, ITrackingContex
      * @param commandResult
      * @return
      */
-    CompletableFuture onCommandExecutedAsync(CommandResult commandResult);
+    CompletableFuture<Void> onCommandExecutedAsync(CommandResult commandResult);
 }

@@ -4,7 +4,6 @@ import com.enodeframework.commanding.AggregateRootAlreadyExistException;
 import com.enodeframework.commanding.CommandResult;
 import com.enodeframework.commanding.CommandReturnType;
 import com.enodeframework.commanding.ICommandExecuteContext;
-import com.enodeframework.common.io.Await;
 import com.enodeframework.domain.IAggregateRoot;
 import com.enodeframework.domain.IAggregateStorage;
 import com.enodeframework.domain.IRepository;
@@ -48,10 +47,10 @@ public class CommandExecuteContext implements ICommandExecuteContext {
     }
 
     @Override
-    public CompletableFuture onCommandExecutedAsync(CommandResult commandResult) {
+    public CompletableFuture<Void> onCommandExecutedAsync(CommandResult commandResult) {
         messageContext.onMessageHandled(queueMessage);
         if (Strings.isNullOrEmpty(commandMessage.getReplyAddress())) {
-            return CompletableFuture.completedFuture(false);
+            return CompletableFuture.completedFuture(null);
         }
         return sendReplyService.sendReply(CommandReturnType.CommandExecuted.getValue(), commandResult, commandMessage.getReplyAddress());
     }
@@ -76,9 +75,9 @@ public class CommandExecuteContext implements ICommandExecuteContext {
      * @return
      */
     @Override
-    public CompletableFuture addAsync(IAggregateRoot aggregateRoot) {
+    public CompletableFuture<Void> addAsync(IAggregateRoot aggregateRoot) {
         add(aggregateRoot);
-        return CompletableFuture.completedFuture(true);
+        return CompletableFuture.completedFuture(null);
     }
 
     /**
@@ -105,18 +104,16 @@ public class CommandExecuteContext implements ICommandExecuteContext {
         } else {
             future = aggregateRootStorage.getAsync(aggregateRootType, aggregateRootId);
         }
-        future = future.thenApply(aggregateRoot -> {
+        return future.thenApply(aggregateRoot -> {
             if (aggregateRoot != null) {
                 trackingAggregateRootDict.putIfAbsent(aggregateRoot.uniqueId(), aggregateRoot);
             }
             return aggregateRoot;
         });
-        Await.get(future);
-        return future;
     }
 
     @Override
-    public <T extends IAggregateRoot> CompletableFuture getAsync(Object id, Class<T> clazz) {
+    public <T extends IAggregateRoot> CompletableFuture<T> getAsync(Object id, Class<T> clazz) {
         return getAsync(id, true, clazz);
     }
 

@@ -17,7 +17,7 @@ public class ProcessingCommand {
         this.items = items == null ? new HashMap<>() : items;
     }
 
-    public CompletableFuture completeAsync(CommandResult commandResult) {
+    public CompletableFuture<Void> completeAsync(CommandResult commandResult) {
         return commandExecuteContext.onCommandExecutedAsync(commandResult);
     }
 

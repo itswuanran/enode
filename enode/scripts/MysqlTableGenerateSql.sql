@@ -1,21 +1,17 @@
 CREATE TABLE `EventStream`
 (
-    `Sequence`              BIGINT AUTO_INCREMENT              NOT NULL,
-    `AggregateRootTypeName` VARCHAR(256)                       NOT NULL,
-    `AggregateRootId`       VARCHAR(36)                        NOT NULL,
-    `Version`               INT                                NOT NULL,
-    `CommandId`             VARCHAR(36)                        NOT NULL,
-    `CreatedOn`             DATETIME                           NOT NULL,
-    `Events`                MEDIUMTEXT
-                                CHARACTER SET utf8mb4
-                                    COLLATE utf8mb4_unicode_ci NOT NULL,
+    `Sequence`              BIGINT AUTO_INCREMENT NOT NULL,
+    `AggregateRootTypeName` VARCHAR(256)          NOT NULL,
+    `AggregateRootId`       VARCHAR(36)           NOT NULL,
+    `Version`               INT                   NOT NULL,
+    `CommandId`             VARCHAR(36)           NOT NULL,
+    `CreatedOn`             DATETIME              NOT NULL,
+    `Events`                MEDIUMTEXT            NOT NULL,
     PRIMARY KEY (`Sequence`),
     UNIQUE KEY `IX_EventStream_AggId_Version` (`AggregateRootId`, `Version`),
     UNIQUE KEY `IX_EventStream_AggId_CommandId` (`AggregateRootId`, `CommandId`)
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 1
-    DEFAULT CHARSET = UTF8;
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE `PublishedVersion`
 (
@@ -27,7 +23,5 @@ CREATE TABLE `PublishedVersion`
     `CreatedOn`             DATETIME              NOT NULL,
     PRIMARY KEY (`Sequence`),
     UNIQUE KEY `IX_PublishedVersion_AggId_Version` (`ProcessorName`, `AggregateRootId`, `Version`)
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 1
-    DEFAULT CHARSET = UTF8;
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
