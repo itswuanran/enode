@@ -28,13 +28,10 @@ import java.util.stream.Collectors;
 
 public abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface extends IObjectProxy & MethodInvocation, THandlerSource> implements IAssemblyInitializer {
     private Map<TKey, List<THandlerProxyInterface>> handlerDict = new HashMap<>();
-    private Map<TKey, MessageHandlerData<THandlerProxyInterface>> messageHandlerDict = new HashMap<>();
-    private MethodHandles.Lookup lookup = MethodHandles.lookup();
 
-    /**
-     * ICommandHandler、ICommandAsyncHandler、IMessageHandler、ITwoMessageHandler<,>、IThreeMessageHandler<,,>
-     */
-    protected abstract Class getGenericHandlerType();
+    private Map<TKey, MessageHandlerData<THandlerProxyInterface>> messageHandlerDict = new HashMap<>();
+
+    private MethodHandles.Lookup lookup = MethodHandles.lookup();
 
     protected abstract TKey getKey(Method method);
 

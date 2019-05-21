@@ -1,6 +1,5 @@
 package com.enodeframework.infrastructure;
 
-import com.enodeframework.common.io.Await;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,6 +8,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static com.enodeframework.common.io.Task.await;
 
 public class ProcessingMessageMailbox<X extends IProcessingMessage<X, Y>, Y extends IMessage> {
     private static final Logger logger = LoggerFactory.getLogger(ProcessingMessageMailbox.class);
@@ -74,7 +75,7 @@ public class ProcessingMessageMailbox<X extends IProcessingMessage<X, Y>, Y exte
             processingMessage = messageQueue.poll();
 
             if (processingMessage != null) {
-                Await.get(messageHandler.handleAsync(processingMessage));
+                await(messageHandler.handleAsync(processingMessage));
             }
         } catch (Exception ex) {
             logger.error(String.format("Message mailbox run has unknown exception, routingKey: %s, commandId: %s", routingKey, processingMessage != null ? processingMessage.getMessage().id() : ""), ex);

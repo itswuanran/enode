@@ -1,6 +1,7 @@
 package com.enodeframework.domain.impl;
 
 import com.enodeframework.common.io.AsyncTaskResult;
+import com.enodeframework.common.io.Task;
 import com.enodeframework.domain.IAggregateRoot;
 import com.enodeframework.domain.IAggregateRootFactory;
 import com.enodeframework.domain.IAggregateSnapshotter;
@@ -58,7 +59,7 @@ public class EventSourcingAggregateStorage implements IAggregateStorage {
         CompletableFuture<T> aggregateRootFuture = aggregateSnapshotter.restoreFromSnapshotAsync(aggregateRootType, aggregateRootId);
         CompletableFuture<T> ret = aggregateRootFuture.thenCompose((aggregateRoot) -> {
             if (aggregateRoot == null) {
-                return CompletableFuture.completedFuture(null);
+                return Task.CompletedTask;
             }
             if (aggregateRoot.getClass() != aggregateRootType || !aggregateRoot.uniqueId().equals(aggregateRootId)) {
                 throw new RuntimeException(String.format("AggregateRoot recovery from snapshot is invalid as the aggregateRootType or aggregateRootId is not matched. Snapshot: [aggregateRootType:%s,aggregateRootId:%s], expected: [aggregateRootType:%s,aggregateRootId:%s]",

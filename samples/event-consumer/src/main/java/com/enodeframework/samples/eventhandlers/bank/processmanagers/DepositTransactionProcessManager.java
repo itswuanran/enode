@@ -4,7 +4,7 @@ import com.enodeframework.annotation.Event;
 import com.enodeframework.annotation.Subscribe;
 import com.enodeframework.commanding.ICommandService;
 import com.enodeframework.common.io.AsyncTaskResult;
-import com.enodeframework.common.io.Await;
+import com.enodeframework.common.io.Task;
 import com.enodeframework.samples.commands.bank.AddTransactionPreparationCommand;
 import com.enodeframework.samples.commands.bank.CommitTransactionPreparationCommand;
 import com.enodeframework.samples.commands.bank.ConfirmDepositCommand;
@@ -35,7 +35,7 @@ public class DepositTransactionProcessManager {
                 PreparationType.CreditPreparation,
                 evnt.Amount);
         command.setId(evnt.id());
-        return Await.get(_commandService.sendAsync(command));
+        return Task.get(_commandService.sendAsync(command));
     }
 
     @Subscribe
@@ -45,7 +45,7 @@ public class DepositTransactionProcessManager {
 
             ConfirmDepositPreparationCommand command = new ConfirmDepositPreparationCommand(evnt.TransactionPreparation.TransactionId);
             command.setId(evnt.id());
-            return Await.get(_commandService.sendAsync(command));
+            return Task.get(_commandService.sendAsync(command));
         }
         return (AsyncTaskResult.Success);
     }
@@ -54,7 +54,7 @@ public class DepositTransactionProcessManager {
     public AsyncTaskResult handleAsync(DepositTransactionPreparationCompletedEvent evnt) {
         CommitTransactionPreparationCommand command = new CommitTransactionPreparationCommand(evnt.AccountId, evnt.aggregateRootId());
         command.setId(evnt.id());
-        return Await.get(_commandService.sendAsync(command));
+        return Task.get(_commandService.sendAsync(command));
     }
 
     @Subscribe
@@ -63,7 +63,7 @@ public class DepositTransactionProcessManager {
                 evnt.TransactionPreparation.preparationType == PreparationType.CreditPreparation) {
             ConfirmDepositCommand command = new ConfirmDepositCommand(evnt.TransactionPreparation.TransactionId);
             command.setId(evnt.id());
-            return Await.get(_commandService.sendAsync(command));
+            return Task.get(_commandService.sendAsync(command));
         }
         return (AsyncTaskResult.Success);
     }

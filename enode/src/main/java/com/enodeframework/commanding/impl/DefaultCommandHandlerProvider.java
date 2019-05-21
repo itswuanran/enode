@@ -2,7 +2,6 @@ package com.enodeframework.commanding.impl;
 
 import com.enodeframework.commanding.ICommand;
 import com.enodeframework.commanding.ICommandContext;
-import com.enodeframework.commanding.ICommandHandler;
 import com.enodeframework.commanding.ICommandHandlerProvider;
 import com.enodeframework.commanding.ICommandHandlerProxy;
 import com.enodeframework.common.Constants;
@@ -16,11 +15,6 @@ public class DefaultCommandHandlerProvider extends AbstractHandlerProvider<Class
 
     @Autowired
     private IObjectContainer objectContainer;
-
-    @Override
-    protected Class<ICommandHandler> getGenericHandlerType() {
-        return ICommandHandler.class;
-    }
 
     @Override
     protected Class getKey(Method method) {
@@ -52,6 +46,9 @@ public class DefaultCommandHandlerProvider extends AbstractHandlerProvider<Class
             return false;
         }
         if (!ICommand.class.isAssignableFrom(method.getParameterTypes()[1])) {
+            return false;
+        }
+        if (!isMethodAnnotationSubscribe(method)) {
             return false;
         }
         return true;

@@ -14,6 +14,7 @@ import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.common.io.AsyncTaskStatus;
 import com.enodeframework.common.io.IOHelper;
 import com.enodeframework.common.io.IORuntimeException;
+import com.enodeframework.common.io.Task;
 import com.enodeframework.common.serializing.IJsonSerializer;
 import com.enodeframework.domain.IAggregateRoot;
 import com.enodeframework.eventing.DomainEventStream;
@@ -107,7 +108,7 @@ public class DefaultProcessingCommandHandler implements IProcessingCommandHandle
                 return completeCommand(processingCommand, CommandStatus.Failed, String.class.getName(), errorMessage);
             }
         }
-        return CompletableFuture.completedFuture(null);
+        return Task.CompletedTask;
     }
 
     private CompletableFuture<Void> handleCommand(ProcessingCommand processingCommand, ICommandHandlerProxy commandHandler) {
@@ -330,7 +331,7 @@ public class DefaultProcessingCommandHandler implements IProcessingCommandHandle
                 () -> String.format("[command:[id:%s,type:%s],handlerType:%s]", command.id(), command.getClass().getName(), commandHandler.getInnerObject().getClass().getName()),
                 errorMessage -> commitChangesAsync(processingCommand, false, null, errorMessage),
                 retryTimes, false);
-        return CompletableFuture.completedFuture(null);
+        return Task.CompletedTask;
     }
 
     private void commitChangesAsync(ProcessingCommand processingCommand, boolean success, IApplicationMessage message, String errorMessage) {

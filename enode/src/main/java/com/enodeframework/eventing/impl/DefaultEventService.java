@@ -6,6 +6,7 @@ import com.enodeframework.commanding.ICommand;
 import com.enodeframework.commanding.ProcessingCommand;
 import com.enodeframework.commanding.ProcessingCommandMailbox;
 import com.enodeframework.common.io.IOHelper;
+import com.enodeframework.common.io.Task;
 import com.enodeframework.common.scheduling.IScheduleService;
 import com.enodeframework.domain.IMemoryCache;
 import com.enodeframework.eventing.DomainEventStream;
@@ -212,7 +213,7 @@ public class DefaultEventService implements IEventService {
         } finally {
             commandMailBox.resume();
         }
-        return CompletableFuture.completedFuture(null);
+        return Task.CompletedTask;
     }
 
     private void tryToRepublishEventAsync(EventCommittingContext context, int retryTimes) {
@@ -313,7 +314,7 @@ public class DefaultEventService implements IEventService {
         } catch (Exception ex) {
             logger.error("Refresh aggregate memory cache to latest version has unknown exception, aggregateRootTypeName:{}, aggregateRootId:{}", aggregateRootTypeName, aggregateRootId, ex);
         }
-        return CompletableFuture.completedFuture(null);
+        return Task.CompletedTask;
     }
 
     private void publishDomainEventAsync(ProcessingCommand processingCommand, DomainEventStreamMessage eventStream, int retryTimes) {

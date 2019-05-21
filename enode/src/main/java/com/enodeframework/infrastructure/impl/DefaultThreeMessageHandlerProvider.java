@@ -4,7 +4,6 @@ import com.enodeframework.common.Constants;
 import com.enodeframework.common.container.IObjectContainer;
 import com.enodeframework.eventing.IDomainEvent;
 import com.enodeframework.infrastructure.IMessageHandlerProxy3;
-import com.enodeframework.infrastructure.IThreeMessageHandler;
 import com.enodeframework.infrastructure.IThreeMessageHandlerProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -16,11 +15,6 @@ public class DefaultThreeMessageHandlerProvider extends AbstractHandlerProvider<
 
     @Autowired
     private IObjectContainer objectContainer;
-
-    @Override
-    protected Class<IThreeMessageHandler> getGenericHandlerType() {
-        return IThreeMessageHandler.class;
-    }
 
     @Override
     protected ManyType getKey(Method method) {

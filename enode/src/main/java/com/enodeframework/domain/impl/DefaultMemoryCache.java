@@ -1,5 +1,6 @@
 package com.enodeframework.domain.impl;
 
+import com.enodeframework.common.io.Task;
 import com.enodeframework.common.scheduling.IScheduleService;
 import com.enodeframework.domain.AggregateCacheInfo;
 import com.enodeframework.domain.IAggregateRoot;
@@ -45,7 +46,7 @@ public class DefaultMemoryCache implements IMemoryCache {
         }
         AggregateCacheInfo aggregateRootInfo = aggregateRootInfoDict.get(aggregateRootId.toString());
         if (aggregateRootInfo == null) {
-            return CompletableFuture.completedFuture(null);
+            return Task.CompletedTask;
         }
         IAggregateRoot aggregateRoot = aggregateRootInfo.getAggregateRoot();
         if (aggregateRoot.getClass() != aggregateRootType) {
@@ -85,7 +86,7 @@ public class DefaultMemoryCache implements IMemoryCache {
             Class aggregateRootType = typeNameProvider.getType(aggregateRootTypeName);
             if (aggregateRootType == null) {
                 logger.error("Could not find aggregate root type by aggregate root type name [{}].", aggregateRootTypeName);
-                return CompletableFuture.completedFuture(null);
+                return Task.CompletedTask;
             }
             CompletableFuture<IAggregateRoot> future = aggregateStorage.getAsync(aggregateRootType, aggregateRootId);
             return future.thenAccept(aggregateRoot -> {
@@ -96,7 +97,7 @@ public class DefaultMemoryCache implements IMemoryCache {
         } catch (Exception ex) {
             logger.error(String.format("Refresh aggregate from event store has unknown exception, aggregateRootTypeName:%s, aggregateRootId:%s", aggregateRootTypeName, aggregateRootId), ex);
         }
-        return CompletableFuture.completedFuture(null);
+        return Task.CompletedTask;
     }
 
     @Override

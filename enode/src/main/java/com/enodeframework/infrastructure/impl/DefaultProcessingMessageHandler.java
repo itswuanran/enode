@@ -2,6 +2,7 @@ package com.enodeframework.infrastructure.impl;
 
 import com.enodeframework.common.io.AsyncTaskResult;
 import com.enodeframework.common.io.IOHelper;
+import com.enodeframework.common.io.Task;
 import com.enodeframework.eventing.DomainEventStreamMessage;
 import com.enodeframework.infrastructure.IMessage;
 import com.enodeframework.infrastructure.IMessageDispatcher;
@@ -67,7 +68,7 @@ public class DefaultProcessingMessageHandler<X extends IProcessingMessage<X, Y>,
                 errorMessage ->
                         logger.error(String.format("Get published version has unknown exception, the code should not be run to here, errorMessage: %s", errorMessage)),
                 retryTimes, true);
-        return CompletableFuture.completedFuture(null);
+        return Task.CompletedTask;
     }
 
     private void doDispatchProcessingMessageAsync(ProcessingDomainEventStreamMessage processingMessage, int retryTimes) {
@@ -76,9 +77,7 @@ public class DefaultProcessingMessageHandler<X extends IProcessingMessage<X, Y>,
                 currentRetryTimes -> doDispatchProcessingMessageAsync(processingMessage, currentRetryTimes),
                 result -> updatePublishedVersionAsync(processingMessage, 0),
                 () -> String.format("sequence message [messageId:%s, messageType:%s, aggregateRootId:%s, aggregateRootVersion:%d]", processingMessage.getMessage().id(), processingMessage.getMessage().getClass().getName(), processingMessage.getMessage().aggregateRootStringId(), processingMessage.getMessage().version()),
-                errorMessage ->
-
-                        logger.error(String.format("Dispatching message has unknown exception, the code should not be run to here, errorMessage: %s", errorMessage)),
+                errorMessage -> logger.error("Dispatching message has unknown exception, the code should not be run to here, errorMessage: {}", errorMessage),
                 retryTimes, true);
     }
 
@@ -86,10 +85,7 @@ public class DefaultProcessingMessageHandler<X extends IProcessingMessage<X, Y>,
         ioHelper.tryAsyncActionRecursively("UpdatePublishedVersionAsync",
                 () -> publishedVersionStore.updatePublishedVersionAsync(getName(), processingMessage.getMessage().aggregateRootTypeName(), processingMessage.getMessage().aggregateRootStringId(), processingMessage.getMessage().version()),
                 currentRetryTimes -> updatePublishedVersionAsync(processingMessage, currentRetryTimes),
-
-                result -> {
-                    processingMessage.complete();
-                },
+                result -> processingMessage.complete(),
                 () -> String.format("sequence message [messageId:%s, messageType:%s, aggregateRootId:%s, aggregateRootVersion:%d]", processingMessage.getMessage().id(), processingMessage.getMessage().getClass().getName(), processingMessage.getMessage().aggregateRootStringId(), processingMessage.getMessage().version()),
                 errorMessage ->
                         logger.error(String.format("Update published version has unknown exception, the code should not be run to here, errorMessage: %s", errorMessage)),

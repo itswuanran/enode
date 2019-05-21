@@ -1,6 +1,6 @@
 package com.enodeframework.commanding;
 
-import com.enodeframework.common.io.Await;
+import com.enodeframework.common.io.Task;
 import com.enodeframework.common.threading.ManualResetEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +12,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static com.enodeframework.common.io.Task.await;
 
 public class ProcessingCommandMailbox {
     private static final Logger logger = LoggerFactory.getLogger(ProcessingCommandMailbox.class);
@@ -111,7 +113,7 @@ public class ProcessingCommandMailbox {
                 logger.error(String.format("Command mailbox complete command failed, commandId: %s, aggregateRootId: %s", processingCommand.getMessage().id(), processingCommand.getMessage().getAggregateRootId()), ex);
             }
         }
-        return CompletableFuture.completedFuture(null);
+        return Task.CompletedTask;
     }
 
     public void run() {
@@ -129,7 +131,7 @@ public class ProcessingCommandMailbox {
                 processingCommand = getProcessingCommand(consumingSequence);
                 if (processingCommand != null) {
                     // await 阻塞操作
-                    Await.get(messageHandler.handle(processingCommand));
+                    await(messageHandler.handle(processingCommand));
                 }
                 consumingSequence++;
                 count++;

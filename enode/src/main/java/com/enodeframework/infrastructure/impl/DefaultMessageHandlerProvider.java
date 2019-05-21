@@ -3,7 +3,6 @@ package com.enodeframework.infrastructure.impl;
 import com.enodeframework.common.Constants;
 import com.enodeframework.common.container.IObjectContainer;
 import com.enodeframework.infrastructure.IMessage;
-import com.enodeframework.infrastructure.IMessageHandler;
 import com.enodeframework.infrastructure.IMessageHandlerProvider;
 import com.enodeframework.infrastructure.IMessageHandlerProxy1;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,11 +13,6 @@ public class DefaultMessageHandlerProvider extends AbstractHandlerProvider<Class
 
     @Autowired
     private IObjectContainer objectContainer;
-
-    @Override
-    protected Class getGenericHandlerType() {
-        return IMessageHandler.class;
-    }
 
     @Override
     protected Class getKey(Method method) {

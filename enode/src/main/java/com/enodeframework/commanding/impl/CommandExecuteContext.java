@@ -4,6 +4,7 @@ import com.enodeframework.commanding.AggregateRootAlreadyExistException;
 import com.enodeframework.commanding.CommandResult;
 import com.enodeframework.commanding.CommandReturnType;
 import com.enodeframework.commanding.ICommandExecuteContext;
+import com.enodeframework.common.io.Task;
 import com.enodeframework.domain.IAggregateRoot;
 import com.enodeframework.domain.IAggregateStorage;
 import com.enodeframework.domain.IRepository;
@@ -50,7 +51,7 @@ public class CommandExecuteContext implements ICommandExecuteContext {
     public CompletableFuture<Void> onCommandExecutedAsync(CommandResult commandResult) {
         messageContext.onMessageHandled(queueMessage);
         if (Strings.isNullOrEmpty(commandMessage.getReplyAddress())) {
-            return CompletableFuture.completedFuture(null);
+            return Task.CompletedTask;
         }
         return sendReplyService.sendReply(CommandReturnType.CommandExecuted.getValue(), commandResult, commandMessage.getReplyAddress());
     }
@@ -77,7 +78,7 @@ public class CommandExecuteContext implements ICommandExecuteContext {
     @Override
     public CompletableFuture<Void> addAsync(IAggregateRoot aggregateRoot) {
         add(aggregateRoot);
-        return CompletableFuture.completedFuture(null);
+        return Task.CompletedTask;
     }
 
     /**

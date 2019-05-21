@@ -4,7 +4,6 @@ import com.enodeframework.common.Constants;
 import com.enodeframework.common.container.IObjectContainer;
 import com.enodeframework.eventing.IDomainEvent;
 import com.enodeframework.infrastructure.IMessageHandlerProxy2;
-import com.enodeframework.infrastructure.ITwoMessageHandler;
 import com.enodeframework.infrastructure.ITwoMessageHandlerProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -16,11 +15,6 @@ public class DefaultTwoMessageHandlerProvider extends AbstractHandlerProvider<Ma
 
     @Autowired
     private IObjectContainer objectContainer;
-
-    @Override
-    protected Class<ITwoMessageHandler> getGenericHandlerType() {
-        return ITwoMessageHandler.class;
-    }
 
     @Override
     protected ManyType getKey(Method method) {
@@ -43,7 +37,6 @@ public class DefaultTwoMessageHandlerProvider extends AbstractHandlerProvider<Ma
                 return false;
             }
         }
-
         return true;
     }
 

@@ -1,7 +1,6 @@
 package com.enodeframework.commanding.impl;
 
 import com.enodeframework.commanding.ICommand;
-import com.enodeframework.commanding.ICommandAsyncHandler;
 import com.enodeframework.commanding.ICommandAsyncHandlerProvider;
 import com.enodeframework.commanding.ICommandAsyncHandlerProxy;
 import com.enodeframework.common.Constants;
@@ -15,11 +14,6 @@ public class DefaultCommandAsyncHandlerProvider extends AbstractHandlerProvider<
 
     @Autowired
     private IObjectContainer objectContainer;
-
-    @Override
-    protected Class<ICommandAsyncHandler> getGenericHandlerType() {
-        return ICommandAsyncHandler.class;
-    }
 
     @Override
     protected Class getKey(Method method) {
@@ -48,6 +42,9 @@ public class DefaultCommandAsyncHandlerProvider extends AbstractHandlerProvider<
             return false;
         }
         if (!ICommand.class.isAssignableFrom(method.getParameterTypes()[0])) {
+            return false;
+        }
+        if (!isMethodAnnotationSubscribe(method)) {
             return false;
         }
         return true;
