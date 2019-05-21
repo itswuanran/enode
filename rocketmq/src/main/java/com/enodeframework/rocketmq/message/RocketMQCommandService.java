@@ -35,9 +35,9 @@ public class RocketMQCommandService extends AbstractCommandService {
 
     @Override
     public CompletableFuture<AsyncTaskResult<CommandResult>> executeAsync(ICommand command, CommandReturnType commandReturnType) {
+        CompletableFuture<AsyncTaskResult<CommandResult>> taskCompletionSource = new CompletableFuture<>();
         try {
             Ensure.notNull(commandResultProcessor, "commandResultProcessor");
-            CompletableFuture<AsyncTaskResult<CommandResult>> taskCompletionSource = new CompletableFuture<>();
             commandResultProcessor.registerProcessingCommand(command, commandReturnType, taskCompletionSource);
             QueueMessage queueMessage = buildCommandMessage(command, true);
             Message message = RocketMQTool.covertToProducerRecord(queueMessage);
@@ -51,10 +51,10 @@ public class RocketMQCommandService extends AbstractCommandService {
                     taskCompletionSource.complete(new AsyncTaskResult<>(sendResult.getStatus(), sendResult.getErrorMessage()));
                 }
             });
-            return taskCompletionSource;
         } catch (Exception ex) {
-            return CompletableFuture.completedFuture(new AsyncTaskResult<>(AsyncTaskStatus.Failed, ex.getMessage()));
+            taskCompletionSource.complete(new AsyncTaskResult<>(AsyncTaskStatus.Failed, ex.getMessage()));
         }
+        return taskCompletionSource;
     }
 
     public DefaultMQProducer getDefaultMQProducer() {

@@ -1,4 +1,4 @@
-package com.enodeframework.queue.command;
+package com.enodeframework.kafka;
 
 public enum ConsumeStatus {
     /**

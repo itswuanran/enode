@@ -1,10 +1,11 @@
 package com.enodeframework.kafka;
 
 import com.enodeframework.common.io.AsyncTaskResult;
-import org.apache.kafka.clients.producer.Producer;
+import com.enodeframework.common.io.AsyncTaskStatus;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -12,12 +13,16 @@ public class SendMessageService {
 
     private static Logger logger = LoggerFactory.getLogger(SendMessageService.class);
 
-    public CompletableFuture<AsyncTaskResult> sendMessageAsync(Producer<String, String> producer, ProducerRecord<String, String> record) {
-        producer.send(record, (metadata, exception) -> {
-            if (exception != null) {
-                logger.error("send message failed. topic:{}, metadata:{}", metadata.topic(), metadata.toString(), exception);
+    public static CompletableFuture<AsyncTaskResult> sendMessageAsync(KafkaTemplate<String, String> producer, ProducerRecord<String, String> record) {
+        CompletableFuture<AsyncTaskResult> future = new CompletableFuture<>();
+        producer.send(record).completable().whenComplete((r, e) -> {
+            if (e != null) {
+                future.complete(new AsyncTaskResult(AsyncTaskStatus.IOException));
+                logger.error("send kafka msg error, record:{}", record, e);
+                return;
             }
+            future.complete(AsyncTaskResult.Success);
         });
-        return CompletableFuture.completedFuture(AsyncTaskResult.Success);
+        return future;
     }
 }

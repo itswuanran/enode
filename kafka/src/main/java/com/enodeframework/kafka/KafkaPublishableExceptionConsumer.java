@@ -2,7 +2,6 @@ package com.enodeframework.kafka;
 
 import com.enodeframework.queue.IMessageContext;
 import com.enodeframework.queue.QueueMessage;
-import com.enodeframework.queue.command.ConsumeStatus;
 import com.enodeframework.queue.publishableexceptions.AbstractPublishableExceptionListener;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 

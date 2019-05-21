@@ -26,12 +26,15 @@ ENode是一个基于【DDD】【CQRS】【ES】【EDA】【In-Memory】架构风
 ## 系统设计
 > https://www.cnblogs.com/netfocus/p/3859371.html
 
+补充：系统依赖注入的实现强耦合了Spring，目前只能在Spring项目中使用，参见Samples项目
+
 ## 注意点
 ### ICommandService sendAsync 和 executeAsync的区别
 sendAsync只关注发送消息的结果
-executeAsync发送消息的同时，关注命令的返回结果。
-CommandReturnType.CommandExecuted：命令执行完成，event发布成功后返回结果
-CommandReturnType.EventHandled：事件处理完成后才返回结果
+
+executeAsync发送消息的同时，关注命令的返回结果，返回的时机如下：
+- CommandReturnType.CommandExecuted：命令执行完成，event发布成功后返回结果
+- CommandReturnType.EventHandled：事件处理完成后才返回结果
 
 ### event使用哪个订阅者发送处理结果
 event的订阅者可能有很多个，所以enode只要求有一个订阅者处理完事件后发送结果给发送命令的人即可，通过AbstractDomainEventListener中sendEventHandledMessage参数来设置是否发送，最终来决定由哪个订阅者来发送命令处理结果
@@ -42,6 +45,13 @@ ICommandHandler是为了操作内存中的聚合根的，所以不会有异步�
 ICommandHandler，ICommandAsyncHandler这两个接口是用于不同的业务场景，ICommandHandler.handleAsync方法执行完成后，框架要从context中获取当前修改的聚合根的领域事件，然后去提交。而ICommandAsyncHandler.handleAsync方法执行完成后，不会有这个逻辑，而是看一下handleAsync方法执行的异步消息结果是什么，也就是IApplicationMessage。
 
 ## 使用说明
+
+### 编程方式
+新增了三个注解，系统限定了只扫描@Command和@Event标识的类，执行的方法上需要添加@Subscribe注解
+- @Command
+- @Event
+- @Subscribe
+
 ### Kafka配置 
 https://kafka.apache.org/quickstart
 ```bash
@@ -62,15 +72,15 @@ nohup sh bin/mqbroker -n 127.0.0.1:9876 &
  
 - command-sender
 
-Command端应用，一般为http服务
+Command端应用，用来接收请求，将请求发送到消息队列
 
 - command-consumer
 
-命令处理服务
+异步消费命令消息，将领域消息持久化才算是执行成功，命令的结果可以发送到命令发送时注册的监听器
 
 - event-consumer
 
-领域事件处理服务
+领域事件处理服务，事件可能会多次投递，所以需要消费端逻辑保证幂等消费
 
 ### 测试
 http://localhost:8001/note/create?id=noteid&t=notetitle&c=commandid

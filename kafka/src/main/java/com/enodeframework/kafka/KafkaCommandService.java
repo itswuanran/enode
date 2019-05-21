@@ -8,30 +8,27 @@ import com.enodeframework.common.io.AsyncTaskStatus;
 import com.enodeframework.common.utilities.Ensure;
 import com.enodeframework.queue.QueueMessage;
 import com.enodeframework.queue.command.AbstractCommandService;
-import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.concurrent.CompletableFuture;
 
 public class KafkaCommandService extends AbstractCommandService {
 
-    private KafkaProducer<String, String> producer;
-    @Autowired
-    private SendMessageService sendMessageService;
+    private KafkaTemplate<String, String> producer;
 
-    public KafkaProducer<String, String> getProducer() {
+    public KafkaTemplate<String, String> getProducer() {
         return producer;
     }
 
-    public void setProducer(KafkaProducer<String, String> producer) {
+    public void setProducer(KafkaTemplate<String, String> producer) {
         this.producer = producer;
     }
 
     @Override
     public CompletableFuture<AsyncTaskResult> sendAsync(ICommand command) {
         try {
-            return sendMessageService.sendMessageAsync(producer, buildKafkaMessage(command, false));
+            return SendMessageService.sendMessageAsync(producer, buildKafkaMessage(command, false));
         } catch (Exception ex) {
             return CompletableFuture.completedFuture(new AsyncTaskResult<>(AsyncTaskStatus.Failed, ex.getMessage()));
         }
@@ -44,27 +41,23 @@ public class KafkaCommandService extends AbstractCommandService {
 
     @Override
     public CompletableFuture<AsyncTaskResult<CommandResult>> executeAsync(ICommand command, CommandReturnType commandReturnType) {
+        CompletableFuture<AsyncTaskResult<CommandResult>> taskCompletionSource = new CompletableFuture<>();
         try {
             Ensure.notNull(commandResultProcessor, "commandResultProcessor");
-
-            CompletableFuture<AsyncTaskResult<CommandResult>> taskCompletionSource = new CompletableFuture<>();
             commandResultProcessor.registerProcessingCommand(command, commandReturnType, taskCompletionSource);
-
-            CompletableFuture<AsyncTaskResult> sendMessageAsync = sendMessageService.sendMessageAsync(producer, buildKafkaMessage(command, true));
+            CompletableFuture<AsyncTaskResult> sendMessageAsync = SendMessageService.sendMessageAsync(producer, buildKafkaMessage(command, true));
             sendMessageAsync.thenAccept(sendResult -> {
                 if (sendResult.getStatus().equals(AsyncTaskStatus.Success)) {
                     //commandResultProcessor中会继续等命令或事件处理完成的状态
                 } else {
-                    //TODO 是否删除下面一行代码
                     taskCompletionSource.complete(new AsyncTaskResult<>(sendResult.getStatus(), sendResult.getErrorMessage()));
                     commandResultProcessor.processFailedSendingCommand(command);
                 }
             });
-
-            return taskCompletionSource;
         } catch (Exception ex) {
-            return CompletableFuture.completedFuture(new AsyncTaskResult<>(AsyncTaskStatus.Failed, ex.getMessage()));
+            taskCompletionSource.complete(new AsyncTaskResult<>(AsyncTaskStatus.Failed, ex.getMessage()));
         }
+        return taskCompletionSource;
     }
 
 

@@ -18,7 +18,11 @@ import com.enodeframework.samples.domain.bank.deposittransaction.DepositTransact
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * 银行存款交易流程管理器，用于协调银行存款交易流程中各个参与者聚合根之间的消息交互。
+ * 银行存款交易流程管理器，用于协调银行存款交易流程中各个参与者聚合根之间的消息交互
+ * IMessageHandler<DepositTransactionStartedEvent>,                    //存款交易已开始
+ * IMessageHandler<DepositTransactionPreparationCompletedEvent>,       //存款交易已提交
+ * IMessageHandler<TransactionPreparationAddedEvent>,                  //账户预操作已添加
+ * IMessageHandler<TransactionPreparationCommittedEvent>               //账户预操作已提交
  */
 @Event
 public class DepositTransactionProcessManager {

@@ -3,7 +3,6 @@ package com.enodeframework.kafka;
 import com.enodeframework.queue.IMessageContext;
 import com.enodeframework.queue.QueueMessage;
 import com.enodeframework.queue.command.AbstractCommandListener;
-import com.enodeframework.queue.command.ConsumeStatus;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 public class KafkaCommandConsumer extends AbstractCommandListener implements IMessageListener {
@@ -13,5 +12,4 @@ public class KafkaCommandConsumer extends AbstractCommandListener implements IMe
         handle(queueMessage, context);
         return ConsumeStatus.CONSUMESUCCESS;
     }
-
 }

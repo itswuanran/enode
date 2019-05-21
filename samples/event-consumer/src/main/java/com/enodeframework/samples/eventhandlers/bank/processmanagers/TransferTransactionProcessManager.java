@@ -29,6 +29,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * IMessageHandler<TransferTransactionStartedEvent>,                  //转账交易已开始
+ * IMessageHandler<AccountValidatePassedMessage>,                     //账户验证已通过
+ * IMessageHandler<AccountValidateFailedMessage>,                     //账户验证未通过
+ * IMessageHandler<AccountValidatePassedConfirmCompletedEvent>,       //两个账户的验证通过事件都已确认
+ * IMessageHandler<TransactionPreparationAddedEvent>,                 //账户预操作已添加
+ * IMessageHandler<InsufficientBalanceException>,                     //账户余额不足
+ * IMessageHandler<TransferOutPreparationConfirmedEvent>,             //转账交易预转出已确认
+ * IMessageHandler<TransferInPreparationConfirmedEvent>,              //转账交易预转入已确认
+ * IMessageHandler<TransactionPreparationCommittedEvent>              //账户预操作已提交
+ */
 @Event
 public class TransferTransactionProcessManager {
 
