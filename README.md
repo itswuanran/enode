@@ -212,7 +212,6 @@ spring.enode.mq.topic.exception=EnodeTestExceptionTopic
     }
 ```
 
-
 ### MySQL & TiDB
 需要下面两张表来存储事件
 ```mysql
@@ -322,13 +321,13 @@ public class BankAccountCommandHandler {
      * 验证账户是否合法
      */
     @Subscribe
-    public IApplicationMessage handleAsync(ValidateAccountCommand command) {
-        IApplicationMessage applicationMessage = new AccountValidatePassedMessage(command.getAggregateRootId(), command.TransactionId);
+    public void handleAsync(ICommandContext context, ValidateAccountCommand command) {
+        IApplicationMessage applicationMessage = new AccountValidatePassedMessage(command.getAggregateRootId(), command.transactionId);
         //此处应该会调用外部接口验证账号是否合法，这里仅仅简单通过账号是否以INVALID字符串开头来判断是否合法；根据账号的合法性，返回不同的应用层消息
         if (command.getAggregateRootId().startsWith("INVALID")) {
-            applicationMessage = new AccountValidateFailedMessage(command.getAggregateRootId(), command.TransactionId, "账户不合法.");
+            applicationMessage = new AccountValidateFailedMessage(command.getAggregateRootId(), command.transactionId, "账户不合法.");
         }
-        return applicationMessage;
+        context.setApplicationMessage(applicationMessage);
     }
 
     /**
@@ -424,42 +423,8 @@ nohup sh bin/mqbroker -n 127.0.0.1:9876 &
 - 领域事件处理服务
 > 事件可能会多次投递，所以需要消费端逻辑保证幂等处理，这里框架无法完成支持，需要开发者自己实现
 ### 测试
-#### 创建聚合
-- http://localhost:8080/note/create?id=noteid&t=notetitle&c=commandid
-### 压测数据
-机器配置：MacBook Pro (Retina, 15-inch, Mid 2015)
-CPU：2.2 GHz Intel Core i7
-内存：16 GB 1600 MHz DDR3
-硬盘：SSD
-
-#### MySQL
-
-| 模式 | 数据量 | 处理耗时 | QPS |
-|:----:|:----:|:----:|:----:|
-|SendOneWay|10000| 737     |**|
-|SendOneWay|50000| 4856    |**|
-|SendOneWay|100000| 8162   |**|
-|EventHandle|5000| 7218    |**|
-|EventHandle|10000| 11066  |**|
-|EventHandle|50000| 71014  |**|
-|CommandHandle|5000| 4001  |**|
-|CommandHandle|10000| 7957 |**|
-|CommandHandle|50000| 44531 |**|
-
-#### InMemory
-
-| 模式 | 数据量 | 处理耗时 | QPS |
-|:----:|:----:|:----:|:----:|
-|SendOneWay|10000| 1425     |**|
-|SendOneWay|50000| 8383    |**|
-|SendOneWay|100000| 12914   |**|
-|EventHandle|5000| 1172    |**|
-|EventHandle|10000| 2403  |**|
-|EventHandle|50000| 12124  |**|
-|CommandHandle|5000| 985  |**|
-|CommandHandle|10000| 1939 |**|
-|CommandHandle|50000| 11265 |**|
-
+- 接入了Swagger3.0，打开swagger-ui即可
+http://localhost:8080/swagger-ui/
 
 ## 参考项目
 - https://github.com/tangxuehua/enode

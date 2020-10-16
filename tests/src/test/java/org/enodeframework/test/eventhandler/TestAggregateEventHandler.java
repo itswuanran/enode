@@ -12,7 +12,7 @@ public class TestAggregateEventHandler {
 
     @Subscribe
     public void handleAsync(TestAggregateCreated evnt) {
-        logger.info("TestAggregateCreated evnt executed:{}", evnt.title);
+        logger.info("TestAggregateCreated evnt executed:{}", evnt.getTitle());
 
     }
 }

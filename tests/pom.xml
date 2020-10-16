@@ -75,5 +75,10 @@
             <artifactId>HikariCP</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <version>1.26</version>
+        </dependency>
     </dependencies>
 </project>

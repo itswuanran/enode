@@ -30,6 +30,11 @@
                 <artifactId>samples-domain</artifactId>
                 <version>${revision}</version>
             </dependency>
+            <dependency>
+                <groupId>io.springfox</groupId>
+                <artifactId>springfox-boot-starter</artifactId>
+                <version>3.0.0</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <dependencies>
@@ -56,6 +61,10 @@
         <dependency>
             <groupId>org.enodeframework</groupId>
             <artifactId>enode-kafka</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-boot-starter</artifactId>
         </dependency>
     </dependencies>
 </project>
