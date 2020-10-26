@@ -6,12 +6,12 @@ import java.util.List;
 
 @Data
 public class OrderViewModel {
-    private String OrderId;
-    private int OrderVersion;
-    private String ConferenceId;
-    private String ConferenceCode;
-    private String ConferenceName;
-    private List<OrderItemViewModel> Items;
-    private List<SeatQuantity> Seats;
-    private long ReservationExpirationDate;
+    private String orderId;
+    private int orderVersion;
+    private String conferenceId;
+    private String conferenceCode;
+    private String conferenceName;
+    private List<OrderItemViewModel> items;
+    private List<SeatQuantity> seats;
+    private long reservationExpirationDate;
 }

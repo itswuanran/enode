@@ -6,8 +6,8 @@ import lombok.Data;
 
 @Data
 public class OrderItemViewModel {
-    private SeatTypeVO SeatType;
-    private OrderLineVO OrderLine;
-    private int Quantity;
-    private int MaxSelectionQuantity;
+    private SeatTypeVO seatTypeVO;
+    private OrderLineVO orderLineVO;
+    private int quantity;
+    private int maxSelectionQuantity;
 }

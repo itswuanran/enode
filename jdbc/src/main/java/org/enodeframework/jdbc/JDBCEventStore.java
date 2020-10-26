@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 /**
@@ -131,7 +130,6 @@ public abstract class JDBCEventStore extends AbstractVerticle implements IEventS
     }
 
     private CompletableFuture<AggregateEventAppendResult> batchAppendAggregateEventsAsync(String aggregateRootId, List<DomainEventStream> eventStreamList) {
-        CompletableFuture<AggregateEventAppendResult> future = new CompletableFuture<>();
         String sql = String.format(INSERT_EVENT_SQL, getTableName(aggregateRootId));
         List<JsonArray> jsonArrays = Lists.newArrayList();
         eventStreamList.sort(Comparator.comparingInt(DomainEventStream::getVersion));
@@ -145,11 +143,7 @@ public abstract class JDBCEventStore extends AbstractVerticle implements IEventS
             array.add(serializeService.serialize(eventSerializer.serialize(domainEventStream.events())));
             jsonArrays.add(array);
         }
-        if (jsonArrays.size() > 1) {
-            future = batchInsertAsync(sql, jsonArrays);
-        } else {
-            future = insertOneByOneAsync(sql, jsonArrays);
-        }
+        CompletableFuture<AggregateEventAppendResult> future = batchInsertAsync(sql, jsonArrays);
         return future.exceptionally(throwable -> {
             if (throwable instanceof SQLException) {
                 SQLException ex = (SQLException) throwable;
@@ -195,30 +189,6 @@ public abstract class JDBCEventStore extends AbstractVerticle implements IEventS
     }
 
     abstract protected String parseDuplicateCommandId(String msg);
-
-    public CompletableFuture<AggregateEventAppendResult> insertOneByOneAsync(String sql, List<JsonArray> jsonArrays) {
-        CompletableFuture<AggregateEventAppendResult> future = new CompletableFuture<>();
-        CountDownLatch latch = new CountDownLatch(jsonArrays.size());
-        for (JsonArray array : jsonArrays) {
-            sqlClient.updateWithParams(sql, array, x -> {
-                if (x.succeeded()) {
-                    latch.countDown();
-                    if (latch.getCount() == 0) {
-                        AggregateEventAppendResult appendResult = new AggregateEventAppendResult();
-                        appendResult.setEventAppendStatus(EventAppendStatus.Success);
-                        future.complete(appendResult);
-                    }
-                    return;
-                }
-                latch.countDown();
-                future.completeExceptionally(x.cause());
-            });
-            if (future.isDone()) {
-                break;
-            }
-        }
-        return future;
-    }
 
     public CompletableFuture<AggregateEventAppendResult> batchInsertAsync(String sql, List<JsonArray> jsonArrays) {
         CompletableFuture<AggregateEventAppendResult> future = new CompletableFuture<>();

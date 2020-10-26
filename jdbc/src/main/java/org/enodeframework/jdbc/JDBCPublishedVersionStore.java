@@ -51,23 +51,21 @@ public class JDBCPublishedVersionStore extends AbstractVerticle implements IPubl
     @Override
     public CompletableFuture<Integer> updatePublishedVersionAsync(String processorName, String aggregateRootTypeName, String aggregateRootId, int publishedVersion) {
         CompletableFuture<Integer> future = new CompletableFuture<>();
-        String sql = "";
-        boolean isInsert = publishedVersion == 1;
+        boolean isUpdate = publishedVersion != 1;
+        String sql = isUpdate ? String.format(UPDATE_SQL, tableName) : String.format(INSERT_SQL, tableName);
         JsonArray array = new JsonArray();
-        if (isInsert) {
-            sql = String.format(INSERT_SQL, tableName);
-            array.add(processorName);
-            array.add(aggregateRootTypeName);
-            array.add(aggregateRootId);
-            array.add(1);
-            array.add(new Date().toInstant());
-        } else {
-            sql = String.format(UPDATE_SQL, tableName);
+        if (isUpdate) {
             array.add(publishedVersion);
             array.add(new Date().toInstant());
             array.add(processorName);
             array.add(aggregateRootId);
             array.add(publishedVersion - 1);
+        } else {
+            array.add(processorName);
+            array.add(aggregateRootTypeName);
+            array.add(aggregateRootId);
+            array.add(1);
+            array.add(new Date().toInstant());
         }
         sqlClient.updateWithParams(sql, array, x -> {
             if (x.succeeded()) {
@@ -80,7 +78,7 @@ public class JDBCPublishedVersionStore extends AbstractVerticle implements IPubl
             if (throwable instanceof SQLException) {
                 SQLException ex = (SQLException) throwable;
                 // insert duplicate return
-                if (isInsert && ex.getSQLState().equals(sqlState) && ex.getMessage().contains(uniqueIndexName)) {
+                if (!isUpdate && ex.getSQLState().equals(sqlState) && ex.getMessage().contains(uniqueIndexName)) {
                     return 0;
                 }
                 logger.error("Insert or update aggregate published version has sql exception.", ex);

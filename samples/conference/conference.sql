@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS `conference` (
-    id BIGINT(20) unsigned NOT NULL AUTO_INCREMENT,
+	id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 	conference_id VARCHAR(38) NOT NULL,
 	access_code VARCHAR(128) DEFAULT NULL,
 	owner_name VARCHAR(1024) NOT NULL,
@@ -13,14 +13,14 @@ CREATE TABLE IF NOT EXISTS `conference` (
 	start_date DATETIME NOT NULL,
 	end_date DATETIME NOT NULL,
 	is_published BIT NOT NULL,
-	version int(10) NOT NULL,
+	version INT(10) NOT NULL,
 	event_sequence INT(10) NOT NULL,
 	PRIMARY KEY (id),
 	UNIQUE KEY uk_conference_id (conference_id)
 ) ENGINE = InnoDB CHARSET = utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `conference_slug_index` (
-    id BIGINT(20) unsigned NOT NULL AUTO_INCREMENT,
+	id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 	index_id VARCHAR(38) NOT NULL,
 	conference_id VARCHAR(38) NOT NULL,
 	slug VARCHAR(1024) NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS `conference_slug_index` (
 ) ENGINE = InnoDB CHARSET = utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `conference_seat_type` (
-    id BIGINT(20) unsigned NOT NULL AUTO_INCREMENT,
+	id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 	seat_type_id VARCHAR(38) NOT NULL,
 	conference_id VARCHAR(38) NOT NULL,
 	name VARCHAR(70) NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS `conference_seat_type` (
 ) ENGINE = InnoDB CHARSET = utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `reservation_item` (
-    id BIGINT(20) unsigned NOT NULL AUTO_INCREMENT,
+	id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 	conference_id VARCHAR(38) NOT NULL,
 	reservation_id VARCHAR(38) NOT NULL,
 	seat_type_id VARCHAR(38) NOT NULL,
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS `reservation_item` (
 ) ENGINE = InnoDB CHARSET = utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `order` (
-    id BIGINT(20) unsigned NOT NULL AUTO_INCREMENT,
+	id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 	order_id VARCHAR(38) NOT NULL,
 	conference_id VARCHAR(38) NOT NULL,
 	status INT(10) NOT NULL,
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS `order` (
 ) ENGINE = InnoDB CHARSET = utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `order_line` (
-    id BIGINT(20) unsigned NOT NULL AUTO_INCREMENT,
+	id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 	order_id VARCHAR(38) NOT NULL,
 	seat_type_id VARCHAR(38) NOT NULL,
 	seat_type_name VARCHAR(1024) NULL,
@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS `order_line` (
 ) ENGINE = InnoDB CHARSET = utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `order_seat_assignment` (
-    id BIGINT(20) unsigned NOT NULL AUTO_INCREMENT,
+	id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 	assignments_id VARCHAR(38) NOT NULL,
 	order_id VARCHAR(38) NOT NULL,
 	position INT(10) NOT NULL,
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS `order_seat_assignment` (
 ) ENGINE = InnoDB CHARSET = utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `payment` (
-    id BIGINT(20) unsigned NOT NULL AUTO_INCREMENT,
+	id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 	payment_id VARCHAR(38) NOT NULL,
 	state INT(10) NOT NULL,
 	order_id VARCHAR(38) NOT NULL,
@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS `payment` (
 ) ENGINE = InnoDB CHARSET = utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `payment_item` (
-    id BIGINT(20) unsigned NOT NULL AUTO_INCREMENT,
+	id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 	payment_item_id VARCHAR(38) NOT NULL,
 	payment_id VARCHAR(38) NULL,
 	description VARCHAR(1024) NULL,

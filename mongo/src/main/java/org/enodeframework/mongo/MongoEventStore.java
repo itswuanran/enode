@@ -9,7 +9,6 @@ import com.mongodb.bulk.BulkWriteError;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.result.InsertManyResult;
-import com.mongodb.client.result.InsertOneResult;
 import com.mongodb.reactivestreams.client.MongoClient;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -34,7 +33,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -131,7 +129,7 @@ public class MongoEventStore implements IEventStore {
             document.put("events", serializeService.serialize(eventSerializer.serialize(domainEventStream.events())));
             documents.add(document);
         }
-        CompletableFuture<AggregateEventAppendResult> future = documents.size() > 1 ? batchInsertAsync(documents) : insertOneByOneAsync(documents);
+        CompletableFuture<AggregateEventAppendResult> future = batchInsertAsync(documents);
         return future.exceptionally(throwable -> {
             int code = 0;
             String message = "";
@@ -171,7 +169,8 @@ public class MongoEventStore implements IEventStore {
 
     public CompletableFuture<AggregateEventAppendResult> batchInsertAsync(List<Document> documents) {
         CompletableFuture<AggregateEventAppendResult> future = new CompletableFuture<>();
-        mongoClient.getDatabase(mongoConfiguration.getDatabaseName()).getCollection(mongoConfiguration.getEventCollectionName())
+        mongoClient.getDatabase(mongoConfiguration.getDatabaseName())
+                .getCollection(mongoConfiguration.getEventCollectionName())
                 .insertMany(documents).subscribe(new Subscriber<InsertManyResult>() {
             @Override
             public void onSubscribe(Subscription s) {
@@ -199,45 +198,7 @@ public class MongoEventStore implements IEventStore {
         });
         return future;
     }
-
-    public CompletableFuture<AggregateEventAppendResult> insertOneByOneAsync(List<Document> documents) {
-        CompletableFuture<AggregateEventAppendResult> future = new CompletableFuture<>();
-        CountDownLatch latch = new CountDownLatch(documents.size());
-        for (Document document : documents) {
-            mongoClient.getDatabase(mongoConfiguration.getDatabaseName()).getCollection(mongoConfiguration.getEventCollectionName())
-                    .insertOne(document).subscribe(new Subscriber<InsertOneResult>() {
-                @Override
-                public void onSubscribe(Subscription s) {
-                    s.request(1);
-                }
-
-                @Override
-                public void onNext(InsertOneResult insertOneResult) {
-                    latch.countDown();
-                }
-
-                @Override
-                public void onError(Throwable t) {
-                    latch.countDown();
-                    future.completeExceptionally(t);
-                }
-
-                @Override
-                public void onComplete() {
-                    if (latch.getCount() == 0) {
-                        AggregateEventAppendResult appendResult = new AggregateEventAppendResult();
-                        appendResult.setEventAppendStatus(EventAppendStatus.Success);
-                        future.complete(appendResult);
-                    }
-                }
-            });
-            if (future.isDone()) {
-                break;
-            }
-        }
-        return future;
-    }
-
+    
     private String parseDuplicateCommandId(String errMsg) {
         Matcher matcher = PATTERN.matcher(errMsg);
         if (matcher.find()) {
