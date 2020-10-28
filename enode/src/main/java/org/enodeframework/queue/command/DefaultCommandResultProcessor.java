@@ -5,8 +5,11 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalCause;
 import com.google.common.cache.RemovalListener;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.net.NetServer;
-import io.vertx.core.parsetools.RecordParser;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.bridge.BridgeOptions;
+import io.vertx.ext.bridge.PermittedOptions;
+import io.vertx.ext.eventbus.bridge.tcp.TcpEventBusBridge;
 import org.enodeframework.commanding.CommandResult;
 import org.enodeframework.commanding.CommandReturnType;
 import org.enodeframework.commanding.CommandStatus;
@@ -15,6 +18,8 @@ import org.enodeframework.common.SysProperties;
 import org.enodeframework.common.exception.DuplicateCommandRegisterException;
 import org.enodeframework.common.scheduling.IScheduleService;
 import org.enodeframework.common.scheduling.Worker;
+import org.enodeframework.common.serializing.ISerializeService;
+import org.enodeframework.common.utilities.InetUtil;
 import org.enodeframework.common.utilities.ReplyMessage;
 import org.enodeframework.queue.domainevent.DomainEventHandledMessage;
 import org.slf4j.Logger;
@@ -37,6 +42,7 @@ public class DefaultCommandResultProcessor extends AbstractVerticle implements I
     private final int port;
     private final String scanExpireCommandTaskName;
     private final IScheduleService scheduleService;
+    private final ISerializeService serializeService;
     private final int completionSourceTimeout;
     private final Cache<String, CommandTaskCompletionSource> commandTaskDict;
     private final BlockingQueue<CommandResult> commandExecutedMessageLocalQueue;
@@ -45,15 +51,16 @@ public class DefaultCommandResultProcessor extends AbstractVerticle implements I
     private final Worker domainEventHandledMessageWorker;
 
     private InetSocketAddress bindAddress;
-    private NetServer netServer;
+    private TcpEventBusBridge tcpEventBusBridge;
     private boolean started;
 
-    public DefaultCommandResultProcessor(IScheduleService scheduleService, int port) {
-        this(scheduleService, port, SysProperties.COMPLETION_SOURCE_TIMEOUT);
+    public DefaultCommandResultProcessor(IScheduleService scheduleService, ISerializeService serializeService, int port) {
+        this(scheduleService, serializeService, port, SysProperties.COMPLETION_SOURCE_TIMEOUT);
     }
 
-    public DefaultCommandResultProcessor(IScheduleService scheduleService, int port, int completionSourceTimeout) {
+    public DefaultCommandResultProcessor(IScheduleService scheduleService, ISerializeService serializeService, int port, int completionSourceTimeout) {
         this.scheduleService = scheduleService;
+        this.serializeService = serializeService;
         this.port = port;
         this.completionSourceTimeout = completionSourceTimeout;
         this.scanExpireCommandTaskName = "CleanTimeoutCommandTask_" + System.currentTimeMillis() + new Random().nextInt(10000);
@@ -73,19 +80,18 @@ public class DefaultCommandResultProcessor extends AbstractVerticle implements I
     }
 
     public void startServer(int port) throws UnknownHostException {
-        netServer = vertx.createNetServer();
         bindAddress = new InetSocketAddress(InetAddress.getLocalHost(), port);
-        netServer.connectHandler(sock -> {
-            RecordParser parser = RecordParser.newDelimited(SysProperties.DELIMITED, sock);
-            parser.endHandler(v -> sock.close()).exceptionHandler(t -> {
-                logger.error("vertx netServer start failed. port: {}", port, t);
-                sock.close();
-            }).handler(buffer -> {
-                ReplyMessage name = buffer.toJsonObject().mapTo(ReplyMessage.class);
-                processRequestInternal(name);
-            });
-        });
-        netServer.listen(port, res -> {
+        String address = InetUtil.toUri(bindAddress);
+        vertx.eventBus().consumer(address, ((Message<JsonObject> msg) -> {
+            ReplyMessage replyMessage = msg.body().mapTo(ReplyMessage.class);
+            processRequestInternal(replyMessage);
+            msg.reply(new JsonObject().put("value", "success"));
+        }));
+        BridgeOptions bridgeOptions = new BridgeOptions();
+        bridgeOptions.addInboundPermitted(new PermittedOptions().setAddress(address));
+        bridgeOptions.addOutboundPermitted(new PermittedOptions().setAddress(address));
+        tcpEventBusBridge = TcpEventBusBridge.create(vertx, bridgeOptions);
+        tcpEventBusBridge.listen(port, res -> {
             if (!res.succeeded()) {
                 logger.error("vertx netServer start failed. port: {}", port, res.cause());
             }
@@ -117,7 +123,7 @@ public class DefaultCommandResultProcessor extends AbstractVerticle implements I
         scheduleService.stopTask(scanExpireCommandTaskName);
         commandExecutedMessageWorker.stop();
         domainEventHandledMessageWorker.stop();
-        netServer.close();
+        tcpEventBusBridge.close();
     }
 
     @Override
@@ -132,8 +138,6 @@ public class DefaultCommandResultProcessor extends AbstractVerticle implements I
         } else if (reply.getCode() == CommandReturnType.EventHandled.getValue()) {
             DomainEventHandledMessage message = reply.getEventHandledMessage();
             domainEventHandledMessageLocalQueue.add(message);
-        } else {
-            logger.error("Invalid remoting reply: {}", reply);
         }
     }
 
@@ -153,7 +157,7 @@ public class DefaultCommandResultProcessor extends AbstractVerticle implements I
         CommandTaskCompletionSource commandTaskCompletionSource = commandTaskDict.asMap().get(commandResult.getCommandId());
         if (commandTaskCompletionSource == null) {
             if (logger.isDebugEnabled()) {
-                logger.debug("Command result return, {}, but commandTaskCompletionSource maybe timeout expired.", commandResult);
+                logger.debug("Command result return, {}, but commandTaskCompletionSource maybe timeout expired.", serializeService.serialize(commandResult));
             }
             return;
         }
@@ -161,7 +165,7 @@ public class DefaultCommandResultProcessor extends AbstractVerticle implements I
             commandTaskDict.asMap().remove(commandResult.getCommandId());
             if (commandTaskCompletionSource.getTaskCompletionSource().complete(commandResult)) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Command result return CommandExecuted, {}", commandResult);
+                    logger.debug("Command result return CommandExecuted, {}", serializeService.serialize(commandResult));
                 }
             }
         } else if (commandTaskCompletionSource.getCommandReturnType().equals(CommandReturnType.EventHandled)) {
@@ -169,7 +173,7 @@ public class DefaultCommandResultProcessor extends AbstractVerticle implements I
                 commandTaskDict.asMap().remove(commandResult.getCommandId());
                 if (commandTaskCompletionSource.getTaskCompletionSource().complete(commandResult)) {
                     if (logger.isDebugEnabled()) {
-                        logger.debug("Command result return EventHandled, {}", commandResult);
+                        logger.debug("Command result return EventHandled, {}", serializeService.serialize(commandResult));
                     }
                 }
             }
@@ -178,7 +182,7 @@ public class DefaultCommandResultProcessor extends AbstractVerticle implements I
 
     private void processTimeoutCommand(String commandId, CommandTaskCompletionSource commandTaskCompletionSource) {
         if (commandTaskCompletionSource != null) {
-            logger.error("Wait command notify timeout, commandId:{}", commandId);
+            logger.error("Wait command notify timeout, commandId: {}", commandId);
             CommandResult commandResult = new CommandResult(CommandStatus.Failed, commandId, commandTaskCompletionSource.getAggregateRootId(), "Wait command notify timeout.", String.class.getName());
             // 任务超时失败
             commandTaskCompletionSource.getTaskCompletionSource().complete(commandResult);
@@ -201,7 +205,7 @@ public class DefaultCommandResultProcessor extends AbstractVerticle implements I
             CommandResult commandResult = new CommandResult(CommandStatus.Success, message.getCommandId(), message.getAggregateRootId(), message.getCommandResult(), message.getCommandResult() != null ? String.class.getName() : null);
             if (commandTaskCompletionSource.getTaskCompletionSource().complete(commandResult)) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Command result return, {}", commandResult);
+                    logger.debug("Command result return, {}", serializeService.serialize(commandResult));
                 }
             }
         }

@@ -264,7 +264,7 @@ public class DefaultEventCommittingService implements IEventCommittingService {
                         });
                     }
                 },
-                () -> String.format("[eventStream:%s]", context.getEventStream()),
+                () -> String.format("[eventStream:%s]", serializeService.serialize(context.getEventStream())),
                 null, retryTimes, true);
         return future;
     }
@@ -274,13 +274,13 @@ public class DefaultEventCommittingService implements IEventCommittingService {
                 () -> domainEventPublisher.publishAsync(eventStream),
                 result -> {
                     if (logger.isDebugEnabled()) {
-                        logger.debug("Publish domain events success, {}", eventStream);
+                        logger.debug("Publish domain events success, {}", serializeService.serialize(eventStream));
                     }
                     String commandHandleResult = processingCommand.getCommandExecuteContext().getResult();
                     CommandResult commandResult = new CommandResult(CommandStatus.Success, processingCommand.getMessage().getId(), eventStream.getAggregateRootId(), commandHandleResult, String.class.getName());
                     completeCommand(processingCommand, commandResult);
                 },
-                () -> String.format("[eventStream:%s]", eventStream),
+                () -> String.format("[eventStream:%s]", serializeService.serialize(eventStream)),
                 null, retryTimes, true);
     }
 

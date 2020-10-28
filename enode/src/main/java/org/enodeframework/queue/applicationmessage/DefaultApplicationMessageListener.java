@@ -24,7 +24,7 @@ public class DefaultApplicationMessageListener implements IMessageHandler {
 
     @Override
     public void handle(QueueMessage queueMessage, IMessageContext context) {
-        logger.info("Received application message: {}", queueMessage);
+        logger.info("Received application message: {}", serializeService.serialize(queueMessage));
         String msg = queueMessage.getBody();
         ApplicationDataMessage appDataMessage = serializeService.deserialize(msg, ApplicationDataMessage.class);
         Class<?> applicationMessageType = typeNameProvider.getType(appDataMessage.getApplicationMessageType());

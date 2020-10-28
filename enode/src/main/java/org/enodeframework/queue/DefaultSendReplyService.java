@@ -1,13 +1,17 @@
 package org.enodeframework.queue;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Promise;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.NetClient;
-import io.vertx.core.net.NetClientOptions;
 import io.vertx.core.net.NetSocket;
 import io.vertx.core.net.SocketAddress;
+import io.vertx.ext.eventbus.bridge.tcp.impl.protocol.FrameHelper;
+import io.vertx.ext.eventbus.bridge.tcp.impl.protocol.FrameParser;
 import org.enodeframework.commanding.CommandResult;
 import org.enodeframework.commanding.CommandReturnType;
-import org.enodeframework.common.SysProperties;
 import org.enodeframework.common.io.ReplySocketAddress;
 import org.enodeframework.common.serializing.ISerializeService;
 import org.enodeframework.common.utilities.InetUtil;
@@ -16,8 +20,7 @@ import org.enodeframework.queue.domainevent.DomainEventHandledMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
+import java.time.Duration;
 
 /**
  * @author anruence@gmail.com
@@ -26,11 +29,18 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DefaultSendReplyService extends AbstractVerticle implements ISendReplyService {
     private static final Logger logger = LoggerFactory.getLogger(DefaultSendReplyService.class);
 
-    private final ConcurrentHashMap<String, CompletableFuture<NetSocket>> socketMap = new ConcurrentHashMap<>();
     private final ISerializeService serializeService;
+
     private boolean started;
+
     private boolean stoped;
+
     private NetClient netClient;
+
+    private Cache<String, Promise<NetSocket>> netSocketCache = CacheBuilder.newBuilder()
+            .expireAfterWrite(Duration.ofMinutes(10))
+            .maximumSize(10)
+            .build();
 
     public DefaultSendReplyService(ISerializeService serializeService) {
         this.serializeService = serializeService;
@@ -38,66 +48,69 @@ public class DefaultSendReplyService extends AbstractVerticle implements ISendRe
 
     @Override
     public void start() {
-        if (!started) {
-            netClient = vertx.createNetClient(new NetClientOptions());
-            started = true;
+        if (!this.started) {
+            this.netClient = vertx.createNetClient();
+            this.started = true;
         }
     }
 
     @Override
     public void stop() {
-        if (!stoped) {
-            netClient.close();
-            stoped = true;
+        if (!this.stoped) {
+            this.netClient.close();
+            this.stoped = true;
         }
     }
 
     @Override
-    public CompletableFuture<Void> sendCommandReply(CommandResult commandResult, ReplySocketAddress replyAddress) {
+    public void sendCommandReply(CommandResult commandResult, ReplySocketAddress replyAddress) {
         ReplyMessage replyMessage = new ReplyMessage();
         replyMessage.setCode(CommandReturnType.CommandExecuted.getValue());
         replyMessage.setCommandResult(commandResult);
-        return sendReply(replyMessage, replyAddress);
+        sendReply(replyMessage, replyAddress);
     }
 
     @Override
-    public CompletableFuture<Void> sendEventReply(DomainEventHandledMessage eventHandledMessage, ReplySocketAddress replyAddress) {
+    public void sendEventReply(DomainEventHandledMessage eventHandledMessage, ReplySocketAddress replyAddress) {
         ReplyMessage replyMessage = new ReplyMessage();
         replyMessage.setCode(CommandReturnType.EventHandled.getValue());
         replyMessage.setEventHandledMessage(eventHandledMessage);
-        return sendReply(replyMessage, replyAddress);
+        sendReply(replyMessage, replyAddress);
     }
 
-    public CompletableFuture<Void> sendReply(ReplyMessage replyMessage, ReplySocketAddress replyAddress) {
-        String message = serializeService.serialize(replyMessage) + SysProperties.DELIMITED;
-        String key = InetUtil.toUri(replyAddress);
-        SocketAddress socketAddress = SocketAddress.inetSocketAddress(replyAddress.getPort(), replyAddress.getHost());
-        CompletableFuture<NetSocket> future = new CompletableFuture<>();
-        if (socketMap.putIfAbsent(key, future) == null) {
-            netClient.connect(socketAddress, res -> {
-                if (!res.succeeded()) {
-                    future.completeExceptionally(res.cause());
-                    logger.error("Failed to connect NetServer, key: {}", key, res.cause());
-                    return;
-                }
-                NetSocket socket = res.result();
-                socket.endHandler(v -> socket.close()).exceptionHandler(t -> {
-                    socketMap.remove(key);
-                    logger.error("NetSocket occurs unexpected error", t);
-                    socket.close();
-                }).handler(buffer -> {
-                }).closeHandler(v -> {
-                    socketMap.remove(key);
-                    logger.info("NetClient socket closed: {}", key);
-                });
-                future.complete(socket);
-            });
+    public void sendReply(ReplyMessage replyMessage, ReplySocketAddress replySocketAddress) {
+        SocketAddress socketAddress = SocketAddress.inetSocketAddress(replySocketAddress.getPort(), replySocketAddress.getHost());
+        String message = serializeService.serialize(replyMessage);
+        String address = InetUtil.toUri(replySocketAddress);
+        String replyAddress = String.format("%s.%s", "client", address);
+        Promise<NetSocket> promise = netSocketCache.getIfPresent(address);
+        if (promise == null) {
+            promise = Promise.promise();
+            netSocketCache.put(address, promise);
+            netClient.connect(socketAddress, promise);
         }
-        return socketMap.get(key).thenAccept(socket -> {
-            socket.write(message);
-        }).exceptionally(ex -> {
-            logger.error("Send command reply has exception, key: {}", key, ex);
-            return null;
+        promise.future().onFailure(throwable -> {
+            netSocketCache.invalidate(address);
+            logger.error("connect occurs unexpected error, msg: {}", message, throwable);
+        }).onSuccess(socket -> {
+            socket.exceptionHandler(throwable -> {
+                netSocketCache.invalidate(address);
+                socket.close();
+                logger.error("socket occurs unexpected error, msg: {}", message, throwable);
+            });
+            socket.closeHandler(x -> {
+                netSocketCache.invalidate(address);
+                logger.error("socket closed, indicatedServerName: {},writeHandlerID: {}", socket.indicatedServerName(), socket.writeHandlerID());
+            });
+            socket.handler(new FrameParser(parse -> {
+                if (parse.succeeded()) {
+                    logger.info("receive server req: {}, res: {}", message, parse);
+                }
+            }));
+            socket.endHandler(v -> {
+                netSocketCache.invalidate(address);
+            });
+            FrameHelper.sendFrame("send", address, replyAddress, new JsonObject(message), socket);
         });
     }
 }

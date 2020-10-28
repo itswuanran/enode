@@ -28,6 +28,7 @@ public class DefaultDomainEventListener implements IMessageHandler {
     private final IEventSerializer eventSerializer;
 
     private final IProcessingEventProcessor domainEventMessageProcessor;
+
     private final ISerializeService serializeService;
 
     private boolean sendEventHandledMessage = true;
@@ -45,7 +46,7 @@ public class DefaultDomainEventListener implements IMessageHandler {
 
     @Override
     public void handle(QueueMessage queueMessage, IMessageContext context) {
-        logger.info("Received event stream message: {}", queueMessage);
+        logger.info("Received event stream message: {}", serializeService.serialize(queueMessage));
         EventStreamMessage message = serializeService.deserialize(queueMessage.getBody(), EventStreamMessage.class);
         DomainEventStreamMessage domainEventStreamMessage = convertToDomainEventStream(message);
         DomainEventStreamProcessContext processContext = new DomainEventStreamProcessContext(this, domainEventStreamMessage, queueMessage, context);

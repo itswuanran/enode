@@ -38,13 +38,4 @@ public class ReplyMessage implements Serializable {
     public void setEventHandledMessage(DomainEventHandledMessage eventHandledMessage) {
         this.eventHandledMessage = eventHandledMessage;
     }
-
-    @Override
-    public String toString() {
-        return "RemoteReply{" +
-                "code=" + code +
-                ", commandResult=" + commandResult +
-                ", eventHandledMessage=" + eventHandledMessage +
-                '}';
-    }
 }

@@ -1,9 +1,11 @@
 package org.enodeframework.queue.domainevent;
 
+import java.io.Serializable;
+
 /**
  * @author anruence@gmail.com
  */
-public class DomainEventHandledMessage {
+public class DomainEventHandledMessage implements Serializable {
     private String commandId;
     private String aggregateRootId;
     private String commandResult;
@@ -30,14 +32,5 @@ public class DomainEventHandledMessage {
 
     public void setCommandResult(String commandResult) {
         this.commandResult = commandResult;
-    }
-
-    @Override
-    public String toString() {
-        return "DomainEventHandledMessage{" +
-                "commandId='" + commandId + '\'' +
-                ", aggregateRootId='" + aggregateRootId + '\'' +
-                ", commandResult='" + commandResult + '\'' +
-                '}';
     }
 }

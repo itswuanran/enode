@@ -187,7 +187,7 @@ public class ProcessingCommandMailbox {
             if (removed != null) {
                 duplicateCommandIdDict.remove(message.getMessage().getId());
                 lastActiveTime = new Date();
-                return message.completeAsync(result);
+                message.completeAsync(result);
             }
         } catch (Exception ex) {
             logger.error("{} complete message with result failed, aggregateRootId: {}, messageId: {}, messageSequence: {}, result: {}", getClass().getName(), aggregateRootId, message.getMessage().getId(), message.getSequence(), result, ex);

@@ -48,7 +48,7 @@ public class DefaultCommandListener implements IMessageHandler {
 
     @Override
     public void handle(QueueMessage queueMessage, IMessageContext context) {
-        logger.info("Received command message: {}", queueMessage);
+        logger.info("Received command message: {}", serializeService.serialize(queueMessage));
         CommandMessage commandMessage = serializeService.deserialize(queueMessage.getBody(), CommandMessage.class);
         Class<?> commandType = typeNameProvider.getType(commandMessage.getCommandType());
         ICommand command = (ICommand) serializeService.deserialize(commandMessage.getCommandData(), commandType);

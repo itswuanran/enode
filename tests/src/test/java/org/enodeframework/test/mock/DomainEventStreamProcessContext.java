@@ -7,21 +7,21 @@ import org.enodeframework.eventing.IEventProcessContext;
 import java.util.List;
 
 public class DomainEventStreamProcessContext implements IEventProcessContext {
-    private DomainEventStreamMessage _domainEventStreamMessage;
-    private ManualResetEvent _waitHandle;
-    private List<Integer> _versionList;
+    private DomainEventStreamMessage domainEventStreamMessage;
+    private ManualResetEvent manualResetEvent;
+    private List<Integer> versionList;
 
     public DomainEventStreamProcessContext(DomainEventStreamMessage domainEventStreamMessage, ManualResetEvent waitHandle, List<Integer> versionList) {
-        _domainEventStreamMessage = domainEventStreamMessage;
-        _waitHandle = waitHandle;
-        _versionList = versionList;
+        this.domainEventStreamMessage = domainEventStreamMessage;
+        manualResetEvent = waitHandle;
+        this.versionList = versionList;
     }
 
     @Override
     public void notifyEventProcessed() {
-        _versionList.add(_domainEventStreamMessage.getVersion());
-        if (_domainEventStreamMessage.getVersion() == 3) {
-            _waitHandle.set();
+        versionList.add(domainEventStreamMessage.getVersion());
+        if (domainEventStreamMessage.getVersion() == 3) {
+            manualResetEvent.set();
         }
     }
 }

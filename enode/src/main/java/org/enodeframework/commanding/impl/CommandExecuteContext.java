@@ -53,12 +53,12 @@ public class CommandExecuteContext implements ICommandExecuteContext {
     }
 
     @Override
-    public CompletableFuture<Void> onCommandExecutedAsync(CommandResult commandResult) {
+    public void onCommandExecutedAsync(CommandResult commandResult) {
         messageContext.onMessageHandled(queueMessage);
         if (Objects.isNull(commandMessage.getReplyAddress())) {
-            return Task.completedTask;
+            return;
         }
-        return sendReplyService.sendCommandReply(commandResult, commandMessage.getReplyAddress());
+        sendReplyService.sendCommandReply(commandResult, commandMessage.getReplyAddress());
     }
 
     @Override

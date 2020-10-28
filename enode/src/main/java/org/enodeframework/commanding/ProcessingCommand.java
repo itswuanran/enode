@@ -2,7 +2,6 @@ package org.enodeframework.commanding;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * @author anruence@gmail.com
@@ -22,8 +21,8 @@ public class ProcessingCommand {
         this.items = items == null ? new HashMap<>() : items;
     }
 
-    public CompletableFuture<Void> completeAsync(CommandResult commandResult) {
-        return commandExecuteContext.onCommandExecutedAsync(commandResult);
+    public void completeAsync(CommandResult commandResult) {
+        commandExecuteContext.onCommandExecutedAsync(commandResult);
     }
 
     public long getSequence() {

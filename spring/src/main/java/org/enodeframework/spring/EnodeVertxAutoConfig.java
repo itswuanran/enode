@@ -31,8 +31,8 @@ public class EnodeVertxAutoConfig {
 
     @Bean(name = "defaultCommandResultProcessor")
     @ConditionalOnProperty(prefix = "spring.enode", name = "server.port")
-    public DefaultCommandResultProcessor defaultCommandResultProcessor(IScheduleService scheduleService) {
-        DefaultCommandResultProcessor processor = new DefaultCommandResultProcessor(scheduleService, port);
+    public DefaultCommandResultProcessor defaultCommandResultProcessor(IScheduleService scheduleService, ISerializeService serializeService) {
+        DefaultCommandResultProcessor processor = new DefaultCommandResultProcessor(scheduleService, serializeService, port);
         vertx.deployVerticle(processor, res -> {
             if (!res.succeeded()) {
                 logger.error("vertx deploy DefaultCommandResultProcessor failed.", res.cause());

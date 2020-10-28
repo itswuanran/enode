@@ -9,7 +9,6 @@ import org.enodeframework.samples.commands.bank.StartTransferTransactionCommand;
 import org.enodeframework.samples.domain.bank.transfertransaction.TransferTransactionInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -36,7 +35,6 @@ public class BankController {
         commandService.sendAsync(new StartTransferTransactionCommand(ObjectId.generateNewStringId(), new TransferTransactionInfo(account1, account2, 1200D))).join();
         //账户2向账户1转账500元，交易成功
         commandService.sendAsync(new StartTransferTransactionCommand(ObjectId.generateNewStringId(), new TransferTransactionInfo(account2, account1, 500D))).join();
-        Thread.sleep(200);
         return "success";
     }
 

@@ -5,7 +5,6 @@ import org.enodeframework.messaging.Message;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author anruence@gmail.com
@@ -67,20 +66,5 @@ public class DomainEventStreamMessage extends Message {
 
     public void setEvents(List<IDomainEvent<?>> events) {
         this.events = events;
-    }
-
-    @Override
-    public String toString() {
-        String format = "[Id=%s,CommandId=%s,AggregateRootId=%s,AggregateRootTypeName=%s,Version=%d,Events=%s,Items=%s,Timestamp=%tc]";
-        return String.format(format,
-                id,
-                commandId,
-                aggregateRootId,
-                aggregateRootTypeName,
-                version,
-                events.stream().map(x -> x.getClass().getSimpleName()).collect(Collectors.joining("|")),
-                items.entrySet().stream().map(x -> x.getKey() + ":" + x.getValue()).collect(Collectors.joining("|")),
-                timestamp
-        );
     }
 }

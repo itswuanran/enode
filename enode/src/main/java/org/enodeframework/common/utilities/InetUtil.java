@@ -37,6 +37,13 @@ public class InetUtil {
         return new ReplySocketAddress(address.getAddress().getHostAddress(), address.getPort());
     }
 
+    public static String toUri(InetSocketAddress socketAddress) {
+        if (Objects.isNull(socketAddress)) {
+            return "";
+        }
+        return String.format("enode://%s:%d", socketAddress.getAddress().getHostAddress(), socketAddress.getPort());
+    }
+
     public static String toUri(ReplySocketAddress socketAddress) {
         if (Objects.isNull(socketAddress)) {
             return "";

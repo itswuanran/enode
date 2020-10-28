@@ -57,15 +57,4 @@ public class CommandResult {
     public String getResultType() {
         return resultType;
     }
-
-    @Override
-    public String toString() {
-        return "CommandResult{" +
-                "status=" + status +
-                ", commandId='" + commandId + '\'' +
-                ", aggregateRootId='" + aggregateRootId + '\'' +
-                ", result='" + result + '\'' +
-                ", resultType='" + resultType + '\'' +
-                '}';
-    }
 }
