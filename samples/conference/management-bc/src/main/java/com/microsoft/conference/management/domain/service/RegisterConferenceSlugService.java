@@ -15,7 +15,7 @@ public class RegisterConferenceSlugService {
     /**
      * 注册会议的Slug索引
      */
-    public void RegisterSlug(String indexId, String conferenceId, String slug) {
+    public void registerSlug(String indexId, String conferenceId, String slug) {
         ConferenceSlugIndex slugIndex = conferenceSlugIndexRepository.findSlugIndex(slug);
         if (slugIndex == null) {
             conferenceSlugIndexRepository.add(new ConferenceSlugIndex(indexId, conferenceId, slug));

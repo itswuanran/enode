@@ -60,7 +60,7 @@ public class ConferenceViewModelGenerator {
 
     @Subscribe
     public void handleAsync(ConferenceCreated evnt) {
-        ConferenceDO conferenceDO = ConferenceConvert.INSTANCE.toDO(evnt, evnt.getInfo());
+        ConferenceDO conferenceDO = DTOExtensions.INSTANCE.toDO(evnt, evnt.getInfo());
         ConferenceInfo conferenceInfo = evnt.getInfo();
         conferenceDO.setConferenceId(evnt.getAggregateRootId());
         conferenceDO.setOwnerName(conferenceInfo.getOwner().getName());
@@ -75,7 +75,7 @@ public class ConferenceViewModelGenerator {
 
     @Subscribe
     public void handleAsync(ConferenceUpdated evnt) {
-        ConferenceDO conferenceDO = ConferenceConvert.INSTANCE.toDO(evnt, evnt.getInfo());
+        ConferenceDO conferenceDO = DTOExtensions.INSTANCE.toDO(evnt, evnt.getInfo());
         conferenceDO.setIsPublished((byte) 0);
         LambdaUpdateWrapper<ConferenceDO> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(ConferenceDO::getVersion, evnt.getVersion() - 1);

@@ -14,7 +14,6 @@ import com.microsoft.conference.management.domain.model.Conference;
 import com.microsoft.conference.management.domain.model.ConferenceEditableInfo;
 import com.microsoft.conference.management.domain.model.ConferenceInfo;
 import com.microsoft.conference.management.domain.model.ConferenceOwner;
-import com.microsoft.conference.management.domain.model.ConferenceSlugIndex;
 import com.microsoft.conference.management.domain.model.ReservationItem;
 import com.microsoft.conference.management.domain.model.SeatTypeInfo;
 import com.microsoft.conference.management.domain.service.RegisterConferenceSlugService;
@@ -39,7 +38,6 @@ public class ConferenceCommandHandler {
     @Subscribe
     public void handleAsync(ICommandContext context, CreateConference command) {
         execInternal(context,command);
-//        lockService.executeInLock(ConferenceSlugIndex.class.getName(), () -> execInternal(context, command));
     }
 
     private void execInternal(ICommandContext context, CreateConference command){
@@ -54,7 +52,7 @@ public class ConferenceCommandHandler {
                 command.getTwitterSearch(),
                 command.getStartDate(),
                 command.getEndDate()));
-        registerConferenceSlugService.RegisterSlug(command.getId(), conference.getId(), command.getSlug());
+        registerConferenceSlugService.registerSlug(command.getId(), conference.getId(), command.getSlug());
         context.add(conference);
     }
 

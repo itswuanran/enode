@@ -25,6 +25,10 @@ public class Order extends AggregateRoot<String> {
     private Registrant registrant;
     private String accessCode;
 
+    public Order() {
+
+    }
+
     public Order(String id, String conferenceId, List<SeatQuantity> seats, PricingService pricingService) {
         super(id);
         Ensure.notNullOrEmpty(id, "id");

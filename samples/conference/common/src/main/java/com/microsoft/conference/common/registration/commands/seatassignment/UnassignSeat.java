@@ -1,14 +1,16 @@
 package com.microsoft.conference.common.registration.commands.seatassignment;
 
+import lombok.Data;
 import org.enodeframework.commanding.Command;
 
+@Data
 public class UnassignSeat extends Command<String> {
-    public int position;
+    private int position;
 
     public UnassignSeat() {
     }
 
-    public UnassignSeat(String orderId) {
-        super(orderId);
+    public UnassignSeat(String assignmentsId) {
+        super(assignmentsId);
     }
 }

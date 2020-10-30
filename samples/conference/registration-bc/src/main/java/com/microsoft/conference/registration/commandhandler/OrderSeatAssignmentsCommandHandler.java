@@ -34,6 +34,6 @@ public class OrderSeatAssignmentsCommandHandler {
     @Subscribe
     public void handleAsync(ICommandContext context, UnassignSeat command) {
         OrderSeatAssignments orderSeatAssignments = await(context.getAsync(command.aggregateRootId, OrderSeatAssignments.class));
-        orderSeatAssignments.unAssignSeat(command.position);
+        orderSeatAssignments.unAssignSeat(command.getPosition());
     }
 }
