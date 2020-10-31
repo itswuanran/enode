@@ -1,6 +1,8 @@
 package com.microsoft.conference.registration.readmodel;
 
+import com.microsoft.conference.common.registration.commands.order.AssignRegistrantDetails;
 import com.microsoft.conference.common.registration.commands.order.PlaceOrder;
+import com.microsoft.conference.registration.controller.RegistrantDetails;
 import com.microsoft.conference.registration.readmodel.service.ConferenceAlias;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
@@ -11,4 +13,5 @@ public interface RegistrationConvert {
 
     PlaceOrder toPlaceOrderCommand(ConferenceAlias alias);
 
+    AssignRegistrantDetails toAssignRegistrantDetails(RegistrantDetails details);
 }

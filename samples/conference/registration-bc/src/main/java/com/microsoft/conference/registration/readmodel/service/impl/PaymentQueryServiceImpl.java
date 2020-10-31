@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class PaymentQueryServiceImpl implements PaymentQueryService {
+
     @Autowired
     private PaymentMapper paymentMapper;
 

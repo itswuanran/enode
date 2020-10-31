@@ -40,7 +40,7 @@ public class OrderCommandHandler {
     @Subscribe
     public void handleAsync(ICommandContext context, AssignRegistrantDetails command) {
         Order order = await(context.getAsync(command.aggregateRootId, Order.class));
-        order.assignRegistrant(command.firstName, command.lastName, command.email);
+        order.assignRegistrant(command.getFirstName(), command.getLastName(), command.getEmail());
     }
 
     @Subscribe

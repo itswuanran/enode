@@ -1,148 +1,187 @@
 package com.microsoft.conference.registration.controller;
 
 import com.microsoft.conference.common.ActionResult;
+import com.microsoft.conference.common.ErrCode;
 import com.microsoft.conference.common.payment.commands.CreatePayment;
 import com.microsoft.conference.common.registration.commands.order.AssignRegistrantDetails;
 import com.microsoft.conference.common.registration.commands.order.MarkAsSuccess;
 import com.microsoft.conference.common.registration.commands.order.PlaceOrder;
 import com.microsoft.conference.registration.domain.order.model.OrderStatus;
+import com.microsoft.conference.registration.readmodel.PayConvert;
 import com.microsoft.conference.registration.readmodel.RegistrationConvert;
 import com.microsoft.conference.registration.readmodel.service.ConferenceAlias;
 import com.microsoft.conference.registration.readmodel.service.ConferenceQueryService;
 import com.microsoft.conference.registration.readmodel.service.OrderQueryService;
 import com.microsoft.conference.registration.readmodel.service.OrderVO;
 import com.microsoft.conference.registration.readmodel.service.SeatTypeVO;
+import org.enodeframework.commanding.CommandResult;
+import org.enodeframework.commanding.CommandReturnType;
+import org.enodeframework.commanding.CommandStatus;
 import org.enodeframework.commanding.ICommand;
 import org.enodeframework.commanding.ICommandService;
-import org.springframework.stereotype.Controller;
+import org.enodeframework.common.io.Task;
+import org.enodeframework.common.utilities.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import static org.enodeframework.common.io.Task.await;
 
-@Controller
+@RestController
 public class RegistrationController {
 
     public String thirdPartyProcessorPayment = "thirdParty";
 
+    @Autowired
     private ICommandService commandService;
-
+    @Autowired
     private ConferenceQueryService conferenceQueryService;
-
+    @Autowired
     private OrderQueryService orderQueryService;
 
-    public ActionResult startRegistration(OrderViewModel model) {
-        ConferenceAlias alias = new ConferenceAlias();
+    @GetMapping("registration/{id}")
+    public ActionResult<OrderViewModel> startRegistration(@PathVariable String slug) {
+        ConferenceAlias alias = conferenceQueryService.getConferenceAlias(slug);
+        return view(createViewModel(alias));
+    }
+
+    @PostMapping("registration")
+    public ActionResult<String> startRegistration(@RequestBody OrderViewModel model) {
+        ConferenceAlias alias = conferenceQueryService.getConferenceAlias(model.getConferenceCode());
         PlaceOrder command = RegistrationConvert.INSTANCE.toPlaceOrderCommand(alias);
         if (!command.getSeatInfos().stream().findAny().isPresent()) {
             String errMsg = "ConferenceCode, You must reservation at least one seat.";
-            return view(createViewModel());
+            return ActionResult.error(ErrCode.SYSTEM_ERROR, errMsg);
         }
-        await(sendCommandAsync(command));
-        return view();
+        CommandResult result = await(executeCommandAsync(command));
+        return view(result.getResult());
     }
 
-    public ActionResult specifyRegistrantAndPaymentDetails(String orderId) {
+    @GetMapping("specify")
+    public ActionResult<RegistrationViewModel> specifyRegistrantAndPaymentDetails(@RequestParam String orderId) {
         OrderVO order = this.waitUntilReservationCompleted(orderId);
         if (order == null) {
-            return view();
+            return ActionResult.error(ErrCode.SYSTEM_ERROR, "PricedOrderUnknown");
         }
-
-        if (order.getStatus() == OrderStatus.ReservationSuccess.getStatus()) {
-
+        if (order.getStatus() != OrderStatus.ReservationSuccess.getStatus()) {
+            return ActionResult.error(ErrCode.SYSTEM_ERROR, "ReservationFailed");
         }
-        return view();
+        RegistrationViewModel viewModel = new RegistrationViewModel();
+        viewModel.setOrderVO(order);
+        RegistrantDetails registrantDetails = new RegistrantDetails();
+        registrantDetails.setOrderId(orderId);
+        viewModel.setRegistrantDetails(registrantDetails);
+        return view(viewModel);
     }
 
-    public ActionResult specifyRegistrantAndPaymentDetails(String orderId, RegistrantDetails model, String paymentType) {
-        if (false) {
-            return specifyRegistrantAndPaymentDetails(orderId);
-        }
-        sendCommandAsync(new AssignRegistrantDetails(orderId));
+    @PostMapping("specify")
+    public ActionResult<String> specifyRegistrantAndPaymentDetails(String orderId, RegistrantDetails viewModel) {
+        AssignRegistrantDetails registrantDetails = RegistrationConvert.INSTANCE.toAssignRegistrantDetails(viewModel);
+        registrantDetails.setAggregateRootId(orderId);
+        await(sendCommandAsync(registrantDetails));
         return this.startPayment(orderId);
     }
 
-
-    public ActionResult startPayment(String orderId) {
+    @PostMapping("startpay")
+    public ActionResult<String> startPayment(@RequestParam String orderId) {
         OrderVO order = this.orderQueryService.findOrder(orderId);
-
         if (order == null) {
-            return view("ReservationUnknown");
+            return ActionResult.error(ErrCode.SYSTEM_ERROR, "ReservationUnknown");
         }
         if (order.getStatus() == OrderStatus.PaymentSuccess.getStatus() || order.getStatus() == OrderStatus.Success.getStatus()) {
             return view("ShowCompletedOrder");
         }
         if (new Date().before(order.getReservationExpirationDate())) {
-            return view();
+            return view("ShowExpiredOrder: " + orderId);
         }
         if (order.isFreeOfCharge()) {
-            return completeRegistrationWithoutPayment(orderId);
+            completeRegistrationWithoutPayment(orderId);
+            return view("completeRegistrationWithoutPayment");
         }
-
-        return completeRegistrationWithThirdPartyProcessorPayment(order);
+        completeRegistrationWithThirdPartyProcessorPayment(order);
+        return view("completeRegistrationWithThirdPartyProcessorPayment");
     }
 
 
-    public ActionResult thankYou(String orderId) {
+    public ActionResult<OrderVO> thankYou(String orderId) {
         return view(this.orderQueryService.findOrder(orderId));
     }
 
-    private ActionResult completeRegistrationWithThirdPartyProcessorPayment(OrderVO order) {
+    private void completeRegistrationWithThirdPartyProcessorPayment(OrderVO order) {
         CreatePayment paymentCommand = createPaymentCommand(order);
         sendCommandAsync(paymentCommand);
-        return view();
     }
 
     private CreatePayment createPaymentCommand(OrderVO order) {
-        String name = "";
+        ConferenceAlias alias = conferenceQueryService.getConferenceAlias(order.getAccessCode());
+        String name = alias.getName();
         String description = "Payment for the order of " + name;
-        CreatePayment paymentCommand = new CreatePayment();
-//            {
-//                AggregateRootId = GuidUtil.NewSequentialId(),
-//                ConferenceId = this.ConferenceAlias.Id,
-//                OrderId = order.OrderId,
-//                Description = description,
-//                TotalAmount = order.TotalAmount,
-//                Lines = order.GetLines().Select(x => new PaymentLine { Id = x.SeatTypeId, Description = x.SeatTypeName, Amount = x.LineTotal })
-//            };
-
-        return paymentCommand;
+        CreatePayment createPayment = new CreatePayment();
+        createPayment.setAggregateRootId(ObjectId.generateNewStringId());
+        createPayment.setConferenceId(alias.getId());
+        createPayment.setOrderId(order.getOrderId());
+        createPayment.setDescription(description);
+        createPayment.setTotalAmount(order.getTotalAmount());
+        createPayment.setLines(order.getOrderLines().stream()
+                .map(PayConvert.INSTANCE::toPaymentLine)
+                .collect(Collectors.toList()));
+        return createPayment;
     }
 
-    private ActionResult completeRegistrationWithoutPayment(String orderId) {
-        sendCommandAsync(new MarkAsSuccess(orderId));
-        return view();
+    private void completeRegistrationWithoutPayment(String orderId) {
+        Task.await(sendCommandAsync(new MarkAsSuccess(orderId)));
     }
 
-    private OrderViewModel createViewModel() {
-        String id = "";
-        List<SeatTypeVO> seatTypes = this.conferenceQueryService.getPublishedSeatTypes(id);
+    private OrderViewModel createViewModel(ConferenceAlias alias) {
+        // thread local
+        List<SeatTypeVO> seatTypes = this.conferenceQueryService.getPublishedSeatTypes(alias.getId());
         OrderViewModel viewModel = new OrderViewModel();
-//            {
-//                ConferenceId = this.ConferenceAlias.Id,
-//                ConferenceCode = this.ConferenceAlias.Slug,
-//                ConferenceName = this.ConferenceAlias.Name,
-//                Items = seatTypes.Select(x => new OrderItemViewModel
-//                {
-//                    SeatType = x,
-//                    MaxSelectionQuantity = Math.Max(Math.Min(x.AvailableQuantity, 20), 0)
-//                }).ToList()
-//            };
+        viewModel.setConferenceCode(alias.getSlug());
+        viewModel.setConferenceId(alias.getId());
+        viewModel.setConferenceName(alias.getName());
+        viewModel.setItems(seatTypes.stream().map(x -> {
+            OrderItemViewModel itemViewModel = new OrderItemViewModel();
+            itemViewModel.setSeatTypeVO(x);
+            itemViewModel.setMaxSelectionQuantity(Math.max(Math.min(x.getAvailableQuantity(), 20), 0));
+            return itemViewModel;
+        }).collect(Collectors.toList()));
         return viewModel;
     }
 
     // 轮训订单状态，直到订单的库存预扣操作完成
     private OrderVO waitUntilReservationCompleted(String orderId) {
-        return new OrderVO();
+        OrderVO x = this.orderQueryService.findOrder(orderId);
+        if (x != null) {
+            if (x.getStatus() == OrderStatus.ReservationSuccess.getStatus()
+                    || x.getStatus() == OrderStatus.ReservationFailed.getStatus()) {
+                return x;
+            }
+        }
+        return null;
     }
 
     private CompletableFuture<Void> sendCommandAsync(ICommand command) {
         return commandService.sendAsync(command);
     }
 
-    private ActionResult view(Object... objects) {
-        return new ActionResult(objects);
+    private boolean isSuceess(CommandResult result) {
+        return CommandStatus.Success.equals(result.getStatus());
+    }
+
+    private CompletableFuture<CommandResult> executeCommandAsync(ICommand command) {
+        return commandService.executeAsync(command, CommandReturnType.CommandExecuted);
+    }
+
+    private <T> ActionResult<T> view(T objects) {
+        return new ActionResult<>(objects);
     }
 }

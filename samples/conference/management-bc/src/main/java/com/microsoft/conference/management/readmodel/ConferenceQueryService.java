@@ -29,50 +29,49 @@ public class ConferenceQueryService {
     @Autowired
     private OrderSeatAssignmentMapper orderSeatAssignmentMapper;
 
-    public ConferenceDTO findConference(String slug) {
+    public ConferenceVO findConference(String slug) {
         LambdaQueryWrapper<ConferenceDO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ConferenceDO::getSlug, slug);
         ConferenceDO conferenceDO = conferenceMapper.selectOne(queryWrapper);
-        return ConferenceConvert.INSTANCE.toDTO(conferenceDO);
+        return DTOExtensions.INSTANCE.toVO(conferenceDO);
     }
 
-    public ConferenceDTO findConference(String email, String accessCode) {
+    public ConferenceVO findConference(String email, String accessCode) {
         LambdaQueryWrapper<ConferenceDO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ConferenceDO::getOwnerEmail, email);
         queryWrapper.eq(ConferenceDO::getAccessCode, accessCode);
         ConferenceDO conferenceDO = conferenceMapper.selectOne(queryWrapper);
-        return ConferenceConvert.INSTANCE.toDTO(conferenceDO);
+        return DTOExtensions.INSTANCE.toVO(conferenceDO);
     }
 
-    public List<SeatTypeDTO> findSeatTypes(String conferenceId) {
+    public List<SeatTypeVO> findSeatTypes(String conferenceId) {
         LambdaQueryWrapper<SeatTypeDO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(SeatTypeDO::getConferenceId, conferenceId);
         List<SeatTypeDO> seatTypeDOS = seatTypeMapper.selectList(queryWrapper);
-        Optional.ofNullable(seatTypeDOS).orElse(new ArrayList<>())
-                .stream().map(x -> ConferenceConvert.INSTANCE.toDTO(x))
+        return Optional.ofNullable(seatTypeDOS).orElse(new ArrayList<>())
+                .stream().map(DTOExtensions.INSTANCE::toVO)
                 .collect(Collectors.toList());
-        return new ArrayList<>();
     }
 
-    public SeatTypeDTO findSeatType(String seatTypeId) {
+    public SeatTypeVO findSeatType(String seatTypeId) {
         LambdaQueryWrapper<SeatTypeDO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(SeatTypeDO::getSeatTypeId, seatTypeId);
         SeatTypeDO seatTypeDO = seatTypeMapper.selectOne(queryWrapper);
-        return ConferenceConvert.INSTANCE.toDTO(seatTypeDO);
+        return DTOExtensions.INSTANCE.toVO(seatTypeDO);
     }
 
-    public List<OrderDTO> findOrders(String conferenceId) {
+    public List<OrderVO> findOrders(String conferenceId) {
         LambdaQueryWrapper<OrderDO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(OrderDO::getConferenceId, conferenceId);
         List<OrderDO> orderDOS = orderMapper.selectList(queryWrapper);
         return Optional.ofNullable(orderDOS).orElse(new ArrayList<>()).stream().map(orderDO -> {
             LambdaQueryWrapper<OrderSeatAssignmentDO> wrapper = new LambdaQueryWrapper<>();
             List<OrderSeatAssignmentDO> seatAssignmentDOS = orderSeatAssignmentMapper.selectList(wrapper);
-            OrderDTO orderDTO = OrderConvert.INSTANCE.toDTO(orderDO);
-            orderDTO.setAttendees(Optional.ofNullable(seatAssignmentDOS).orElse(new ArrayList<>()).stream()
-                    .map(OrderConvert.INSTANCE::toDTO)
+            OrderVO orderVO = DTOExtensions.INSTANCE.toVO(orderDO);
+            orderVO.setAttendees(Optional.ofNullable(seatAssignmentDOS).orElse(new ArrayList<>()).stream()
+                    .map(DTOExtensions.INSTANCE::toVO)
                     .collect(Collectors.toList()));
-            return orderDTO;
+            return orderVO;
         }).collect(Collectors.toList());
     }
 }

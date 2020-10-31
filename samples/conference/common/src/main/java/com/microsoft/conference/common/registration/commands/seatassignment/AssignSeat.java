@@ -14,7 +14,7 @@ public class AssignSeat extends Command<String> {
     public AssignSeat() {
     }
 
-    public AssignSeat(String orderId) {
-        super(orderId);
+    public AssignSeat(String assignmentsId) {
+        super(assignmentsId);
     }
 }

@@ -17,11 +17,15 @@ public class ActionResult<T> {
         this.success = false;
     }
 
-    public ActionResult<T> of(T data) {
+    public static <T> ActionResult<T> of(T data) {
         return new ActionResult<>(data);
     }
 
-    public static ActionResult error(String errCode, String errMsg) {
+    public static <T> ActionResult<T> empty() {
+        return new ActionResult<>(null);
+    }
+
+    public static <T> ActionResult<T> error(String errCode, String errMsg) {
         return new ActionResult<>(errCode, errMsg);
     }
 

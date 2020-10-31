@@ -24,13 +24,13 @@ public class PaymentCommandHandler {
 
     @Subscribe
     public void handleAsync(ICommandContext context, CreatePayment command) {
-        List<PaymentItem> paymentItemList = command.lines.stream().map(x -> new PaymentItem(x.description, x.amount)).collect(Collectors.toList());
+        List<PaymentItem> paymentItemList = command.getLines().stream().map(x -> new PaymentItem(x.description, x.amount)).collect(Collectors.toList());
         context.addAsync(new Payment(
                 command.getAggregateRootId(),
-                command.orderId,
-                command.conferenceId,
-                command.description,
-                command.totalAmount,
+                command.getOrderId(),
+                command.getConferenceId(),
+                command.getDescription(),
+                command.getTotalAmount(),
                 paymentItemList));
     }
 

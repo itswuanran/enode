@@ -9,7 +9,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class OrderDTO {
+public class OrderVO {
     private String orderId;
     private String conferenceId;
     private String accessCode;
@@ -18,13 +18,13 @@ public class OrderDTO {
     private String registrantEmail;
     private BigDecimal totalAmount;
     private int status;
-    private List<AttendeeDTO> attendees = new ArrayList<>();
+    private List<AttendeeVO> attendees = new ArrayList<>();
 
-    public List<AttendeeDTO> getAttendees() {
+    public List<AttendeeVO> getAttendees() {
         return attendees;
     }
 
-    public void setAttendees(List<AttendeeDTO> attendees) {
+    public void setAttendees(List<AttendeeVO> attendees) {
         this.attendees = attendees;
     }
 

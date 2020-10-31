@@ -28,6 +28,6 @@ public class ConferenceSlugIndexRepository implements IConferenceSlugIndexReposi
         LambdaQueryWrapper<ConferenceSlugIndexDO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ConferenceSlugIndexDO::getSlug, slug);
         ConferenceSlugIndexDO slugIndexDO = conferenceSlugIndexMapper.selectOne(queryWrapper);
-        return ConferenceConvert.INSTANCE.toDTO(slugIndexDO);
+        return DTOExtensions.INSTANCE.toSlugIndex(slugIndexDO);
     }
 }

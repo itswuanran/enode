@@ -1,6 +1,8 @@
 package com.microsoft.conference.registration.readmodel;
 
 import com.microsoft.conference.common.dataobject.PaymentDO;
+import com.microsoft.conference.common.payment.commands.PaymentLine;
+import com.microsoft.conference.registration.readmodel.service.OrderLineVO;
 import com.microsoft.conference.registration.readmodel.service.PaymentVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
@@ -10,4 +12,6 @@ public interface PayConvert {
     PayConvert INSTANCE = Mappers.getMapper(PayConvert.class);
 
     PaymentVO toPayment(PaymentDO paymentDO);
+
+    PaymentLine toPaymentLine(OrderLineVO paymentDO);
 }
