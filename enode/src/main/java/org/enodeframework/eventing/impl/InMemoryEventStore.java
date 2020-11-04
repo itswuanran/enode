@@ -5,6 +5,7 @@ import org.enodeframework.eventing.EventAppendResult;
 import org.enodeframework.eventing.IEventStore;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -18,9 +19,8 @@ import java.util.stream.Collectors;
  * @author anruence@gmail.com
  */
 public class InMemoryEventStore implements IEventStore {
-    private static final boolean EDITING = true;
-    private static final boolean UNEDITING = false;
     private final Object lockObj = new Object();
+
     private ConcurrentMap<String, AggregateInfo> aggregateInfoDict;
 
     public InMemoryEventStore() {
@@ -67,6 +67,18 @@ public class InMemoryEventStore implements IEventStore {
     @Override
     public CompletableFuture<List<DomainEventStream>> queryAggregateEventsAsync(String aggregateRootId, String aggregateRootTypeName, int minVersion, int maxVersion) {
         return CompletableFuture.completedFuture(queryAggregateEvents(aggregateRootId, aggregateRootTypeName, minVersion, maxVersion));
+    }
+
+    @Override
+    public CompletableFuture<Integer> getPublishedVersionAsync(String aggregateRootTypeName, String aggregateRootId) {
+        AggregateInfo aggregateInfo = aggregateInfoDict.get(aggregateRootId);
+        int version = Optional.ofNullable(aggregateInfo)
+                .map(AggregateInfo::getEventDict)
+                .map(Map::values).orElse(new ArrayList<>())
+                .stream()
+                .map(DomainEventStream::getVersion)
+                .max(Comparator.naturalOrder()).orElse(0);
+        return CompletableFuture.completedFuture(version);
     }
 
     private DomainEventStream find(String aggregateRootId, int version) {
