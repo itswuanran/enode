@@ -32,6 +32,7 @@ import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -148,12 +149,12 @@ public abstract class JDBCEventStore extends AbstractVerticle implements IEventS
         return future.exceptionally(throwable -> {
             if (throwable instanceof SQLException) {
                 SQLException ex = (SQLException) throwable;
-                if (ex.getSQLState().equals(sqlState) && ex.getMessage().contains(versionIndexName)) {
+                if (sqlState.equals(ex.getSQLState()) && Objects.nonNull(ex.getMessage()) && ex.getMessage().contains(versionIndexName)) {
                     AggregateEventAppendResult appendResult = new AggregateEventAppendResult();
                     appendResult.setEventAppendStatus(EventAppendStatus.DuplicateEvent);
                     return appendResult;
                 }
-                if (ex.getSQLState().equals(sqlState) && ex.getMessage().contains(commandIndexName)) {
+                if (sqlState.equals(ex.getSQLState()) && Objects.nonNull(ex.getMessage()) && ex.getMessage().contains(commandIndexName)) {
                     // Duplicate entry '5d3ac841d1fcfe669e9a257d-5d3ac841d1fcfe669e9a2585' for key 'IX_EventStream_AggId_CommandId'
                     // ERROR: duplicate key value violates unique constraint "event_stream_aggregate_root_id_command_id_key"\n详细：Key (aggregate_root_id, command_id)=(5ee99656d767113d73a7540f, 5ee99656d767113d73a75417) already exists.
                     AggregateEventAppendResult appendResult = new AggregateEventAppendResult();
