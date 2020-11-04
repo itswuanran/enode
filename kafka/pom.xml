@@ -13,6 +13,7 @@
     <name>${project.artifactId}</name>
     <packaging>jar</packaging>
     <version>${revision}</version>
+    <description>enodeframework message queue kafka adapter</description>
     <dependencies>
         <dependency>
             <groupId>org.enodeframework</groupId>

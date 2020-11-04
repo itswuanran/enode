@@ -4,8 +4,8 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.json.JsonArray;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.sql.SQLClient;
-import org.enodeframework.common.exception.EventStoreException;
 import org.enodeframework.common.exception.IORuntimeException;
+import org.enodeframework.common.exception.PublishedVersionStoreException;
 import org.enodeframework.common.utilities.Ensure;
 import org.enodeframework.eventing.IPublishedVersionStore;
 import org.slf4j.Logger;
@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -69,7 +70,11 @@ public class JDBCPublishedVersionStore extends AbstractVerticle implements IPubl
         }
         sqlClient.updateWithParams(sql, array, x -> {
             if (x.succeeded()) {
-                future.complete(x.result().getUpdated());
+                if (x.result().getUpdated() == 1) {
+                    future.complete(x.result().getUpdated());
+                    return;
+                }
+                future.completeExceptionally(new PublishedVersionStoreException(String.format("updated rows not expect: %s, %s", array, x.result().getUpdated())));
                 return;
             }
             future.completeExceptionally(x.cause());
@@ -78,15 +83,17 @@ public class JDBCPublishedVersionStore extends AbstractVerticle implements IPubl
             if (throwable instanceof SQLException) {
                 SQLException ex = (SQLException) throwable;
                 // insert duplicate return
-                if (!isUpdate && ex.getSQLState().equals(sqlState) && ex.getMessage().contains(uniqueIndexName)) {
+                if (!isUpdate && sqlState.equals(ex.getSQLState()) && Objects.nonNull(ex.getMessage()) && ex.getMessage().contains(uniqueIndexName)) {
                     return 0;
                 }
                 logger.error("Insert or update aggregate published version has sql exception.", ex);
                 throw new IORuntimeException(throwable);
             }
             logger.error("Insert or update aggregate published version has unknown exception.", throwable);
-            throw new EventStoreException(throwable);
-
+            if (throwable instanceof PublishedVersionStoreException) {
+                throw (PublishedVersionStoreException) throwable;
+            }
+            throw new PublishedVersionStoreException(throwable);
         });
     }
 
@@ -115,7 +122,7 @@ public class JDBCPublishedVersionStore extends AbstractVerticle implements IPubl
                 throw new IORuntimeException(throwable);
             }
             logger.error("Get aggregate published version has unknown exception.", throwable);
-            throw new EventStoreException(throwable);
+            throw new PublishedVersionStoreException(throwable);
         });
     }
 }

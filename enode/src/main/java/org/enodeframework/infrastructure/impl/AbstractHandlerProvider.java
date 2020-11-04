@@ -126,7 +126,7 @@ public abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface exten
                 IObjectContainer objectContainer = getObjectContainer();
                 Ensure.notNull(objectContainer, "objectContainer");
                 THandlerProxyInterface handlerProxy = objectContainer.resolve(getHandlerProxyImplementationType());
-                Ensure.notNull(handlerProxy, "handlerProxy: " + getHandlerProxyImplementationType().getName());
+                Ensure.notNull(handlerProxy, String.format("handlerProxy: %s", getHandlerProxyImplementationType().getName()));
                 handlerProxy.setHandlerType(handlerType);
                 handlerProxy.setMethod(method);
                 handlerProxy.setMethodHandle(handleMethod);

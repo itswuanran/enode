@@ -42,7 +42,7 @@ public class ProcessingEventMailBox {
 
     private void tryRemovedInvalidWaitingMessages(int version) {
         waitingProcessingEventDict.keySet().stream().filter(x -> x < version).forEach(key -> {
-            if (waitingProcessingEventDict.containsKey(version)) {
+            if (waitingProcessingEventDict.containsKey(key)) {
                 ProcessingEvent processingEvent = waitingProcessingEventDict.remove(key);
                 logger.warn("{} invalid waiting message removed, aggregateRootType: {}, aggregateRootId: {}, commandId: {}, eventVersion: {}, eventStreamId: {}, eventTypes: {}, eventIds: {}, nextExpectingEventVersion: {}",
                         getClass().getName(),

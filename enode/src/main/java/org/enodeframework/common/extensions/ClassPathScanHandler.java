@@ -158,7 +158,7 @@ public class ClassPathScanHandler {
                 // 判断是否过滤 inner class
                 if (this.excludeInner && name.indexOf('$') != -1) {
                     if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("exclude inner class with name:" + name);
+                        LOGGER.debug("exclude inner class with name: {}", name);
                     }
                     continue;
                 }

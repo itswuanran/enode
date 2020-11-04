@@ -8,8 +8,8 @@ import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.MongoClient;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.enodeframework.common.exception.EventStoreException;
 import org.enodeframework.common.exception.IORuntimeException;
+import org.enodeframework.common.exception.PublishedVersionStoreException;
 import org.enodeframework.eventing.IPublishedVersionStore;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -110,7 +110,10 @@ public class MongoPublishedVersionStore implements IPublishedVersionStore {
 
                 @Override
                 public void onComplete() {
-                    future.complete(updated);
+                    if (updated == 1) {
+                        future.complete(updated);
+                    }
+                    future.completeExceptionally(new PublishedVersionStoreException(String.format("updated rows not expect, aggregateRootId: %s, version: %s, updated: %s", aggregateRootId, publishedVersion, updated)));
                 }
             });
         }
@@ -124,9 +127,11 @@ public class MongoPublishedVersionStore implements IPublishedVersionStore {
                 logger.error("Insert or update aggregate published version has sql exception.", ex);
                 throw new IORuntimeException(throwable);
             }
+            if (throwable instanceof PublishedVersionStoreException) {
+                throw (PublishedVersionStoreException) throwable;
+            }
             logger.error("Insert or update aggregate published version has unknown exception.", throwable);
-            throw new EventStoreException(throwable);
-
+            throw new PublishedVersionStoreException(throwable);
         });
     }
 
@@ -168,7 +173,7 @@ public class MongoPublishedVersionStore implements IPublishedVersionStore {
                 throw new IORuntimeException(throwable);
             }
             logger.error("Get aggregate published version has unknown exception.", throwable);
-            throw new EventStoreException(throwable);
+            throw new PublishedVersionStoreException(throwable);
         });
     }
 }
