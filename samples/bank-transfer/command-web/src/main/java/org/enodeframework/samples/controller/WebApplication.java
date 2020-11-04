@@ -8,7 +8,6 @@ import springfox.documentation.oas.annotations.EnableOpenApi;
 
 @SpringBootApplication(scanBasePackages = {"org.enodeframework"})
 @EnableEnode(scanBasePackages = {"org.enodeframework"})
-@ImportAutoConfiguration(value = {KafkaConfig.class})
 @EnableOpenApi
 public class WebApplication {
     public static void main(String[] args) {

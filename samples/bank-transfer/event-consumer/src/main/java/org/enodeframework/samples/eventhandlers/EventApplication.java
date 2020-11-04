@@ -10,7 +10,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @SpringBootApplication(scanBasePackages = {"org.enodeframework"})
 @EnableEnode(scanBasePackages = {"org.enodeframework"})
-@ImportAutoConfiguration(value = {KafkaEventConfig.class})
 public class EventApplication {
     public static void main(String[] args) {
         SpringApplication.run(EventApplication.class, args);
