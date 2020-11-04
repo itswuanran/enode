@@ -8,37 +8,13 @@ import com.google.common.base.Strings;
 public class Ensure {
     public static <T> void notNull(T argument, String argumentName) {
         if (argument == null) {
-            throw new IllegalArgumentException(argumentName + " should not be null.");
+            throw new IllegalArgumentException(String.format("%s should not be null.", argumentName));
         }
     }
 
     public static void notNullOrEmpty(String argument, String argumentName) {
         if (Strings.isNullOrEmpty(argument)) {
-            throw new IllegalArgumentException(argumentName + " should not be null or empty.");
-        }
-    }
-
-    public static void positive(int number, String argumentName) {
-        if (number <= 0) {
-            throw new IllegalArgumentException(argumentName + " should be positive.");
-        }
-    }
-
-    public static void positive(long number, String argumentName) {
-        if (number <= 0) {
-            throw new IllegalArgumentException(argumentName + " should be positive.");
-        }
-    }
-
-    public static void nonNegative(long number, String argumentName) {
-        if (number < 0) {
-            throw new IllegalArgumentException(argumentName + " should be non negative.");
-        }
-    }
-
-    public static void nonNegative(int number, String argumentName) {
-        if (number < 0) {
-            throw new IllegalArgumentException(argumentName + " should be non negative.");
+            throw new IllegalArgumentException(String.format("%s should not be null or empty.", argumentName));
         }
     }
 

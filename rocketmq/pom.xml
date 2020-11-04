@@ -12,6 +12,7 @@
     <artifactId>enode-rocketmq</artifactId>
     <name>${project.artifactId}</name>
     <packaging>jar</packaging>
+    <description>enodeframework message queue rocketmq adapter</description>
     <dependencies>
         <dependency>
             <groupId>org.enodeframework</groupId>

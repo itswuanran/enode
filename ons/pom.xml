@@ -12,7 +12,7 @@
     <artifactId>enode-ons</artifactId>
     <name>${project.artifactId}</name>
     <packaging>jar</packaging>
-    <description>enodeframework message queue ons</description>
+    <description>enodeframework message queue ons adapter</description>
     <dependencies>
         <dependency>
             <groupId>org.enodeframework</groupId>
