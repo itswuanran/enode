@@ -68,7 +68,7 @@ abstract class JDBCEventStore(dataSource: DataSource, dbConfiguration: DBConfigu
         return batchAggregateEventAppendResult.taskCompletionSource
     }
 
-    private fun batchAppendAggregateEventsAsync(aggregateRootId: String, eventStreamList: List<DomainEventStream>, batchAggregateEventAppendResult: BatchAggregateEventAppendResult, retryTimes: Int) {
+    fun batchAppendAggregateEventsAsync(aggregateRootId: String, eventStreamList: List<DomainEventStream>, batchAggregateEventAppendResult: BatchAggregateEventAppendResult, retryTimes: Int) {
         IOHelper.tryAsyncActionRecursively("BatchAppendAggregateEventsAsync",
                 { batchAppendAggregateEventsAsync(aggregateRootId, eventStreamList) },
                 { result: AggregateEventAppendResult? -> batchAggregateEventAppendResult.addCompleteAggregate(aggregateRootId, result) },
@@ -93,7 +93,7 @@ abstract class JDBCEventStore(dataSource: DataSource, dbConfiguration: DBConfigu
         return future
     }
 
-    private fun batchAppendAggregateEventsAsync(aggregateRootId: String, eventStreamList: List<DomainEventStream>): CompletableFuture<AggregateEventAppendResult?> {
+    fun batchAppendAggregateEventsAsync(aggregateRootId: String, eventStreamList: List<DomainEventStream>): CompletableFuture<AggregateEventAppendResult?> {
         val sql = String.format(INSERT_EVENT_SQL, tableName)
         val jsonArrays: ArrayList<JsonArray> = Lists.newArrayList()
         for (domainEventStream in eventStreamList) {
@@ -124,9 +124,8 @@ abstract class JDBCEventStore(dataSource: DataSource, dbConfiguration: DBConfigu
                         appendResult.duplicateCommandIds = Lists.newArrayList(commandId)
                         return@exceptionally appendResult
                     }
-                    // 如果没有从异常信息获取到commandId(很低概率获取不到)，兜底从db查询出来，此时选择的策略是从最后一个开始查
-                    // 但是Vert.x的线程模型决定了不能再次使用eventloop线程执行阻塞的查询操作
-                    tryFindEventByCommandIdAsyncRecursion(eventStreamList.size, aggregateRootId, eventStreamList, appendResult.duplicateCommandIds, 0)
+                    // 如果没有从异常信息获取到commandId(很低概率获取不到)，需要从db查询出来
+                    // 但是Vert.x的线程模型决定了不能再次使用EventLoop线程执行阻塞的查询操作
                     return@exceptionally appendResult
                 }
                 logger.error("Batch append event has sql exception.", throwable)
@@ -137,20 +136,8 @@ abstract class JDBCEventStore(dataSource: DataSource, dbConfiguration: DBConfigu
         }
     }
 
-    private fun tryFindEventByCommandIdAsyncRecursion(i: Int, aggregateRootId: String, eventStreamList: List<DomainEventStream>, duplicateCommandIds: MutableList<String>, retryTimes: Int) {
-        if (i == 0) {
-            return
-        }
-        val eventStream = eventStreamList[i - 1]
-        tryFindEventByCommandIdAsync(aggregateRootId, eventStream.commandId, duplicateCommandIds, retryTimes).thenAccept { x: DomainEventStream? ->
-            if (x != null) {
-                return@thenAccept
-            }
-            tryFindEventByCommandIdAsyncRecursion(i - 1, aggregateRootId, eventStreamList, duplicateCommandIds, 0)
-        }
-    }
-
     protected abstract fun parseDuplicateCommandId(msg: String): String
+
     fun batchInsertAsync(sql: String, jsonArrays: List<JsonArray>): CompletableFuture<AggregateEventAppendResult?> {
         val future = CompletableFuture<AggregateEventAppendResult?>()
         batchWithParams(sql, jsonArrays) { x: AsyncResult<List<Int?>?> ->
@@ -162,7 +149,7 @@ abstract class JDBCEventStore(dataSource: DataSource, dbConfiguration: DBConfigu
             }
             future.completeExceptionally(x.cause())
         }
-        return future
+        return future;
     }
 
     override fun queryAggregateEventsAsync(aggregateRootId: String, aggregateRootTypeName: String, minVersion: Int, maxVersion: Int): CompletableFuture<List<DomainEventStream>> {
@@ -197,7 +184,7 @@ abstract class JDBCEventStore(dataSource: DataSource, dbConfiguration: DBConfigu
 
     override fun findAsync(aggregateRootId: String, version: Int): CompletableFuture<DomainEventStream> {
         return IOHelper.tryIOFuncAsync({
-            val future = CompletableFuture<DomainEventStream?>()
+            val future = CompletableFuture<DomainEventStream>()
             val sql = String.format(SELECT_ONE_BY_VERSION_SQL, tableName)
             val array = JsonArray()
             array.add(aggregateRootId)
@@ -228,7 +215,7 @@ abstract class JDBCEventStore(dataSource: DataSource, dbConfiguration: DBConfigu
 
     override fun findAsync(aggregateRootId: String, commandId: String): CompletableFuture<DomainEventStream> {
         return IOHelper.tryIOFuncAsync({
-            val future = CompletableFuture<DomainEventStream?>()
+            val future = CompletableFuture<DomainEventStream>()
             val sql = String.format(SELECT_ONE_BY_COMMAND_ID_SQL, tableName)
             val array = JsonArray()
             array.add(aggregateRootId)

@@ -49,21 +49,21 @@ class DefaultSendReplyService(private val serializeService: ISerializeService) :
         }
     }
 
-    override fun sendCommandReply(commandResult: CommandResult, replyAddress: ReplySocketAddress): CompletableFuture<Void> {
+    override fun sendCommandReply(commandResult: CommandResult, replyAddress: ReplySocketAddress): CompletableFuture<Boolean> {
         val replyMessage = ReplyMessage()
-        replyMessage.code = CommandReturnType.CommandExecuted.value.toInt()
+        replyMessage.code = CommandReturnType.CommandExecuted.value
         replyMessage.commandResult = commandResult
         return sendReply(replyMessage, replyAddress)
     }
 
-    override fun sendEventReply(eventHandledMessage: DomainEventHandledMessage, replyAddress: ReplySocketAddress): CompletableFuture<Void> {
+    override fun sendEventReply(eventHandledMessage: DomainEventHandledMessage, replyAddress: ReplySocketAddress): CompletableFuture<Boolean> {
         val replyMessage = ReplyMessage()
-        replyMessage.code = CommandReturnType.EventHandled.value.toInt()
+        replyMessage.code = CommandReturnType.EventHandled.value
         replyMessage.eventHandledMessage = eventHandledMessage
         return sendReply(replyMessage, replyAddress)
     }
 
-    fun sendReply(replyMessage: ReplyMessage?, replySocketAddress: ReplySocketAddress): CompletableFuture<Void> {
+    fun sendReply(replyMessage: ReplyMessage?, replySocketAddress: ReplySocketAddress): CompletableFuture<Boolean> {
         val socketAddress = SocketAddress.inetSocketAddress(replySocketAddress.port, replySocketAddress.host)
         val message = serializeService.serialize(replyMessage)
         val address = InetUtil.toUri(replySocketAddress)
@@ -83,7 +83,7 @@ class DefaultSendReplyService(private val serializeService: ISerializeService) :
                 socket.close()
                 logger.error("socket occurs unexpected error, msg: {}", message, throwable)
             }
-            socket.closeHandler { x: Void? ->
+            socket.closeHandler {
                 netSocketCache.invalidate(address)
                 logger.error("socket closed, indicatedServerName: {},writeHandlerID: {}", socket.indicatedServerName(), socket.writeHandlerID())
             }
@@ -92,7 +92,7 @@ class DefaultSendReplyService(private val serializeService: ISerializeService) :
                     logger.info("receive server req: {}, res: {}", message, parse)
                 }
             })
-            socket.endHandler { v: Void? -> netSocketCache.invalidate(address) }
+            socket.endHandler { netSocketCache.invalidate(address) }
             FrameHelper.sendFrame("send", address, replyAddress, JsonObject(message), socket)
         }
         return Task.completedTask

@@ -45,12 +45,13 @@ class DefaultCommandResultProcessor constructor(private val scheduleService: ISc
     private lateinit var tcpEventBusBridge: TcpEventBusBridge
     private var started = false
 
-    fun startServer(port: Int) {
+    private fun startServer(port: Int) {
         bindAddress = InetSocketAddress(InetAddress.getLocalHost(), port)
         val address = InetUtil.toUri(bindAddress)
         vertx.eventBus().consumer(address) { msg: Message<JsonObject> ->
             val replyMessage = msg.body().mapTo(ReplyMessage::class.java)
             processRequestInternal(replyMessage)
+            msg.reply(JsonObject().put("value", "success"))
         }
         val bridgeOptions = BridgeOptions()
         bridgeOptions.addInboundPermitted(PermittedOptions().setAddress(address))

@@ -20,7 +20,7 @@ import java.util.Set;
  */
 public class DefaultAggregateRepositoryProvider implements IAggregateRepositoryProvider, IAssemblyInitializer {
 
-    private final Map<Class, IAggregateRepositoryProxy> repositoryDict = new HashMap<>();
+    private final Map<Class<?>, IAggregateRepositoryProxy> repositoryDict = new HashMap<>();
 
     @Override
     public IAggregateRepositoryProxy getRepository(Class<? extends IAggregateRoot> aggregateRootType) {
@@ -37,16 +37,16 @@ public class DefaultAggregateRepositoryProvider implements IAggregateRepositoryP
      *
      * @param aggregateRepositoryType
      */
-    private void registerAggregateRepository(Class aggregateRepositoryType) {
+    private void registerAggregateRepository(Class<?> aggregateRepositoryType) {
         Type[] genericInterfaces = aggregateRepositoryType.getGenericInterfaces();
         Arrays.stream(genericInterfaces).forEach(x -> {
             ParameterizedType superGenericInterfaceType = (ParameterizedType) x;
             if (!IAggregateRepository.class.equals(superGenericInterfaceType.getRawType())) {
                 return;
             }
-            IAggregateRepository resolve = (IAggregateRepository) ObjectContainer.INSTANCE.resolve(aggregateRepositoryType);
-            AggregateRepositoryProxy aggregateRepositoryProxy = new AggregateRepositoryProxy(resolve);
-            repositoryDict.put((Class) superGenericInterfaceType.getActualTypeArguments()[0], aggregateRepositoryProxy);
+            IAggregateRepository<IAggregateRoot> resolve = (IAggregateRepository<IAggregateRoot>) ObjectContainer.INSTANCE.resolve(aggregateRepositoryType);
+            AggregateRepositoryProxy<IAggregateRoot> aggregateRepositoryProxy = new AggregateRepositoryProxy<>(resolve);
+            repositoryDict.put((Class<?>) superGenericInterfaceType.getActualTypeArguments()[0], aggregateRepositoryProxy);
         });
     }
 }

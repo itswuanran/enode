@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture
  * @author anruence@gmail.com
  */
 class DefaultCommandService(private val topic: String, private val tag: String, private val commandResultProcessor: ICommandResultProcessor, private val sendMessageService: ISendMessageService, private val serializeService: ISerializeService) : ICommandService {
-    override fun sendAsync(command: ICommand): CompletableFuture<Void> {
+    override fun sendAsync(command: ICommand): CompletableFuture<Boolean> {
         return sendMessageService.sendMessageAsync(buildCommandMessage(command, false))
     }
 
@@ -30,7 +30,7 @@ class DefaultCommandService(private val topic: String, private val tag: String, 
             Ensure.notNull(commandResultProcessor, "commandResultProcessor")
             commandResultProcessor.registerProcessingCommand(command, commandReturnType, taskCompletionSource)
             val sendMessageAsync = sendMessageService.sendMessageAsync(buildCommandMessage(command, true))
-            sendMessageAsync.thenAccept { sendResult: Void? -> }.exceptionally { ex: Throwable? ->
+            sendMessageAsync.exceptionally { ex: Throwable? ->
                 commandResultProcessor.processFailedSendingCommand(command)
                 taskCompletionSource.completeExceptionally(ex)
                 null

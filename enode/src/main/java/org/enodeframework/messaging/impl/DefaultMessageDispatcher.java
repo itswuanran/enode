@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import org.enodeframework.common.function.Action2;
 import org.enodeframework.common.function.Action4;
 import org.enodeframework.common.io.IOHelper;
+import org.enodeframework.common.io.Task;
 import org.enodeframework.infrastructure.IObjectProxy;
 import org.enodeframework.infrastructure.ITypeNameProvider;
 import org.enodeframework.messaging.IMessage;
@@ -48,19 +49,19 @@ public class DefaultMessageDispatcher implements IMessageDispatcher {
     }
 
     @Override
-    public CompletableFuture<Void> dispatchMessageAsync(IMessage message) {
+    public CompletableFuture<Boolean> dispatchMessageAsync(IMessage message) {
         return dispatchMessages(Lists.newArrayList(message));
     }
 
     @Override
-    public CompletableFuture<Void> dispatchMessagesAsync(List<? extends IMessage> messages) {
+    public CompletableFuture<Boolean> dispatchMessagesAsync(List<? extends IMessage> messages) {
         return dispatchMessages(messages);
     }
 
-    private CompletableFuture<Void> dispatchMessages(List<? extends IMessage> messages) {
+    private CompletableFuture<Boolean> dispatchMessages(List<? extends IMessage> messages) {
         int messageCount = messages.size();
         if (messageCount == 0) {
-            return CompletableFuture.completedFuture(null);
+            return Task.completedTask;
         }
         RootDispatching rootDispatching = new RootDispatching();
         //先对每个事件调用其Handler
@@ -221,7 +222,7 @@ public class DefaultMessageDispatcher implements IMessageDispatcher {
     }
 
     class RootDispatching {
-        private final CompletableFuture<Void> taskCompletionSource;
+        private final CompletableFuture<Boolean> taskCompletionSource;
         private final ConcurrentMap<Object, Boolean> childDispatchingDict;
 
         public RootDispatching() {
@@ -229,7 +230,7 @@ public class DefaultMessageDispatcher implements IMessageDispatcher {
             childDispatchingDict = new ConcurrentHashMap<>();
         }
 
-        public CompletableFuture<Void> getTaskCompletionSource() {
+        public CompletableFuture<Boolean> getTaskCompletionSource() {
             return taskCompletionSource;
         }
 
@@ -240,7 +241,7 @@ public class DefaultMessageDispatcher implements IMessageDispatcher {
         public void onChildDispatchingFinished(Object childDispatching) {
             if (childDispatchingDict.remove(childDispatching) != null) {
                 if (childDispatchingDict.isEmpty()) {
-                    taskCompletionSource.complete(null);
+                    taskCompletionSource.complete(true);
                 }
             }
         }
