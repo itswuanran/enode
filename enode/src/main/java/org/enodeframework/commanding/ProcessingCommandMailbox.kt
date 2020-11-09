@@ -1,8 +1,5 @@
 package org.enodeframework.commanding
 
-import kotlinx.coroutines.*
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import org.enodeframework.common.io.Task
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -16,8 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 class ProcessingCommandMailbox(aggregateRootId: String, messageHandler: IProcessingCommandHandler, batchSize: Int, private val executor: Executor) {
     private val lockObj = Any()
-
-    val asyncLock = Mutex()
+    private val asyncLock = Any()
 
     /**
      * Sequence 对应 ProcessingCommand
@@ -74,7 +70,7 @@ class ProcessingCommandMailbox(aggregateRootId: String, messageHandler: IProcess
             if (logger.isDebugEnabled) {
                 logger.debug("{} start run, aggregateRootId: {}, consumingSequence: {}", javaClass.name, aggregateRootId, consumingSequence)
             }
-            GlobalScope.launch { processMessages() }
+            CompletableFuture.runAsync({ processMessages() }, executor)
         }
     }
 
@@ -156,8 +152,8 @@ class ProcessingCommandMailbox(aggregateRootId: String, messageHandler: IProcess
         return System.currentTimeMillis() - lastActiveTime.time >= timeoutSeconds
     }
 
-    suspend fun processMessages() {
-        this.asyncLock.withLock {
+    fun processMessages() {
+        synchronized(asyncLock) {
             lastActiveTime = Date()
             try {
                 var scannedCount = 0
@@ -167,10 +163,7 @@ class ProcessingCommandMailbox(aggregateRootId: String, messageHandler: IProcess
                         if (duplicateCommandIdDict.containsKey(message.message.id)) {
                             message.isDuplicated = true
                         }
-
-                        withContext(Dispatchers.Default) {
-                            messageHandler.handleAsync(message).join()
-                        }
+                        messageHandler.handleAsync(message).join()
                     }
                     scannedCount++
                     consumingSequence++

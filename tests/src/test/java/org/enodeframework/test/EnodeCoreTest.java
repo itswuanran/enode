@@ -3,7 +3,6 @@ package org.enodeframework.test;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.enodeframework.commanding.CommandResult;
-import org.enodeframework.commanding.CommandReturnType;
 import org.enodeframework.commanding.CommandStatus;
 import org.enodeframework.commanding.ICommand;
 import org.enodeframework.common.io.Task;
@@ -285,7 +284,7 @@ public class EnodeCoreTest extends AbstractTest {
         SetResultCommand command = new SetResultCommand();
         command.aggregateRootId = (ObjectId.generateNewStringId());
         command.setResult("CommandResult");
-        CommandResult asyncResult = Task.await(commandService.executeAsync(command, CommandReturnType.EventHandled));
+        CommandResult asyncResult = Task.await(commandService.executeAsync(command));
         Assert.assertNotNull(asyncResult);
 
         CommandResult commandResult = asyncResult;
@@ -756,8 +755,8 @@ public class EnodeCoreTest extends AbstractTest {
         command1.setTitle("Sample Title1");
         TestEventPriorityCommand command2 = new TestEventPriorityCommand();
         command2.aggregateRootId = noteId;
-        CommandResult commandResult1 = Task.await(commandService.executeAsync(command1, CommandReturnType.EventHandled));
-        CommandResult commandResult2 = Task.await(commandService.executeAsync(command2, CommandReturnType.EventHandled));
+        CommandResult commandResult1 = Task.await(commandService.executeAsync(command1));
+        CommandResult commandResult2 = Task.await(commandService.executeAsync(command2));
         Task.sleep(1000);
         Assert.assertEquals(CommandStatus.Success, commandResult1.getStatus());
         Assert.assertEquals(CommandStatus.Success, commandResult2.getStatus());
