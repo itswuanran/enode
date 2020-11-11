@@ -23,7 +23,8 @@ class ProcessingEventMailBox(aggregateRootTypeName: String, aggregateRootId: Str
     private var processingEventQueue: ConcurrentLinkedQueue<ProcessingEvent>
     private var handleProcessingEventAction: Action1<ProcessingEvent>
     private var lastActiveTime: Date
-    private var nextExpectingEventVersion = 1
+    private var nextExpectingEventVersion: Int? = null
+
     private fun tryRemovedInvalidWaitingMessages(version: Int) {
         waitingProcessingEventDict.keys.stream().filter { x: Int -> x < version }.forEach { key: Int ->
             if (waitingProcessingEventDict.containsKey(key)) {
@@ -44,6 +45,9 @@ class ProcessingEventMailBox(aggregateRootTypeName: String, aggregateRootId: Str
     }
 
     private fun tryEnqueueValidWaitingMessage() {
+        if (nextExpectingEventVersion == null) {
+            return
+        }
         while (waitingProcessingEventDict.containsKey(nextExpectingEventVersion)) {
             val nextProcessingEvent = waitingProcessingEventDict.remove(nextExpectingEventVersion)
             if (nextProcessingEvent != null) {
@@ -53,18 +57,22 @@ class ProcessingEventMailBox(aggregateRootTypeName: String, aggregateRootId: Str
         }
     }
 
-    val totalUnHandledMessageCount: Long
-        get() = processingEventQueue.size.toLong()
+    fun getTotalUnHandledMessageCount(): Int {
+        return processingEventQueue.size
+    }
 
     fun setNextExpectingEventVersion(version: Int) {
         synchronized(lockObj) {
             tryRemovedInvalidWaitingMessages(version)
-            if (nextExpectingEventVersion == 1 || version > nextExpectingEventVersion) {
+            if (nextExpectingEventVersion == null || version > this.nextExpectingEventVersion!!) {
                 nextExpectingEventVersion = version
                 logger.info("{} refreshed nextExpectingEventVersion, aggregateRootId: {}, aggregateRootTypeName: {}, version: {}", javaClass.name, aggregateRootId, aggregateRootTypeName, nextExpectingEventVersion)
                 tryEnqueueValidWaitingMessage()
                 lastActiveTime = Date()
                 tryRun()
+            } else if (version == this.nextExpectingEventVersion){
+                val processingEvent = waitingProcessingEventDict.get(nextExpectingEventVersion);
+                logger.info("{} equals nextExpectingEventVersion ignored, aggregateRootId: {}, aggregateRootTypeName: {}, version: {}, current nextExpectingEventVersion: {}", javaClass.name, aggregateRootId, aggregateRootTypeName, version, nextExpectingEventVersion)
             } else {
                 logger.info("{} nextExpectingEventVersion ignored, aggregateRootId: {}, aggregateRootTypeName: {}, version: {}, current nextExpectingEventVersion: {}", javaClass.name, aggregateRootId, aggregateRootTypeName, version, nextExpectingEventVersion)
             }
@@ -97,7 +105,7 @@ class ProcessingEventMailBox(aggregateRootTypeName: String, aggregateRootId: Str
                 throw MailBoxProcessException(String.format("ProcessingEventMailBox was removed, cannot allow to enqueue message, aggregateRootTypeName: %s, aggregateRootId: %s", aggregateRootTypeName, aggregateRootId))
             }
             val eventStream = processingEvent.message
-            if (eventStream.getVersion() > nextExpectingEventVersion) {
+            if (nextExpectingEventVersion == null || eventStream.getVersion() > this.nextExpectingEventVersion!!) {
                 if (waitingProcessingEventDict.putIfAbsent(eventStream.getVersion(), processingEvent) == null) {
                     logger.warn("{} waiting message added, aggregateRootType: {}, aggregateRootId: {}, commandId: {}, eventVersion: {}, eventStreamId: {}, eventTypes: {}, eventIds: {}, nextExpectingEventVersion: {}",
                             javaClass.name,
@@ -148,7 +156,7 @@ class ProcessingEventMailBox(aggregateRootTypeName: String, aggregateRootId: Str
             logger.debug("{} complete run, aggregateRootId: {}", javaClass.name, aggregateRootId)
         }
         setAsNotRunning()
-        if (totalUnHandledMessageCount > 0) {
+        if (getTotalUnHandledMessageCount() > 0) {
             tryRun()
         }
     }
@@ -201,8 +209,9 @@ class ProcessingEventMailBox(aggregateRootTypeName: String, aggregateRootId: Str
         isRunning.set(0)
     }
 
-    val waitingMessageCount: Int
-        get() = waitingProcessingEventDict.size
+    fun getWaitingMessageCount(): Int {
+        return waitingProcessingEventDict.size
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(ProcessingEventMailBox::class.java)
