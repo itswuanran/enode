@@ -25,6 +25,10 @@ class ProcessingEventMailBox(aggregateRootTypeName: String, aggregateRootId: Str
     private var lastActiveTime: Date
     private var nextExpectingEventVersion: Int? = null
 
+    fun getNextExpectingEventVersion(): Int? {
+        return this.nextExpectingEventVersion
+    }
+
     private fun tryRemovedInvalidWaitingMessages(version: Int) {
         waitingProcessingEventDict.keys.stream().filter { x: Int -> x < version }.forEach { key: Int ->
             if (waitingProcessingEventDict.containsKey(key)) {
@@ -71,7 +75,7 @@ class ProcessingEventMailBox(aggregateRootTypeName: String, aggregateRootId: Str
                 lastActiveTime = Date()
                 tryRun()
             } else if (version == this.nextExpectingEventVersion){
-                val processingEvent = waitingProcessingEventDict.get(nextExpectingEventVersion);
+                val processingEvent = waitingProcessingEventDict.get(nextExpectingEventVersion)
                 logger.info("{} equals nextExpectingEventVersion ignored, aggregateRootId: {}, aggregateRootTypeName: {}, version: {}, current nextExpectingEventVersion: {}", javaClass.name, aggregateRootId, aggregateRootTypeName, version, nextExpectingEventVersion)
             } else {
                 logger.info("{} nextExpectingEventVersion ignored, aggregateRootId: {}, aggregateRootTypeName: {}, version: {}, current nextExpectingEventVersion: {}", javaClass.name, aggregateRootId, aggregateRootTypeName, version, nextExpectingEventVersion)

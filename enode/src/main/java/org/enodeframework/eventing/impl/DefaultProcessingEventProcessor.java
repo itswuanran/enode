@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import org.enodeframework.common.io.IOHelper;
 import org.enodeframework.common.io.Task;
 import org.enodeframework.common.scheduling.IScheduleService;
+import org.enodeframework.common.serializing.ISerializeService;
 import org.enodeframework.eventing.DomainEventStreamMessage;
 import org.enodeframework.eventing.EnqueueMessageResult;
 import org.enodeframework.eventing.IProcessingEventProcessor;
@@ -35,6 +36,7 @@ public class DefaultProcessingEventProcessor implements IProcessingEventProcesso
     private final ConcurrentHashMap<String, ProcessingEventMailBox> mailboxDict;
     private final ConcurrentHashMap<String, Boolean> refreshingAggregateRootDict;
     private final IScheduleService scheduleService;
+    private final ISerializeService serializeService;
     private final IMessageDispatcher messageDispatcher;
     private final IPublishedVersionStore publishedVersionStore;
     private final Executor executor;
@@ -42,8 +44,9 @@ public class DefaultProcessingEventProcessor implements IProcessingEventProcesso
     private int scanExpiredAggregateIntervalMilliseconds = 5000;
     private int processTryToRefreshAggregateIntervalMilliseconds = 1000;
 
-    public DefaultProcessingEventProcessor(IScheduleService scheduleService, IMessageDispatcher messageDispatcher, IPublishedVersionStore publishedVersionStore, Executor executor) {
+    public DefaultProcessingEventProcessor(IScheduleService scheduleService, ISerializeService serializeService, IMessageDispatcher messageDispatcher, IPublishedVersionStore publishedVersionStore, Executor executor) {
         this.scheduleService = scheduleService;
+        this.serializeService = serializeService;
         this.messageDispatcher = messageDispatcher;
         this.publishedVersionStore = publishedVersionStore;
         this.executor = executor;
@@ -128,6 +131,9 @@ public class DefaultProcessingEventProcessor implements IProcessingEventProcesso
         IOHelper.tryAsyncActionRecursivelyWithoutResult("DispatchProcessingMessageAsync",
                 () -> messageDispatcher.dispatchMessagesAsync(processingEvent.getMessage().getEvents()),
                 result -> {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("dispatch messages success, msg: {}", serializeService.serialize(processingEvent.getMessage()));
+                    }
                     updatePublishedVersionAsync(processingEvent, 0);
                 },
                 () -> String.format("sequence message [messageId:%s, messageType:%s, aggregateRootId:%s, aggregateRootVersion:%s]", processingEvent.getMessage().getId(), processingEvent.getMessage().getClass().getName(), processingEvent.getMessage().getAggregateRootId(), processingEvent.getMessage().getVersion()),
@@ -150,6 +156,9 @@ public class DefaultProcessingEventProcessor implements IProcessingEventProcesso
                     return publishedVersionStore.updatePublishedVersionAsync(name, message.getAggregateRootTypeName(), message.getAggregateRootId(), message.getVersion());
                 },
                 result -> {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("update published version success, message ack: {}", serializeService.serialize(message));
+                    }
                     processingEvent.complete();
                 },
                 () -> String.format("DomainEventStreamMessage [messageId:%s, messageType:%s, aggregateRootId:%s, aggregateRootVersion:%s]", message.getId(), message.getClass().getName(), message.getAggregateRootId(), message.getVersion()),

@@ -76,10 +76,10 @@ public class App {
 spring.enode.eventstore=mongo
 # enode messagequeue (kafka, rocketmq, ons)
 spring.enode.mq=kafka
-spring.enode.mq.topic.command=EnodeTestCommandTopic
-spring.enode.mq.topic.event=EnodeTestEventTopic
-spring.enode.mq.topic.application=EnodeTestApplicationMessageTopic
-spring.enode.mq.topic.exception=EnodeTestExceptionTopic
+spring.enode.mq.topic.command=EnodeBankCommandTopic
+spring.enode.mq.topic.event=EnodeBankEventTopic
+spring.enode.mq.topic.application=EnodeBankApplicationMessageTopic
+spring.enode.mq.topic.exception=EnodeBankExceptionTopic
 ```
 
 ### kafka listener bean 配置

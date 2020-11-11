@@ -24,6 +24,9 @@ public class DefaultAggregateSnapshotter implements IAggregateSnapshotter {
     public <T extends IAggregateRoot> CompletableFuture<T> restoreFromSnapshotAsync(Class<T> aggregateRootType, String aggregateRootId) {
         CompletableFuture<T> future = new CompletableFuture<>();
         IAggregateRepositoryProxy aggregateRepository = aggregateRepositoryProvider.getRepository(aggregateRootType);
+        if (aggregateRepository == null) {
+            return CompletableFuture.completedFuture(null);
+        }
         Ensure.notNull(aggregateRepository, "aggregateRepository");
         return tryGetAggregateAsync(aggregateRepository, aggregateRootType, aggregateRootId, 0, future);
     }

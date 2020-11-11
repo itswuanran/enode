@@ -44,7 +44,7 @@ public class DefaultDomainEventPublisher implements IMessagePublisher<DomainEven
         queueMessage.setTag(tag);
         queueMessage.setBody(data);
         queueMessage.setRouteKey(routeKey);
-        queueMessage.setKey(message.getId());
+        queueMessage.setKey(String.format("%s_evt_agg_%s", message.getId(), message.getAggregateRootId()));
         return queueMessage;
     }
 
