@@ -171,8 +171,7 @@ class DefaultProcessingCommandHandler(private val eventStore: IEventStore, priva
                 { eventStore.findAsync(command.aggregateRootId, command.id) },
                 { result: DomainEventStream? ->
                     if (result != null) {
-                        eventCommittingService.publishDomainEventAsync(processingCommand, result)
-                        future.complete(true)
+                        eventCommittingService.publishDomainEventAsync(processingCommand, result).thenAccept { future.complete(true) }
                     } else {
                         completeCommand(processingCommand, CommandStatus.NothingChanged, String::class.java.name, processingCommand.commandExecuteContext.result)
                                 .thenAccept { future.complete(true) }
@@ -193,8 +192,7 @@ class DefaultProcessingCommandHandler(private val eventStore: IEventStore, priva
                         //这里，我们需要再重新做一遍发布事件这个操作；
                         //之所以要这样做是因为虽然该command产生的事件已经持久化成功，但并不表示事件已经发布出去了；
                         //因为有可能事件持久化成功了，但那时正好机器断电了，则发布事件就没有做；
-                        eventCommittingService.publishDomainEventAsync(processingCommand, result)
-                        future.complete(true)
+                        eventCommittingService.publishDomainEventAsync(processingCommand, result).thenAccept { future.complete(true) }
                     } else {
                         //到这里，说明当前command执行遇到异常，然后当前command之前也没执行过，是第一次被执行。
                         //那就判断当前异常是否是需要被发布出去的异常，如果是，则发布该异常给所有消费者；

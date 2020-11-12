@@ -25,10 +25,6 @@ class ProcessingEventMailBox(aggregateRootTypeName: String, aggregateRootId: Str
     private var lastActiveTime: Date
     private var nextExpectingEventVersion: Int? = null
 
-    fun getNextExpectingEventVersion(): Int? {
-        return this.nextExpectingEventVersion
-    }
-
     private fun tryRemovedInvalidWaitingMessages(version: Int) {
         waitingProcessingEventDict.keys.stream().filter { x: Int -> x < version }.forEach { key: Int ->
             if (waitingProcessingEventDict.containsKey(key)) {
