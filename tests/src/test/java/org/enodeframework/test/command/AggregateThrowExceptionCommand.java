@@ -2,14 +2,14 @@ package org.enodeframework.test.command;
 
 import org.enodeframework.commanding.Command;
 
-public class AggregateThrowExceptionCommand extends Command {
-    public boolean PublishableException;
+public class AggregateThrowExceptionCommand extends Command<String> {
+    public boolean publishableException;
 
     public boolean isPublishableException() {
-        return PublishableException;
+        return publishableException;
     }
 
     public void setPublishableException(boolean publishableException) {
-        PublishableException = publishableException;
+        this.publishableException = publishableException;
     }
 }

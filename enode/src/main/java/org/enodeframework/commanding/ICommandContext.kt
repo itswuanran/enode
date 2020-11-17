@@ -13,7 +13,7 @@ interface ICommandContext {
     /**
      * Add a new aggregate into the current command context synchronously, and then return a completed task object.
      */
-    fun addAsync(aggregateRoot: IAggregateRoot): CompletableFuture<Boolean>?
+    fun addAsync(aggregateRoot: IAggregateRoot): CompletableFuture<Boolean>
 
     /**
      * Get an aggregate from the current command context.

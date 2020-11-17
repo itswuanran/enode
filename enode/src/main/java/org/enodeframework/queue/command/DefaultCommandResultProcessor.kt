@@ -140,7 +140,7 @@ class DefaultCommandResultProcessor constructor(private val scheduleService: ISc
         }
     }
 
-    private fun processTimeoutCommand(commandId: String?, commandTaskCompletionSource: CommandTaskCompletionSource?) {
+    private fun processTimeoutCommand(commandId: String, commandTaskCompletionSource: CommandTaskCompletionSource?) {
         if (commandTaskCompletionSource != null) {
             logger.error("Wait command notify timeout, commandId: {}", commandId)
             val commandResult = CommandResult(CommandStatus.Failed, commandId, commandTaskCompletionSource.aggregateRootId, "Wait command notify timeout.", String::class.java.name)
@@ -159,14 +159,14 @@ class DefaultCommandResultProcessor constructor(private val scheduleService: ISc
     }
 
     private fun processDomainEventHandledMessage(message: DomainEventHandledMessage) {
-        val commandTaskCompletionSource = commandTaskDict.asMap().get(message.commandId)
+        val commandTaskCompletionSource = commandTaskDict.asMap()[message.commandId]
         if (commandTaskCompletionSource != null) {
-            if (!CommandReturnType.EventHandled.equals(commandTaskCompletionSource.commandReturnType)) {
-                logger.warn("event arrived early than command: {}", serializeService.serialize(message));
+            if (CommandReturnType.EventHandled != commandTaskCompletionSource.commandReturnType) {
+                logger.warn("event arrived early than command: {}", serializeService.serialize(message))
                 return
             }
             commandTaskDict.asMap().remove(message.commandId)
-            val commandResult = CommandResult(CommandStatus.Success, message.commandId, message.aggregateRootId, message.commandResult, if (message.commandResult != null) String::class.java.name else null)
+            val commandResult = CommandResult(CommandStatus.Success, message.commandId, message.aggregateRootId, message.commandResult, "")
             commandTaskCompletionSource.taskCompletionSource.complete(commandResult)
             if (logger.isDebugEnabled) {
                 logger.debug("DomainEvent result return, {}", serializeService.serialize(message))
@@ -179,7 +179,7 @@ class DefaultCommandResultProcessor constructor(private val scheduleService: ISc
     }
 
     init {
-        commandTaskDict = CacheBuilder.newBuilder().removalListener { notification: RemovalNotification<String?, CommandTaskCompletionSource?> ->
+        commandTaskDict = CacheBuilder.newBuilder().removalListener { notification: RemovalNotification<String, CommandTaskCompletionSource> ->
             if (notification.cause == RemovalCause.EXPIRED) {
                 processTimeoutCommand(notification.key, notification.value)
             }

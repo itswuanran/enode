@@ -17,7 +17,7 @@ import java.util.stream.Collectors
  * @author anruence@gmail.com
  */
 class DefaultMemoryCache(private val aggregateStorage: IAggregateStorage, private val scheduleService: IScheduleService, private val typeNameProvider: ITypeNameProvider) : IMemoryCache {
-    private val aggregateRootInfoDict: ConcurrentMap<String, AggregateCacheInfo?>
+    private val aggregateRootInfoDict: ConcurrentMap<String, AggregateCacheInfo>
     private val lockObj = Any()
     private val taskName: String
     var timeoutSeconds = 5000
@@ -31,9 +31,9 @@ class DefaultMemoryCache(private val aggregateStorage: IAggregateStorage, privat
         if (aggregateRootInfo.aggregateRoot.javaClass != aggregateRootType) {
             throw AggregateRootTypeNotMatchException(String.format("Incorrect aggregate root type, aggregateRootId:%s, type:%s, expecting type:%s", aggregateRootId, aggregateRootInfo.aggregateRoot.javaClass, aggregateRootType))
         }
-        if (aggregateRoot!!.changes.size > 0) {
+        if (aggregateRoot.changes.size > 0) {
             val lastestAggregateRootFuture = aggregateStorage.getAsync(aggregateRootType, aggregateRootId.toString())
-            return lastestAggregateRootFuture.thenApply { lastestAggregateRoot: IAggregateRoot? ->
+            return lastestAggregateRootFuture.thenApply { lastestAggregateRoot: IAggregateRoot ->
                 resetAggregateRootCache(aggregateRootType, aggregateRootId.toString(), lastestAggregateRoot)
                 lastestAggregateRoot as T
             }
@@ -51,7 +51,7 @@ class DefaultMemoryCache(private val aggregateStorage: IAggregateStorage, privat
 
     override fun <T : IAggregateRoot> acceptAggregateRootChanges(aggregateRoot: T) {
         synchronized(lockObj) {
-            val cacheInfo = aggregateRootInfoDict.computeIfAbsent(aggregateRoot.uniqueId) { x: String? ->
+            val cacheInfo = aggregateRootInfoDict.computeIfAbsent(aggregateRoot.uniqueId) {
                 logger.info("Aggregate root in-memory cache initialized, aggregateRootType: {}, aggregateRootId: {}, aggregateRootVersion: {}", aggregateRoot.javaClass.name, aggregateRoot.uniqueId, aggregateRoot.version)
                 AggregateCacheInfo(aggregateRoot)
             }
@@ -103,16 +103,13 @@ class DefaultMemoryCache(private val aggregateStorage: IAggregateStorage, privat
         scheduleService.stopTask(taskName)
     }
 
-    private fun resetAggregateRootCache(aggregateRootType: Class<*>, aggregateRootId: String, aggregateRoot: IAggregateRoot?) {
+    private fun resetAggregateRootCache(aggregateRootType: Class<*>, aggregateRootId: String, aggregateRoot: IAggregateRoot) {
         val aggregateCacheInfo = aggregateRootInfoDict.remove(aggregateRootId)
         if (aggregateCacheInfo != null) {
             logger.info("Removed dirty in-memory aggregate, aggregateRootType: {}, aggregateRootId: {}, version: {}", aggregateRootType.name, aggregateRootId, aggregateCacheInfo.aggregateRoot.version)
         }
-        if (aggregateRoot == null) {
-            return
-        }
         synchronized(lockObj) {
-            val cacheInfo = aggregateRootInfoDict.computeIfAbsent(aggregateRoot.uniqueId) { x: String? ->
+            val cacheInfo = aggregateRootInfoDict.computeIfAbsent(aggregateRoot.uniqueId) {
                 if (logger.isDebugEnabled) {
                     logger.debug("Aggregate root in-memory cache reset, aggregateRootType: {}, aggregateRootId: {}, aggregateRootVersion: {}", aggregateRoot.javaClass.name, aggregateRoot.uniqueId, aggregateRoot.version)
                 }

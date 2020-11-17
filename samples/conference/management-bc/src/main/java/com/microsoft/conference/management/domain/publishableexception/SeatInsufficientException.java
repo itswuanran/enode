@@ -8,6 +8,9 @@ public class SeatInsufficientException extends DomainException {
     public String conferenceId;
     public String reservationId;
 
+    public SeatInsufficientException() {
+    }
+
     public SeatInsufficientException(String conferenceId, String reservationId) {
         super();
         this.conferenceId = conferenceId;

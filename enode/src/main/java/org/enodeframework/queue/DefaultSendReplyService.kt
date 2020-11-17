@@ -24,7 +24,6 @@ import java.util.concurrent.CompletableFuture
 
 /**
  * @author anruence@gmail.com
- * TODO 支持其他类型的服务间调用
  */
 class DefaultSendReplyService(private val serializeService: ISerializeService) : CoroutineVerticle(), ISendReplyService {
     private var started = false
@@ -33,7 +32,7 @@ class DefaultSendReplyService(private val serializeService: ISerializeService) :
     private val netSocketCache = CacheBuilder.newBuilder()
             .expireAfterWrite(Duration.ofMinutes(10))
             .maximumSize(10)
-            .build<String, Promise<NetSocket>?>()
+            .build<String, Promise<NetSocket>>()
 
     override suspend fun start() {
         if (!started) {
@@ -63,18 +62,17 @@ class DefaultSendReplyService(private val serializeService: ISerializeService) :
         return sendReply(replyMessage, replyAddress)
     }
 
-    fun sendReply(replyMessage: ReplyMessage?, replySocketAddress: ReplySocketAddress): CompletableFuture<Boolean> {
+    private fun sendReply(replyMessage: ReplyMessage?, replySocketAddress: ReplySocketAddress): CompletableFuture<Boolean> {
         val socketAddress = SocketAddress.inetSocketAddress(replySocketAddress.port, replySocketAddress.host)
         val message = serializeService.serialize(replyMessage)
         val address = InetUtil.toUri(replySocketAddress)
         val replyAddress = String.format("%s.%s", "client", address)
-        var promise = netSocketCache.getIfPresent(address)
-        if (promise == null) {
-            promise = Promise.promise()
-            netSocketCache.put(address, promise)
-            netClient.connect(socketAddress, promise)
+        val promise = netSocketCache.get(address) {
+            val value = Promise.promise<NetSocket>()
+            netClient.connect(socketAddress, value)
+            value
         }
-        promise!!.future().onFailure { throwable: Throwable? ->
+        promise.future().onFailure { throwable: Throwable? ->
             netSocketCache.invalidate(address)
             logger.error("connect occurs unexpected error, msg: {}", message, throwable)
         }.onSuccess { socket: NetSocket ->

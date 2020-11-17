@@ -13,7 +13,6 @@ import java.util.concurrent.CompletableFuture
  */
 class CommandHandlerProxy : ICommandHandlerProxy {
     private lateinit var handlerType: Class<*>
-    private var commandHandler: Any? = null
     private lateinit var methodHandle: MethodHandle
     private lateinit var method: Method
     override fun handleAsync(context: ICommandContext, command: ICommand): CompletableFuture<Boolean> {
@@ -32,10 +31,7 @@ class CommandHandlerProxy : ICommandHandlerProxy {
     }
 
     override fun getInnerObject(): Any {
-        if (commandHandler == null) {
-            this.commandHandler = ObjectContainer.INSTANCE.resolve(handlerType)
-        }
-        return this.commandHandler!!;
+        return ObjectContainer.INSTANCE.resolve(handlerType)
     }
 
     override fun setHandlerType(handlerType: Class<*>) {

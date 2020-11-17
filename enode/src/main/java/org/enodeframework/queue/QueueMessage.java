@@ -7,14 +7,22 @@ import java.io.Serializable;
  */
 public class QueueMessage implements Serializable {
 
+    /**
+     * 消息体
+     */
     private String body;
+    /**
+     *
+     */
     private String topic;
     /**
      * 业务标识
      */
     private String tag;
+    /**
+     * 路由的键
+     */
     private String routeKey;
-
     /**
      * 消息唯一标识
      */

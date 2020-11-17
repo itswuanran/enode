@@ -7,39 +7,39 @@ class CommandResult {
     /**
      * Represents the result status of the command.
      */
-    var status: CommandStatus? = null
+    var status: CommandStatus = CommandStatus.Failed
         private set
 
     /**
      * Represents the unique identifier of the command.
      */
-    var commandId: String? = null
+    var commandId: String = ""
         private set
 
     /**
      * Represents the aggregate root id associated with the command.
      */
-    var aggregateRootId: String? = null
+    var aggregateRootId: String = ""
         private set
 
     /**
      * Represents the command result data.
      */
-    var result: String? = null
+    var result: String? = ""
         private set
 
     /**
      * Represents the command result data type.
      */
-    var resultType: String? = null
+    var resultType: String = ""
         private set
 
-    constructor() {}
+    constructor()
 
     /**
      * Parameterized constructor.
      */
-    constructor(status: CommandStatus?, commandId: String?, aggregateRootId: String?, result: String?, resultType: String?) {
+    constructor(status: CommandStatus, commandId: String, aggregateRootId: String, result: String?, resultType: String) {
         this.status = status
         this.commandId = commandId
         this.aggregateRootId = aggregateRootId

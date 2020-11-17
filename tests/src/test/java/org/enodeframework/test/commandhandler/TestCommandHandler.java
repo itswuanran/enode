@@ -91,7 +91,7 @@ public class TestCommandHandler {
     @Subscribe
     public void handleAsync(ICommandContext context, AggregateThrowExceptionCommand command) throws Exception {
         TestAggregate testAggregate = Task.await(context.getAsync(command.aggregateRootId, TestAggregate.class));
-        testAggregate.ThrowException(command.PublishableException);
+        testAggregate.ThrowException(command.publishableException);
     }
 
     @Subscribe
