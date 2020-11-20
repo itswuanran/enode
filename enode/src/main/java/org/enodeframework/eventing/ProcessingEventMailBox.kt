@@ -141,7 +141,7 @@ class ProcessingEventMailBox(val aggregateRootTypeName: String, val aggregateRoo
             if (logger.isDebugEnabled) {
                 logger.debug("{} start run, aggregateRootId: {}", javaClass.name, aggregateRootId)
             }
-            CoroutineScope(Dispatchers.Default).launch { processMessages() }
+            CoroutineScope(Dispatchers.Default).launch { processMessage() }
         }
     }
 
@@ -163,7 +163,7 @@ class ProcessingEventMailBox(val aggregateRootTypeName: String, val aggregateRoo
         return SystemClock.now() - lastActiveTime.time >= timeoutSeconds
     }
 
-    private fun processMessages() {
+    private fun processMessage() {
         val message = processingEventQueue.poll()
         if (message != null) {
             lastActiveTime = Date()

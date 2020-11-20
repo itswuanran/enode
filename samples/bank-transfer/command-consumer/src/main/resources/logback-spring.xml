@@ -34,5 +34,6 @@
 
     <root level="INFO">
         <appender-ref ref="APPLICATION"/>
+        <appender-ref ref="CONSOLE"/>
     </root>
 </configuration>

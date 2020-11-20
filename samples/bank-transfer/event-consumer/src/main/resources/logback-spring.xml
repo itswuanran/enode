@@ -28,11 +28,11 @@
     </appender>
 
     <logger name="org.enodeframework" level="DEBUG" addtivity="false">
-        <appender-ref ref="APPLICATION"/>
         <appender-ref ref="CONSOLE"/>
     </logger>
 
     <root level="INFO">
         <appender-ref ref="APPLICATION"/>
+        <appender-ref ref="CONSOLE"/>
     </root>
 </configuration>

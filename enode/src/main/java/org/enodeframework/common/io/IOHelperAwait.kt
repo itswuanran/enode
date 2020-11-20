@@ -1,11 +1,12 @@
 package org.enodeframework.common.io
 
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.future.asCompletableFuture
 import org.enodeframework.common.exception.IORuntimeException
 import org.enodeframework.common.function.Action1
 import org.enodeframework.common.function.Action2
 import org.enodeframework.common.function.DelayedTask
 import org.enodeframework.common.function.Func
-import org.enodeframework.common.utilities.Ensure
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
@@ -14,26 +15,26 @@ import java.util.concurrent.CompletionException
 /**
  * @author anruence@gmail.com
  */
-object IOHelper {
+object IOHelperAwait {
 
-    private val logger = LoggerFactory.getLogger(IOHelper::class.java)
+    private val logger = LoggerFactory.getLogger(IOHelperAwait::class.java)
 
     @JvmStatic
     fun <TAsyncResult> tryAsyncActionRecursively(
             asyncActionName: String,
-            asyncAction: Func<CompletableFuture<TAsyncResult>>,
+            asyncAction: Func<Deferred<TAsyncResult>>,
             successAction: Action1<TAsyncResult>,
             getContextInfoFunc: Func<String?>,
             failedAction: Action2<Throwable, String>?,
             retryTimes: Int,
             retryWhenFailed: Boolean) {
-        tryAsyncActionRecursively(asyncActionName, asyncAction, successAction, getContextInfoFunc, failedAction, retryTimes, retryWhenFailed, 3, 1000)
+        return tryAsyncActionRecursively(asyncActionName, asyncAction, successAction, getContextInfoFunc, failedAction, retryTimes, retryWhenFailed, 3, 1000)
     }
 
     @JvmStatic
     fun <TAsyncResult> tryAsyncActionRecursively(
             asyncActionName: String,
-            asyncAction: Func<CompletableFuture<TAsyncResult>>,
+            asyncAction: Func<Deferred<TAsyncResult>>,
             successAction: Action1<TAsyncResult>,
             getContextInfoFunc: Func<String?>,
             failedAction: Action2<Throwable, String>?,
@@ -42,13 +43,13 @@ object IOHelper {
             maxRetryTimes: Int,
             retryInterval: Int) {
         val asyncTaskExecutionContext = AsyncTaskExecutionContext(asyncActionName, asyncAction, successAction, getContextInfoFunc, failedAction, retryTimes, retryWhenFailed, maxRetryTimes, retryInterval)
-        asyncTaskExecutionContext.execute()
+        return asyncTaskExecutionContext.execute()
     }
 
     @JvmStatic
     fun <TAsyncResult> tryAsyncActionRecursivelyWithoutResult(
             asyncActionName: String,
-            asyncAction: Func<CompletableFuture<TAsyncResult>>,
+            asyncAction: Func<Deferred<TAsyncResult>>,
             successAction: Action1<TAsyncResult>,
             getContextInfoFunc: Func<String?>,
             failedAction: Action2<Throwable, String>?,
@@ -59,18 +60,16 @@ object IOHelper {
     }
 
     @JvmStatic
-    fun <T> tryIOFuncAsync(func: Func<CompletableFuture<T>>, funcName: String): CompletableFuture<T> {
-        Ensure.notNull(func, "func")
-        Ensure.notNull(funcName, "funcName")
+    fun <T> tryIOFuncAsync(func: Func<Deferred<T>>, funcName: String): CompletableFuture<T> {
         return try {
-            func.apply()
+            func.apply().asCompletableFuture()
         } catch (ex: Exception) {
             throw IORuntimeException(String.format("%s failed.", funcName), ex)
         }
     }
 
-    internal class AsyncTaskExecutionContext<TAsyncResult>(private val actionName: String, asyncAction: Func<CompletableFuture<TAsyncResult>>, successAction: Action1<TAsyncResult>, contextInfoFunc: Func<String?>, failedAction: Action2<Throwable, String>?, retryTimes: Int, retryWhenFailed: Boolean, maxRetryTimes: Int, retryInterval: Int) {
-        private val asyncAction: Func<CompletableFuture<TAsyncResult>>
+    internal class AsyncTaskExecutionContext<TAsyncResult>(private val actionName: String, asyncAction: Func<Deferred<TAsyncResult>>, successAction: Action1<TAsyncResult>, contextInfoFunc: Func<String?>, failedAction: Action2<Throwable, String>?, retryTimes: Int, retryWhenFailed: Boolean, maxRetryTimes: Int, retryInterval: Int) {
+        private val asyncAction: Func<Deferred<TAsyncResult>>
         private val successAction: Action1<TAsyncResult>
         private val contextInfoFunc: Func<String?>
         private val failedAction: Action2<Throwable, String>?
@@ -81,7 +80,7 @@ object IOHelper {
         fun execute() {
             var asyncResult = CompletableFuture<TAsyncResult>()
             try {
-                asyncResult = asyncAction.apply()
+                asyncResult = asyncAction.apply().asCompletableFuture()
             } catch (ex: Exception) {
                 asyncResult.completeExceptionally(ex)
             }
@@ -94,7 +93,6 @@ object IOHelper {
                     executeFailedAction(ex, String.format("Task '%s' was cancelled.", actionName))
                     null
                 }
-                return
             }
             asyncResult
                     .thenAccept { result: TAsyncResult ->

@@ -12,7 +12,7 @@ import javax.sql.DataSource
  */
 class MysqlEventStore(dataSource: DataSource, setting: DBConfiguration, eventSerializer: IEventSerializer, serializeService: ISerializeService) : JDBCEventStore(dataSource, setting, eventSerializer, serializeService) {
 
-    public override fun parseDuplicateCommandId(msg: String): String {
+    public override fun parseCommandId(msg: String): String {
         val matcher = PATTERN_MYSQL.matcher(msg)
         if (!matcher.find()) {
             return ""

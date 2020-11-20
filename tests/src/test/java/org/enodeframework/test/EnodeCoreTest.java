@@ -657,7 +657,7 @@ public class EnodeCoreTest extends AbstractTest {
         for (int i = 0; i < 50; i++) {
             ChangeTestAggregateTitleCommand command1 = new ChangeTestAggregateTitleCommand();
             command1.aggregateRootId = aggregateId;
-            command1.setTitle("Changed Note2");
+            command1.setTitle("Changed Note2-" + i);
             commandList.add(command1);
         }
         ManualResetEvent waitHandle = new ManualResetEvent(false);
@@ -676,7 +676,7 @@ public class EnodeCoreTest extends AbstractTest {
         note = Task.await(memoryCache.getAsync(aggregateId, TestAggregate.class));
         Assert.assertNotNull(note);
         Assert.assertEquals(2 + commandList.size(), note.getVersion());
-        Assert.assertEquals("Changed Note2", note.getTitle());
+        Assert.assertEquals("Changed Note2-" + (commandList.size() - 1), note.getTitle());
     }
 
     @Test

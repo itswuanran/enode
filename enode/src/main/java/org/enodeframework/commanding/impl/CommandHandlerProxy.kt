@@ -6,7 +6,6 @@ import org.enodeframework.commanding.ICommandHandlerProxy
 import org.enodeframework.common.container.ObjectContainer
 import java.lang.invoke.MethodHandle
 import java.lang.reflect.Method
-import java.util.concurrent.CompletableFuture
 
 /**
  * @author anruence@gmail.com
@@ -15,19 +14,8 @@ class CommandHandlerProxy : ICommandHandlerProxy {
     private lateinit var handlerType: Class<*>
     private lateinit var methodHandle: MethodHandle
     private lateinit var method: Method
-    override fun handleAsync(context: ICommandContext, command: ICommand): CompletableFuture<Boolean> {
-        val future = CompletableFuture<Boolean>()
-        try {
-            val result = methodHandle.invoke(getInnerObject(), context, command)
-            if (result is CompletableFuture<*>) {
-                result.thenAccept { future.complete(true) }
-                return future
-            }
-            future.complete(true)
-        } catch (throwable: Throwable) {
-            future.completeExceptionally(throwable)
-        }
-        return future
+    override suspend fun handleAsync(context: ICommandContext, command: ICommand) {
+        methodHandle.invoke(getInnerObject(), context, command)
     }
 
     override fun getInnerObject(): Any {

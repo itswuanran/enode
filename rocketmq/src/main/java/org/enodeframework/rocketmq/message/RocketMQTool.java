@@ -37,7 +37,7 @@ public class RocketMQTool {
 
     private static void handleConcurrently(int index, int total, List<MessageExt> msgs, CountDownLatch latch, IMessageHandler messageHandler) {
         msgs.forEach(msg -> {
-            QueueMessage queueMessage = covertToQueueMessage(msgs.get(index));
+            QueueMessage queueMessage = covertToQueueMessage(msg);
             messageHandler.handle(queueMessage, message -> {
                 latch.countDown();
             });
