@@ -1,7 +1,8 @@
 package org.enodeframework.commanding
 
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.enodeframework.common.io.Task
@@ -11,6 +12,7 @@ import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * @author anruence@gmail.com
@@ -29,11 +31,11 @@ class ProcessingCommandMailbox(var aggregateRootId: String, private val messageH
     var isPaused = false
         private set
     private var nextSequence: Long = 0
-    var consumingSequence: Long = 0
+    var consumingSequence: AtomicLong = AtomicLong(0L)
         private set
 
     fun getTotalUnHandledMessageCount(): Long {
-        return nextSequence - consumingSequence
+        return nextSequence - consumingSequence.get()
     }
 
     /**
@@ -64,9 +66,9 @@ class ProcessingCommandMailbox(var aggregateRootId: String, private val messageH
             }
             setAsRunning()
             if (logger.isDebugEnabled) {
-                logger.debug("{} start run, aggregateRootId: {}, consumingSequence: {}", javaClass.name, aggregateRootId, consumingSequence)
+                logger.debug("{} start run, aggregateRootId: {}, consumingSequence: {}", javaClass.name, aggregateRootId, consumingSequence.get())
             }
-            GlobalScope.async { processMessagesAwait() }
+            CoroutineScope(Dispatchers.Default).launch { processMessagesAwait() }
         }
     }
 
@@ -114,7 +116,7 @@ class ProcessingCommandMailbox(var aggregateRootId: String, private val messageH
         isPaused = false
         lastActiveTime = Date()
         if (logger.isDebugEnabled) {
-            logger.debug("{} resume requested, aggregateRootId: {}, consumingSequence: {}", javaClass.name, aggregateRootId, consumingSequence)
+            logger.debug("{} resume requested, aggregateRootId: {}, consumingSequence: {}", javaClass.name, aggregateRootId, consumingSequence.get())
         }
     }
 
@@ -123,7 +125,7 @@ class ProcessingCommandMailbox(var aggregateRootId: String, private val messageH
     }
 
     fun resetConsumingSequence(consumingSequence: Long) {
-        this.consumingSequence = consumingSequence
+        this.consumingSequence.set(consumingSequence);
         lastActiveTime = Date()
         if (logger.isDebugEnabled) {
             logger.debug("{} reset consumingSequence, aggregateRootId: {}, consumingSequence: {}", javaClass.name, aggregateRootId, consumingSequence)
@@ -154,15 +156,15 @@ class ProcessingCommandMailbox(var aggregateRootId: String, private val messageH
             try {
                 var scannedCount = 0
                 while (getTotalUnHandledMessageCount() > 0 && scannedCount < batchSize && !isPauseRequested) {
-                    val message = getMessage(consumingSequence)
+                    val message = getMessage(consumingSequence.get())
                     if (message != null) {
                         if (duplicateCommandIdDict.containsKey(message.message.id)) {
                             message.isDuplicated = true
                         }
                         Task.await(messageHandler.handleAsync(message))
                     }
+                    consumingSequence.incrementAndGet();
                     scannedCount++
-                    consumingSequence++
                 }
             } catch (ex: Exception) {
                 logger.error("{} run has unknown exception, aggregateRootId: {}", javaClass.name, aggregateRootId, ex)

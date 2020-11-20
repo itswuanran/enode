@@ -1,7 +1,10 @@
 package org.enodeframework.eventing
 
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.enodeframework.common.exception.DuplicateEventStreamException
 import org.enodeframework.common.function.Action1
 import org.enodeframework.common.io.Task
@@ -14,7 +17,7 @@ import java.util.stream.Collectors
 
 class EventCommittingContextMailBox(val number: Int, private val batchSize: Int, handleEventAction: Action1<List<EventCommittingContext>>) {
     private val lockObj = Any()
-    private val processMessageLockObj = Any()
+    private val processMessageMutex = Mutex()
     private val aggregateDictDict: ConcurrentHashMap<String, ConcurrentHashMap<String, Byte>> = ConcurrentHashMap()
     private val messageQueue: ConcurrentLinkedQueue<EventCommittingContext> = ConcurrentLinkedQueue()
     private val handleMessageAction: Action1<List<EventCommittingContext>> = handleEventAction
@@ -68,7 +71,7 @@ class EventCommittingContextMailBox(val number: Int, private val batchSize: Int,
             if (logger.isDebugEnabled) {
                 logger.debug("{} start run, mailboxNumber: {}", javaClass.name, number)
             }
-            GlobalScope.async { processMessages() }
+            CoroutineScope(Dispatchers.Default).async { processMessages() }
         }
     }
 
@@ -94,8 +97,8 @@ class EventCommittingContextMailBox(val number: Int, private val batchSize: Int,
         return SystemClock.now() - lastActiveTime.time >= timeoutSeconds
     }
 
-    private fun processMessages() {
-        synchronized(processMessageLockObj) {
+    private suspend fun processMessages() {
+        processMessageMutex.withLock {
             lastActiveTime = Date()
             val messageList: MutableList<EventCommittingContext> = ArrayList()
             while (messageList.size < batchSize) {
