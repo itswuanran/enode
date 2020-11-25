@@ -61,6 +61,8 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -665,7 +667,7 @@ public class EnodeCoreTest extends AbstractTest {
         ManualResetEvent waitHandle = new ManualResetEvent(false);
         AtomicLong count = new AtomicLong(0);
         for (ICommand updateCommand : commandList) {
-            commandService.executeAsync(updateCommand).thenAccept(t -> {
+            commandService.executeAsync(updateCommand, CommandReturnType.EventHandled).thenAccept(t -> {
                 Assert.assertNotNull(t);
                 Assert.assertEquals(CommandStatus.Success, t.getStatus());
                 long totalCount = count.incrementAndGet();
@@ -711,8 +713,10 @@ public class EnodeCoreTest extends AbstractTest {
     @Test
     public void note_update_many_times_test() {
         String noteId = IdGenerator.nextId();
-        CountDownLatch latch = new CountDownLatch(300);
-        for (int i = 0; i < 300; i++) {
+        // 使用无界队列模拟不会出现异常，如果有界队列
+        Executor executor = Executors.newCachedThreadPool();
+        CountDownLatch latch = new CountDownLatch(20);
+        for (int i = 0; i < 20; i++) {
             CompletableFuture.runAsync(() -> {
                 String title = "Create Note";
                 CreateTestAggregateCommand createNoteCommand = new CreateTestAggregateCommand();
@@ -723,9 +727,8 @@ public class EnodeCoreTest extends AbstractTest {
                 titleCommand.setTitle(title + "Changed");
                 titleCommand.setAggregateRootId(noteId);
                 Task.await(commandService.executeAsync(titleCommand, CommandReturnType.EventHandled));
-                LOGGER.info("latchxxxxxx{}",latch.getCount());
                 latch.countDown();
-            });
+            }, executor);
         }
         Task.await(latch);
     }

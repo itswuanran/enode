@@ -8,7 +8,6 @@ import kotlinx.coroutines.future.asCompletableFuture
 import org.enodeframework.commanding.*
 import org.enodeframework.common.SysProperties
 import org.enodeframework.common.io.IOHelper
-import org.enodeframework.common.io.IOHelperAwait
 import org.enodeframework.common.io.Task
 import org.enodeframework.common.serializing.ISerializeService
 import org.enodeframework.domain.AggregateRootReferenceChangedException
@@ -66,11 +65,11 @@ class DefaultProcessingCommandHandler(private val eventStore: IEventStore, priva
             return republishCommandEvents(processingCommand, 0)
         }
         val taskSource = CompletableFuture<Boolean>()
-        IOHelperAwait.tryAsyncActionRecursivelyWithoutResult("HandleCommandAsync", {
+        IOHelper.tryAsyncActionRecursivelyWithoutResult("HandleCommandAsync", {
             commandContext.clear()
             CoroutineScope(Dispatchers.Default).async {
                 commandHandler.handleAsync(commandContext, command)
-            }
+            }.asCompletableFuture()
         }, {
             if (logger.isDebugEnabled) {
                 logger.debug("Handle command success. handlerType:{}, commandType:{}, commandId:{}, aggregateRootId:{}",
@@ -180,7 +179,7 @@ class DefaultProcessingCommandHandler(private val eventStore: IEventStore, priva
         }, { result: DomainEventStream? ->
             if (result != null) {
                 eventCommittingService.publishDomainEventAsync(processingCommand, result)
-                future.complete(true)
+                        .whenComplete { _, _ -> future.complete(true) }
             } else {
                 completeCommand(processingCommand, CommandStatus.NothingChanged, String::class.java.name, processingCommand.commandExecuteContext.result)
                         .whenComplete { _, _ -> future.complete(true) }
@@ -202,7 +201,7 @@ class DefaultProcessingCommandHandler(private val eventStore: IEventStore, priva
                 //之所以要这样做是因为虽然该command产生的事件已经持久化成功，但并不表示事件已经发布出去了；
                 //因为有可能事件持久化成功了，但那时正好机器断电了，则发布事件就没有做；
                 eventCommittingService.publishDomainEventAsync(processingCommand, result)
-                future.complete(true)
+                        .whenComplete { _, _ -> future.complete(true) }
             } else {
                 //到这里，说明当前command执行遇到异常，然后当前command之前也没执行过，是第一次被执行。
                 //那就判断当前异常是否是需要被发布出去的异常，如果是，则发布该异常给所有消费者；

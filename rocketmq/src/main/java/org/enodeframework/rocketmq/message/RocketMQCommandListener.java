@@ -1,5 +1,7 @@
 package org.enodeframework.rocketmq.message;
 
+import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
+import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyContext;
 import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerOrderly;
@@ -23,5 +25,10 @@ public class RocketMQCommandListener implements MessageListenerOrderly {
     public ConsumeOrderlyStatus consumeMessage(List<MessageExt> msgs, ConsumeOrderlyContext context) {
         RocketMQTool.handle(msgs, commandListener);
         return ConsumeOrderlyStatus.SUCCESS;
+    }
+
+    public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
+        RocketMQTool.handle(msgs, commandListener);
+        return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
     }
 }

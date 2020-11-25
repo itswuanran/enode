@@ -9,7 +9,7 @@ import java.util.concurrent.CountDownLatch
  */
 object Task {
     @JvmField
-    var completedTask = CompletableFuture.completedFuture(true)
+    var completedTask: CompletableFuture<Boolean> = CompletableFuture.completedFuture(true)
 
     @JvmStatic
     fun await(latch: CountDownLatch) {

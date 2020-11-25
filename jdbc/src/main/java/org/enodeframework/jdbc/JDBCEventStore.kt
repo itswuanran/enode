@@ -13,9 +13,10 @@ import io.vertx.kotlin.ext.sql.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.future.asCompletableFuture
 import org.enodeframework.common.exception.EventStoreException
 import org.enodeframework.common.exception.IORuntimeException
-import org.enodeframework.common.io.IOHelperAwait
+import org.enodeframework.common.io.IOHelper
 import org.enodeframework.common.serializing.ISerializeService
 import org.enodeframework.common.utilities.Ensure
 import org.enodeframework.eventing.*
@@ -68,11 +69,13 @@ abstract class JDBCEventStore(dataSource: DataSource, dbConfiguration: DBConfigu
     }
 
     private fun batchAppendAggregateEventsAsync(aggregateRootId: String, eventStreamList: List<DomainEventStream>, batchAggregateEventAppendResult: BatchAggregateEventAppendResult, retryTimes: Int) {
-        IOHelperAwait.tryAsyncActionRecursively("BatchAppendAggregateEventsAsync",
-                { CoroutineScope(Dispatchers.Default).async { batchAppendAggregateEvents(aggregateRootId, eventStreamList) } },
-                { result: AggregateEventAppendResult -> batchAggregateEventAppendResult.addCompleteAggregate(aggregateRootId, result) },
-                { String.format("[aggregateRootId: %s, eventStreamCount: %s]", aggregateRootId, eventStreamList.size) },
-                null, retryTimes, true)
+        IOHelper.tryAsyncActionRecursively("BatchAppendAggregateEventsAsync", {
+            CoroutineScope(Dispatchers.Default)
+                    .async { batchAppendAggregateEvents(aggregateRootId, eventStreamList) }
+                    .asCompletableFuture()
+        }, { result: AggregateEventAppendResult -> batchAggregateEventAppendResult.addCompleteAggregate(aggregateRootId, result) }, {
+            String.format("[aggregateRootId: %s, eventStreamCount: %s]", aggregateRootId, eventStreamList.size)
+        }, null, retryTimes, true)
     }
 
     protected abstract fun parseCommandId(msg: String): String
@@ -138,10 +141,10 @@ abstract class JDBCEventStore(dataSource: DataSource, dbConfiguration: DBConfigu
     }
 
     override fun queryAggregateEventsAsync(aggregateRootId: String, aggregateRootTypeName: String, minVersion: Int, maxVersion: Int): CompletableFuture<List<DomainEventStream>> {
-        return IOHelperAwait.tryIOFuncAsync({
+        return IOHelper.tryIOFuncAsync({
             CoroutineScope(Dispatchers.Default).async {
                 queryAggregateEvents(aggregateRootId, aggregateRootTypeName, minVersion, maxVersion)
-            }
+            }.asCompletableFuture()
         }, "QueryAggregateEventsAsync")
     }
 
@@ -155,7 +158,7 @@ abstract class JDBCEventStore(dataSource: DataSource, dbConfiguration: DBConfigu
             val resultSet = sqlClient.queryWithParamsAwait(sql, array)
             return resultSet.rows
                     .map { row: JsonObject -> convertFrom(row.mapTo(StreamRecord::class.java)) }
-                    .toMutableList();
+                    .toMutableList()
         } catch (throwable: Throwable) {
             if (throwable is SQLException) {
                 val errorMessage = String.format("Failed to query aggregate events async, aggregateRootId: %s, aggregateRootType: %s", aggregateRootId, aggregateRootTypeName)
@@ -168,10 +171,10 @@ abstract class JDBCEventStore(dataSource: DataSource, dbConfiguration: DBConfigu
     }
 
     override fun findAsync(aggregateRootId: String, version: Int): CompletableFuture<DomainEventStream?> {
-        return IOHelperAwait.tryIOFuncAsync({
+        return IOHelper.tryIOFuncAsync({
             CoroutineScope(Dispatchers.Default).async {
                 findByVersion(aggregateRootId, version)
-            }
+            }.asCompletableFuture()
         }, "FindEventByVersionAsync")
     }
 
@@ -194,11 +197,11 @@ abstract class JDBCEventStore(dataSource: DataSource, dbConfiguration: DBConfigu
     }
 
     override fun findAsync(aggregateRootId: String, commandId: String): CompletableFuture<DomainEventStream?> {
-        return IOHelperAwait.tryIOFuncAsync({
+        return IOHelper.tryIOFuncAsync({
             CoroutineScope(Dispatchers.Default).async {
                 findByCommandId(aggregateRootId, commandId)
-            }
-        }, "FindEventByCommandIdAsync");
+            }.asCompletableFuture()
+        }, "FindEventByCommandIdAsync")
     }
 
     private suspend fun findByCommandId(aggregateRootId: String, commandId: String): DomainEventStream? {

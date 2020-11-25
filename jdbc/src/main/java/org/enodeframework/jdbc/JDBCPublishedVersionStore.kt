@@ -9,9 +9,10 @@ import io.vertx.kotlin.ext.sql.updateWithParamsAwait
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.future.asCompletableFuture
 import org.enodeframework.common.exception.IORuntimeException
 import org.enodeframework.common.exception.PublishedVersionStoreException
-import org.enodeframework.common.io.IOHelperAwait
+import org.enodeframework.common.io.IOHelper
 import org.enodeframework.common.utilities.Ensure
 import org.enodeframework.eventing.IPublishedVersionStore
 import org.slf4j.LoggerFactory
@@ -35,8 +36,10 @@ open class JDBCPublishedVersionStore @JvmOverloads constructor(dataSource: DataS
     }
 
     override fun updatePublishedVersionAsync(processorName: String, aggregateRootTypeName: String, aggregateRootId: String, publishedVersion: Int): CompletableFuture<Int> {
-        return IOHelperAwait.tryIOFuncAsync({
-            CoroutineScope(Dispatchers.Default).async { updatePublishedVersion(processorName, aggregateRootTypeName, aggregateRootId, publishedVersion) }
+        return IOHelper.tryIOFuncAsync({
+            CoroutineScope(Dispatchers.Default).async {
+                updatePublishedVersion(processorName, aggregateRootTypeName, aggregateRootId, publishedVersion)
+            }.asCompletableFuture()
         }, "UpdatePublishedVersionAsync");
     }
 
@@ -77,8 +80,10 @@ open class JDBCPublishedVersionStore @JvmOverloads constructor(dataSource: DataS
     }
 
     override fun getPublishedVersionAsync(processorName: String, aggregateRootTypeName: String, aggregateRootId: String): CompletableFuture<Int> {
-        return IOHelperAwait.tryIOFuncAsync({
-            CoroutineScope(Dispatchers.Default).async { getPublishedVersion(processorName, aggregateRootTypeName, aggregateRootId) }
+        return IOHelper.tryIOFuncAsync({
+            CoroutineScope(Dispatchers.Default).async {
+                getPublishedVersion(processorName, aggregateRootTypeName, aggregateRootId)
+            }.asCompletableFuture()
         }, "UpdatePublishedVersionAsync");
     }
 

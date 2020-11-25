@@ -22,16 +22,16 @@ public class DefaultAggregateSnapshotter implements IAggregateSnapshotter {
 
     @Override
     public <T extends IAggregateRoot> CompletableFuture<T> restoreFromSnapshotAsync(Class<T> aggregateRootType, String aggregateRootId) {
-        CompletableFuture<T> future = new CompletableFuture<>();
         IAggregateRepositoryProxy aggregateRepository = aggregateRepositoryProvider.getRepository(aggregateRootType);
         if (aggregateRepository == null) {
             return CompletableFuture.completedFuture(null);
         }
         Ensure.notNull(aggregateRepository, "aggregateRepository");
-        return tryGetAggregateAsync(aggregateRepository, aggregateRootType, aggregateRootId, 0, future);
+        return tryGetAggregateAsync(aggregateRepository, aggregateRootType, aggregateRootId, 0);
     }
 
-    private <T extends IAggregateRoot> CompletableFuture<T> tryGetAggregateAsync(IAggregateRepositoryProxy aggregateRepository, Class<?> aggregateRootType, String aggregateRootId, int retryTimes, CompletableFuture<T> taskSource) {
+    private <T extends IAggregateRoot> CompletableFuture<T> tryGetAggregateAsync(IAggregateRepositoryProxy aggregateRepository, Class<?> aggregateRootType, String aggregateRootId, int retryTimes) {
+        CompletableFuture<T> taskSource = new CompletableFuture<>();
         IOHelper.tryAsyncActionRecursively("TryGetAggregateAsync",
                 () -> aggregateRepository.getAsync(aggregateRootId),
                 result -> {

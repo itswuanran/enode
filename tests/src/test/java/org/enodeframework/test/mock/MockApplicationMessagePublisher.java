@@ -2,13 +2,14 @@ package org.enodeframework.test.mock;
 
 import org.enodeframework.common.exception.EnodeRuntimeException;
 import org.enodeframework.common.exception.IORuntimeException;
+import org.enodeframework.common.io.Task;
 import org.enodeframework.messaging.IApplicationMessage;
 import org.enodeframework.messaging.IMessagePublisher;
 
 import java.util.concurrent.CompletableFuture;
 
 public class MockApplicationMessagePublisher implements IMessagePublisher<IApplicationMessage> {
-    private static CompletableFuture<Boolean> successResultTask = CompletableFuture.completedFuture(null);
+    private static CompletableFuture<Boolean> successResultTask = Task.completedTask;
     private int expectFailedCount = 0;
     private int currentFailedCount = 0;
     private FailedType failedType;

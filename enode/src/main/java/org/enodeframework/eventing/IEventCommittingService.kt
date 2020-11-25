@@ -1,6 +1,7 @@
 package org.enodeframework.eventing
 
 import org.enodeframework.commanding.ProcessingCommand
+import java.util.concurrent.CompletableFuture
 
 interface IEventCommittingService {
     /**
@@ -11,5 +12,5 @@ interface IEventCommittingService {
     /**
      * Publish the given domain event stream async.
      */
-    fun publishDomainEventAsync(processingCommand: ProcessingCommand, eventStream: DomainEventStream)
+    fun publishDomainEventAsync(processingCommand: ProcessingCommand, eventStream: DomainEventStream): CompletableFuture<Boolean>
 }

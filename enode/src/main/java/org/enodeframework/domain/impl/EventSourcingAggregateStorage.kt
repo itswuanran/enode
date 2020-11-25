@@ -25,7 +25,7 @@ class EventSourcingAggregateStorage(private val eventStore: IEventStore, private
                 return@thenCompose CompletableFuture.completedFuture(aggregateRoot)
             }
             val aggregateRootTypeName = typeNameProvider.getTypeName(aggregateRootType)
-            tryQueryAggregateEventsAsync(aggregateRootType, aggregateRootTypeName, aggregateRootId, MINVERSION, MAXVERSION, 0, CompletableFuture()).thenApply { eventStreams: List<DomainEventStream>? ->
+            tryQueryAggregateEventsAsync(aggregateRootType, aggregateRootTypeName, aggregateRootId, MIN_VERSION, MAX_VERSION, 0).thenApply { eventStreams: List<DomainEventStream> ->
                 val rebuild = rebuildAggregateRoot(aggregateRootType, eventStreams)
                         ?: throw AggregateRootNotFoundException(String.format("aggregateRoot not found, [aggregateRootType: %s, aggregateRootId: %s]", aggregateRootType.name, aggregateRootId))
                 rebuild
@@ -33,29 +33,31 @@ class EventSourcingAggregateStorage(private val eventStore: IEventStore, private
         }
     }
 
-    private fun <T : IAggregateRoot?> tryRestoreFromSnapshotAsync(aggregateRootType: Class<T>, aggregateRootId: String, retryTimes: Int, taskSource: CompletableFuture<T>): CompletableFuture<T> {
-        IOHelper.tryAsyncActionRecursively("TryRestoreFromSnapshotAsync",
-                { aggregateSnapshotter.restoreFromSnapshotAsync(aggregateRootType, aggregateRootId) }, { value: T -> taskSource.complete(value) },
-                { String.format("tryRestoreFromSnapshotAsync has unknown exception, aggregateRootType: %s, aggregateRootId: %s", aggregateRootType.name, aggregateRootId) },
-                null,
-                retryTimes, true)
+    private fun <T : IAggregateRoot?> tryRestoreFromSnapshotAsync(aggregateRootType: Class<T>, aggregateRootId: String, retryTimes: Int): CompletableFuture<T> {
+        val taskSource = CompletableFuture<T>()
+        IOHelper.tryAsyncActionRecursively("TryRestoreFromSnapshotAsync", {
+            aggregateSnapshotter.restoreFromSnapshotAsync(aggregateRootType, aggregateRootId)
+        }, { value: T -> taskSource.complete(value) }, {
+            String.format("tryRestoreFromSnapshotAsync has unknown exception, aggregateRootType: %s, aggregateRootId: %s", aggregateRootType.name, aggregateRootId)
+        }, null, retryTimes, true)
         return taskSource
     }
 
-    private fun tryQueryAggregateEventsAsync(aggregateRootType: Class<*>, aggregateRootTypeName: String, aggregateRootId: String, minVersion: Int, maxVersion: Int, retryTimes: Int, taskSource: CompletableFuture<List<DomainEventStream>>): CompletableFuture<List<DomainEventStream>> {
-        IOHelper.tryAsyncActionRecursively("TryQueryAggregateEventsAsync",
-                { eventStore.queryAggregateEventsAsync(aggregateRootId, aggregateRootTypeName, minVersion, maxVersion) }, { value: List<DomainEventStream> -> taskSource.complete(value) },
-                { String.format("eventStore.queryAggregateEventsAsync has unknown exception, aggregateRootTypeName: %s, aggregateRootId: %s", aggregateRootTypeName, aggregateRootId) },
-                null,
-                retryTimes, true)
+    private fun tryQueryAggregateEventsAsync(aggregateRootType: Class<*>, aggregateRootTypeName: String, aggregateRootId: String, minVersion: Int, maxVersion: Int, retryTimes: Int): CompletableFuture<List<DomainEventStream>> {
+        val taskSource = CompletableFuture<List<DomainEventStream>>()
+        IOHelper.tryAsyncActionRecursively("TryQueryAggregateEventsAsync", {
+            eventStore.queryAggregateEventsAsync(aggregateRootId, aggregateRootTypeName, minVersion, maxVersion)
+        }, { value: List<DomainEventStream> -> taskSource.complete(value) }, {
+            String.format("eventStore.queryAggregateEventsAsync has unknown exception, aggregateRootTypeName: %s, aggregateRootId: %s", aggregateRootTypeName, aggregateRootId)
+        }, null, retryTimes, true)
         return taskSource
     }
 
     private fun <T : IAggregateRoot?> tryGetFromSnapshot(aggregateRootId: String, aggregateRootType: Class<T>): CompletableFuture<T> {
-        val aggregateRootFuture = tryRestoreFromSnapshotAsync(aggregateRootType, aggregateRootId, 0, CompletableFuture())
+        val aggregateRootFuture = tryRestoreFromSnapshotAsync(aggregateRootType, aggregateRootId, 0)
         return aggregateRootFuture.thenCompose { aggregateRoot: T? ->
             if (aggregateRoot == null) {
-                return@thenCompose CompletableFuture.completedFuture(null)
+                return@thenCompose CompletableFuture.completedFuture(aggregateRoot)
             }
             if (aggregateRoot.javaClass != aggregateRootType || aggregateRoot.uniqueId != aggregateRootId) {
                 throw AggregateRootInvalidException(String.format("AggregateRoot recovery from snapshot is invalid as the aggregateRootType or aggregateRootId is not matched. Snapshot: [aggregateRootType: %s, aggregateRootId: %s], expected: [aggregateRootType: %s, aggregateRootId: %s]",
@@ -65,7 +67,7 @@ class EventSourcingAggregateStorage(private val eventStore: IEventStore, private
                         aggregateRootId))
             }
             val aggregateRootTypeName = typeNameProvider.getTypeName(aggregateRootType)
-            val eventStreamsFuture = tryQueryAggregateEventsAsync(aggregateRootType, aggregateRootTypeName, aggregateRootId, aggregateRoot.version + 1, MAXVERSION, 0, CompletableFuture())
+            val eventStreamsFuture = tryQueryAggregateEventsAsync(aggregateRootType, aggregateRootTypeName, aggregateRootId, aggregateRoot.version + 1, MAX_VERSION, 0)
             eventStreamsFuture.thenApply { eventStreams: List<DomainEventStream>? ->
                 aggregateRoot.replayEvents(eventStreams)
                 aggregateRoot
@@ -73,17 +75,17 @@ class EventSourcingAggregateStorage(private val eventStore: IEventStore, private
         }
     }
 
-    private fun <T : IAggregateRoot?> rebuildAggregateRoot(aggregateRootType: Class<T>, eventStreams: List<DomainEventStream>?): T? {
-        if (eventStreams == null || eventStreams.isEmpty()) {
+    private fun <T : IAggregateRoot?> rebuildAggregateRoot(aggregateRootType: Class<T>, eventStreams: List<DomainEventStream>): T? {
+        if (eventStreams.isEmpty()) {
             return null
         }
         val aggregateRoot = aggregateRootFactory.createAggregateRoot(aggregateRootType)
-        aggregateRoot!!.replayEvents(eventStreams)
+        aggregateRoot?.replayEvents(eventStreams)
         return aggregateRoot
     }
 
     companion object {
-        private const val MINVERSION = 1
-        private const val MAXVERSION = Int.MAX_VALUE
+        private const val MIN_VERSION = 1
+        private const val MAX_VERSION = Int.MAX_VALUE
     }
 }
