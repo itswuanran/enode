@@ -10,6 +10,7 @@ import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.Consumer
 import java.util.stream.Collectors
 
@@ -32,10 +33,10 @@ class DefaultMemoryCache(private val aggregateStorage: IAggregateStorage, privat
             throw AggregateRootTypeNotMatchException(String.format("Incorrect aggregate root type, aggregateRootId:%s, type:%s, expecting type:%s", aggregateRootId, aggregateRootInfo.aggregateRoot.javaClass, aggregateRootType))
         }
         if (aggregateRoot.changes.size > 0) {
-            val lastestAggregateRootFuture = aggregateStorage.getAsync(aggregateRootType, aggregateRootId.toString())
-            return lastestAggregateRootFuture.thenApply { lastestAggregateRoot: IAggregateRoot ->
-                resetAggregateRootCache(aggregateRootType, aggregateRootId.toString(), lastestAggregateRoot)
-                lastestAggregateRoot as T
+            val latestAggregateRootFuture = aggregateStorage.getAsync(aggregateRootType, aggregateRootId.toString())
+            return latestAggregateRootFuture.thenApply { latestAggregateRoot: IAggregateRoot ->
+                resetAggregateRootCache(aggregateRootType, aggregateRootId.toString(), latestAggregateRoot)
+                latestAggregateRoot as T
             }
         }
         return CompletableFuture.completedFuture(aggregateRoot)
@@ -48,20 +49,25 @@ class DefaultMemoryCache(private val aggregateStorage: IAggregateStorage, privat
         return getAsync(aggregateRootId, IAggregateRoot::class.java)
     }
 
-
     override fun <T : IAggregateRoot> acceptAggregateRootChanges(aggregateRoot: T) {
         synchronized(lockObj) {
+            val cacheReset = AtomicBoolean(false)
             val cacheInfo = aggregateRootInfoDict.computeIfAbsent(aggregateRoot.uniqueId) {
+                aggregateRoot.acceptChanges()
+                cacheReset.set(true)
                 logger.info("Aggregate root in-memory cache initialized, aggregateRootType: {}, aggregateRootId: {}, aggregateRootVersion: {}", aggregateRoot.javaClass.name, aggregateRoot.uniqueId, aggregateRoot.version)
                 AggregateCacheInfo(aggregateRoot)
             }
+            if (cacheReset.get()) {
+                return
+            }
+            val aggregateRootOldVersion = cacheInfo!!.aggregateRoot.version
             //更新到内存缓存前需要先检查聚合根引用是否有变化，有变化说明此聚合根已经被重置过状态了
-            if (aggregateRoot.version > 1 && cacheInfo!!.aggregateRoot !== aggregateRoot) {
+            if (aggregateRoot.version > 1 && cacheInfo.aggregateRoot !== aggregateRoot) {
                 throw AggregateRootReferenceChangedException(aggregateRoot)
             }
-            //接受聚合根的最新事件修改，更新聚合根版本号
-            val aggregateRootOldVersion = cacheInfo!!.aggregateRoot.version
             aggregateRoot.acceptChanges()
+            //接受聚合根的最新事件修改，更新聚合根版本号
             cacheInfo.updateAggregateRoot(aggregateRoot)
             logger.info("Aggregate root in-memory cache changed, aggregateRootType: {}, aggregateRootId: {}, aggregateRootNewVersion: {}, aggregateRootOldVersion: {}", aggregateRoot.javaClass.name, aggregateRoot.uniqueId, aggregateRoot.version, aggregateRootOldVersion)
         }
@@ -109,11 +115,16 @@ class DefaultMemoryCache(private val aggregateStorage: IAggregateStorage, privat
             logger.info("Removed dirty in-memory aggregate, aggregateRootType: {}, aggregateRootId: {}, version: {}", aggregateRootType.name, aggregateRootId, aggregateCacheInfo.aggregateRoot.version)
         }
         synchronized(lockObj) {
+            val cacheReset = AtomicBoolean(false)
             val cacheInfo = aggregateRootInfoDict.computeIfAbsent(aggregateRoot.uniqueId) {
                 if (logger.isDebugEnabled) {
                     logger.debug("Aggregate root in-memory cache reset, aggregateRootType: {}, aggregateRootId: {}, aggregateRootVersion: {}", aggregateRoot.javaClass.name, aggregateRoot.uniqueId, aggregateRoot.version)
                 }
+                cacheReset.set(true)
                 AggregateCacheInfo(aggregateRoot)
+            }
+            if (cacheReset.get()) {
+                return
             }
             val aggregateRootOldVersion = cacheInfo!!.aggregateRoot.version
             cacheInfo.updateAggregateRoot(aggregateRoot)
