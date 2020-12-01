@@ -10,15 +10,16 @@ import java.util.concurrent.CompletableFuture;
  * @author anruence@gmail.com
  */
 public class AggregateRepositoryProxy<TAggregateRoot extends IAggregateRoot> implements IAggregateRepositoryProxy {
-    private final IAggregateRepository<TAggregateRoot> aggregateRepository;
-
-    public AggregateRepositoryProxy(IAggregateRepository<TAggregateRoot> aggregateRepository) {
-        this.aggregateRepository = aggregateRepository;
-    }
+    private IAggregateRepository<TAggregateRoot> aggregateRepository;
 
     @Override
     public Object getInnerObject() {
         return aggregateRepository;
+    }
+
+    @Override
+    public void setInnerObject(Object innerObject) {
+        this.aggregateRepository = (IAggregateRepository<TAggregateRoot>) innerObject;
     }
 
     @Override

@@ -218,7 +218,7 @@ public class EnodeCoreTest extends AbstractTest {
         commandResult = Task.await(commandService.executeAsync(command2));
         commandResult = Task.await(commandService.executeAsync(command2));
         commandResult = Task.await(commandService.executeAsync(command2));
-        commandResult = Task.await(commandService.executeAsync(command2,CommandReturnType.EventHandled));
+        commandResult = Task.await(commandService.executeAsync(command2, CommandReturnType.EventHandled));
         Assert.assertNotNull(commandResult);
         Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
         note = Task.await(memoryCache.getAsync(aggregateId, TestAggregate.class));
@@ -715,20 +715,23 @@ public class EnodeCoreTest extends AbstractTest {
         String noteId = IdGenerator.nextId();
         // 使用无界队列模拟不会出现异常，如果有界队列
         Executor executor = Executors.newCachedThreadPool();
-        CountDownLatch latch = new CountDownLatch(20);
-        for (int i = 0; i < 20; i++) {
+        CountDownLatch latch = new CountDownLatch(300);
+        for (int i = 0; i < 300; i++) {
             CompletableFuture.runAsync(() -> {
                 String title = "Create Note";
                 CreateTestAggregateCommand createNoteCommand = new CreateTestAggregateCommand();
                 createNoteCommand.setTitle(title);
                 createNoteCommand.setAggregateRootId(noteId);
-                Task.await(commandService.executeAsync(createNoteCommand, CommandReturnType.EventHandled));
+                Task.await(commandService.executeAsync(createNoteCommand, CommandReturnType.CommandExecuted));
                 ChangeTestAggregateTitleCommand titleCommand = new ChangeTestAggregateTitleCommand();
                 titleCommand.setTitle(title + "Changed");
                 titleCommand.setAggregateRootId(noteId);
-                Task.await(commandService.executeAsync(titleCommand, CommandReturnType.EventHandled));
+                Task.await(commandService.executeAsync(titleCommand, CommandReturnType.CommandExecuted));
                 latch.countDown();
-            }, executor);
+            }, executor).exceptionally(x -> {
+                latch.countDown();
+                return null;
+            });
         }
         Task.await(latch);
     }
@@ -796,7 +799,7 @@ public class EnodeCoreTest extends AbstractTest {
         command.setAggregateRootId(aggregateId);
         command.setTitle("Sample Note");
         //执行创建聚合根的命令
-        CommandResult commandResult = Task.await(commandService.executeAsync(command,CommandReturnType.EventHandled));
+        CommandResult commandResult = Task.await(commandService.executeAsync(command, CommandReturnType.EventHandled));
         Assert.assertNotNull(commandResult);
         Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
         TestAggregate note = Task.await(memoryCache.getAsync(aggregateId, TestAggregate.class));
