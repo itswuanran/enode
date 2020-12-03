@@ -89,16 +89,16 @@ class CommandExecuteContext(
         }
     }
 
-    override fun <T : IAggregateRoot> getAsync(id: Any, clazz: Class<T>): CompletableFuture<T> {
-        return getAsync(id, true, clazz)
+    override fun <T : IAggregateRoot> getAsync(id: Any, aggregateRootType: Class<T>): CompletableFuture<T> {
+        return getAsync(id, true, aggregateRootType)
     }
 
-    override fun <T : IAggregateRoot> get(id: Any, firstFromCache: Boolean, clazz: Class<T>): T {
-        return getAsync(id, firstFromCache, clazz).join()
+    override fun <T : IAggregateRoot> get(id: Any, firstFromCache: Boolean, aggregateRootType: Class<T>): T {
+        return getAsync(id, firstFromCache, aggregateRootType).join()
     }
 
-    override fun <T : IAggregateRoot> get(id: Any, clazz: Class<T>): T {
-        return getAsync(id, clazz).join()
+    override fun <T : IAggregateRoot> get(id: Any, aggregateRootType: Class<T>): T {
+        return getAsync(id, aggregateRootType).join()
     }
 
     override val trackedAggregateRoots: List<IAggregateRoot>

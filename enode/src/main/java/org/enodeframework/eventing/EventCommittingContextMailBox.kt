@@ -22,9 +22,8 @@ class EventCommittingContextMailBox(val number: Int, private val batchSize: Int,
     private val messageQueue: ConcurrentLinkedQueue<EventCommittingContext> = ConcurrentLinkedQueue()
     private val handleMessageAction: Action1<List<EventCommittingContext>> = handleEventAction
     private var lastActiveTime: Date = Date()
-        private set
-    var isRunning = false
-        private set
+
+    private var isRunning = false
 
     private fun totalUnHandledMessageCount(): Long {
         return messageQueue.count().toLong()
@@ -35,7 +34,7 @@ class EventCommittingContextMailBox(val number: Int, private val batchSize: Int,
      */
     fun enqueueMessage(message: EventCommittingContext) {
         synchronized(lockObj) {
-            val eventDict = aggregateDictDict.computeIfAbsent(message.eventStream.aggregateRootId) { x: String -> ConcurrentHashMap() }
+            val eventDict = aggregateDictDict.computeIfAbsent(message.eventStream.aggregateRootId) { ConcurrentHashMap() }
             // If the specified key is not already associated with a value (or is mapped to null) associates it with the given value and returns null, else returns the current value.
             if (eventDict.putIfAbsent(message.eventStream.id, ONE_BYTE) == null) {
                 message.mailBox = this
@@ -62,7 +61,7 @@ class EventCommittingContextMailBox(val number: Int, private val batchSize: Int,
     /**
      * 尝试运行一次MailBox，一次运行会处理一个消息或者一批消息，当前MailBox不能是运行中或者暂停中或者已暂停
      */
-    fun tryRun() {
+    private fun tryRun() {
         synchronized(lockObj) {
             if (isRunning) {
                 return

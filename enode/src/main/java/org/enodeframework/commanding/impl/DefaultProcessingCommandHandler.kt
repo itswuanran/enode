@@ -285,7 +285,7 @@ class DefaultProcessingCommandHandler(private val eventStore: IEventStore, priva
             return HandlerFindResult.TooManyHandlerData
         }
         val handlerData = handlerDataList.stream().findFirst().orElse(MessageHandlerData())
-        if (handlerData.listHandlers == null || handlerData.listHandlers.size == 0) {
+        if (handlerData.listHandlers.isEmpty()) {
             return HandlerFindResult.NotFound
         } else if (handlerData.listHandlers.size > 1) {
             return HandlerFindResult.TooManyHandler

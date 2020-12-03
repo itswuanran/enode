@@ -144,7 +144,7 @@ class DefaultEventCommittingService(private val memoryCache: IMemoryCache, priva
             return
         }
         if (eventCommittingContext.eventStream.version == 1) {
-            handleFirstEventDuplicationAsync(eventCommittingContext, 0).asDeferred().await();
+            handleFirstEventDuplicationAsync(eventCommittingContext, 0).asDeferred().await()
             processDuplicateAggregateRootRecursively(index + 1, contexts, eventMailBox)
         } else {
             resetCommandMailBoxConsumingSequence(eventCommittingContext, eventCommittingContext.processingCommand.sequence, duplicateCommandIdList).asDeferred().await()
@@ -159,7 +159,7 @@ class DefaultEventCommittingService(private val memoryCache: IMemoryCache, priva
         commandMailBox.pause()
         val future = CompletableFuture<Boolean>()
         eventMailBox.removeAggregateAllEventCommittingContexts(aggregateRootId)
-        memoryCache.refreshAggregateFromEventStoreAsync(context.eventStream.aggregateRootTypeName, aggregateRootId).whenComplete { t, u ->
+        memoryCache.refreshAggregateFromEventStoreAsync(context.eventStream.aggregateRootTypeName, aggregateRootId).whenComplete { _, _ ->
             try {
                 if (duplicateCommandIdList != null) {
                     for (commandId in duplicateCommandIdList) {
@@ -171,9 +171,9 @@ class DefaultEventCommittingService(private val memoryCache: IMemoryCache, priva
                 commandMailBox.resume()
                 commandMailBox.tryRun()
             }
-            future.complete(true);
+            future.complete(true)
         }
-        return future;
+        return future
     }
 
     private fun handleFirstEventDuplicationAsync(context: EventCommittingContext, retryTimes: Int): CompletableFuture<Boolean> {
@@ -186,7 +186,7 @@ class DefaultEventCommittingService(private val memoryCache: IMemoryCache, priva
                 //之所以要这样做，是因为虽然该command产生的事件已经持久化成功，但并不表示事件也已经发布出去了；
                 //有可能事件持久化成功了，但那时正好机器断电了，则发布事件都没有做；
                 if (context.processingCommand.message.id == result.commandId) {
-                    resetCommandMailBoxConsumingSequence(context, context.processingCommand.sequence + 1, null).whenComplete { t, u ->
+                    resetCommandMailBoxConsumingSequence(context, context.processingCommand.sequence + 1, null).whenComplete { _, _ ->
                         publishDomainEventAsync(context.processingCommand, result).whenComplete { _, _ ->
                             future.complete(true)
                         }
@@ -199,7 +199,7 @@ class DefaultEventCommittingService(private val memoryCache: IMemoryCache, priva
                             result.aggregateRootId,
                             result.aggregateRootTypeName)
                     logger.error(errorMessage)
-                    resetCommandMailBoxConsumingSequence(context, context.processingCommand.sequence + 1, null).whenComplete { t, u ->
+                    resetCommandMailBoxConsumingSequence(context, context.processingCommand.sequence + 1, null).whenComplete { _, _ ->
                         val commandResult = CommandResult(CommandStatus.Failed, context.processingCommand.message.id, context.eventStream.aggregateRootId, "Duplicate aggregate creation.", String::class.java.name)
                         completeCommand(context.processingCommand, commandResult).whenComplete { _, _ ->
                             future.complete(true)
@@ -212,7 +212,7 @@ class DefaultEventCommittingService(private val memoryCache: IMemoryCache, priva
                         context.eventStream.aggregateRootId,
                         context.eventStream.aggregateRootTypeName)
                 logger.error(errorMessage)
-                resetCommandMailBoxConsumingSequence(context, context.processingCommand.sequence + 1, null).whenComplete { t, u ->
+                resetCommandMailBoxConsumingSequence(context, context.processingCommand.sequence + 1, null).whenComplete { _, _ ->
                     val commandResult = CommandResult(CommandStatus.Failed, context.processingCommand.message.id, context.eventStream.aggregateRootId, "Duplicate aggregate creation, but we cannot find the existing eventstream from eventstore.", String::class.java.name)
                     completeCommand(context.processingCommand, commandResult)
                             .whenComplete { _, _ -> future.complete(true) }
@@ -240,7 +240,7 @@ class DefaultEventCommittingService(private val memoryCache: IMemoryCache, priva
         }, {
             String.format("[eventStream:%s]", serializeService.serialize(eventStream))
         }, null, retryTimes, true)
-        return future;
+        return future
     }
 
     private fun completeCommand(processingCommand: ProcessingCommand, commandResult: CommandResult): CompletableFuture<Boolean> {
