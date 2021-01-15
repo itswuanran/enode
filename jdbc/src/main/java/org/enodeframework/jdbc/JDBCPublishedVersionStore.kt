@@ -1,123 +1,201 @@
-package org.enodeframework.jdbc
+package org.enodeframework.jdbc;
 
+import io.vertx.core.AsyncResult
 import io.vertx.core.json.JsonArray
-import io.vertx.ext.jdbc.JDBCClient
 import io.vertx.ext.sql.SQLClient
-import io.vertx.kotlin.coroutines.CoroutineVerticle
-import io.vertx.kotlin.ext.sql.querySingleWithParamsAwait
-import io.vertx.kotlin.ext.sql.updateWithParamsAwait
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.future.asCompletableFuture
+import io.vertx.ext.sql.UpdateResult
+import org.enodeframework.common.DbType
+import org.enodeframework.common.EventStoreConfiguration
 import org.enodeframework.common.exception.IORuntimeException
 import org.enodeframework.common.exception.PublishedVersionStoreException
 import org.enodeframework.common.io.IOHelper
-import org.enodeframework.common.utilities.Ensure
 import org.enodeframework.eventing.IPublishedVersionStore
 import org.slf4j.LoggerFactory
 import java.sql.SQLException
 import java.util.*
 import java.util.concurrent.CompletableFuture
-import javax.sql.DataSource
 
 /**
  * @author anruence@gmail.com
  */
-open class JDBCPublishedVersionStore @JvmOverloads constructor(dataSource: DataSource, setting: DBConfiguration = DBConfiguration()) : CoroutineVerticle(), IPublishedVersionStore {
-    private val tableName: String
-    private val uniqueIndexName: String
-    private val sqlState: String
-    private val dataSource: DataSource
-    private lateinit var sqlClient: SQLClient
+class JDBCPublishedVersionStore(private val client: SQLClient, private val configuration: EventStoreConfiguration) :
+    IPublishedVersionStore {
 
-    override suspend fun start() {
-        sqlClient = JDBCClient.create(vertx, dataSource)
-    }
+    private var code: String = ""
 
-    override fun updatePublishedVersionAsync(processorName: String, aggregateRootTypeName: String, aggregateRootId: String, publishedVersion: Int): CompletableFuture<Int> {
+    override fun updatePublishedVersionAsync(
+        processorName: String,
+        aggregateRootTypeName: String,
+        aggregateRootId: String,
+        publishedVersion: Int
+    ): CompletableFuture<Int> {
         return IOHelper.tryIOFuncAsync({
-            CoroutineScope(Dispatchers.Default).async {
-                updatePublishedVersion(processorName, aggregateRootTypeName, aggregateRootId, publishedVersion)
-            }.asCompletableFuture()
+            updatePublishedVersion(processorName, aggregateRootTypeName, aggregateRootId, publishedVersion)
         }, "UpdatePublishedVersionAsync");
     }
 
-    private suspend fun updatePublishedVersion(processorName: String, aggregateRootTypeName: String, aggregateRootId: String, publishedVersion: Int): Int {
-        val isUpdate = publishedVersion != 1
-        val sql = if (isUpdate) String.format(UPDATE_SQL, tableName) else String.format(INSERT_SQL, tableName)
+    private fun updatePublishedVersion(
+        processorName: String,
+        aggregateRootTypeName: String,
+        aggregateRootId: String,
+        publishedVersion: Int
+    ): CompletableFuture<Int> {
+        val insert = publishedVersion == 1
+        if (insert) {
+            return insertVersionAsync(processorName, aggregateRootTypeName, aggregateRootId, publishedVersion)
+        }
+        return updateVersionAsync(processorName, aggregateRootTypeName, aggregateRootId, publishedVersion)
+    }
+
+    private fun updateVersionAsync(
+        processorName: String,
+        aggregateRootTypeName: String,
+        aggregateRootId: String,
+        publishedVersion: Int
+    ): CompletableFuture<Int> {
+        val future = CompletableFuture<Int>()
         val array = JsonArray()
-        if (isUpdate) {
-            array.add(publishedVersion)
-            array.add(Date().toInstant())
-            array.add(processorName)
-            array.add(aggregateRootId)
-            array.add(publishedVersion - 1)
-        } else {
-            array.add(processorName)
-            array.add(aggregateRootTypeName)
-            array.add(aggregateRootId)
-            array.add(1)
-            array.add(Date().toInstant())
-        }
-        try {
-            val updateResult = sqlClient.updateWithParamsAwait(sql, array)
-            if (updateResult.updated == 0) {
-                throw PublishedVersionStoreException(String.format("version update rows is 0. %s", array))
-            }
-            return updateResult.updated
-        } catch (throwable: Throwable) {
-            if (throwable is SQLException) {
-                if (!isUpdate && sqlState == throwable.sqlState && throwable.message!!.contains(uniqueIndexName)) {
-                    return 1
+        array.add(publishedVersion)
+        array.add(Date().toInstant())
+        array.add(processorName)
+        array.add(aggregateRootId)
+        array.add(publishedVersion - 1)
+        val sql = String.format(UPDATE_SQL, configuration.publishedTableName)
+        client.updateWithParams(sql, array) { ar: AsyncResult<UpdateResult> ->
+            if (ar.succeeded()) {
+                if (ar.result().updated == 0) {
+                    future.completeExceptionally(
+                        PublishedVersionStoreException(
+                            String.format(
+                                "version update rows is 0. %s",
+                                array
+                            )
+                        )
+                    )
+                    return@updateWithParams
                 }
-                logger.error("Insert or update aggregate published version has sql exception. {}", array, throwable)
-                throw IORuntimeException(throwable)
+                future.complete(ar.result().updated);
+                return@updateWithParams
             }
-            logger.error("Insert or update aggregate published version has unknown exception. {}", array, throwable)
-            throw PublishedVersionStoreException(throwable)
+            val throwable = ar.cause()
+            if (throwable is SQLException) {
+                logger.error("Update aggregate published version has sql exception. {}", array, throwable)
+                future.completeExceptionally(IORuntimeException(throwable))
+                return@updateWithParams
+            }
+            logger.error("Update aggregate published version has unknown exception. {}", array, throwable)
+            future.completeExceptionally(PublishedVersionStoreException(throwable))
+            return@updateWithParams
         }
+        return future
     }
 
-    override fun getPublishedVersionAsync(processorName: String, aggregateRootTypeName: String, aggregateRootId: String): CompletableFuture<Int> {
+    private fun insertVersionAsync(
+        processorName: String,
+        aggregateRootTypeName: String,
+        aggregateRootId: String,
+        publishedVersion: Int
+    ): CompletableFuture<Int> {
+        val future = CompletableFuture<Int>()
+        val array = JsonArray()
+        array.add(processorName)
+        array.add(aggregateRootTypeName)
+        array.add(aggregateRootId)
+        array.add(1)
+        array.add(Date().toInstant())
+        val sql = String.format(INSERT_SQL, configuration.publishedTableName)
+        client.updateWithParams(sql, array) { ar: AsyncResult<UpdateResult> ->
+            if (ar.succeeded()) {
+                if (ar.result().updated == 0) {
+                    future.completeExceptionally(
+                        PublishedVersionStoreException(
+                            String.format(
+                                "version update rows is 0. %s",
+                                array
+                            )
+                        )
+                    )
+                    return@updateWithParams
+                }
+                future.complete(ar.result().updated);
+                return@updateWithParams
+            }
+            val throwable = ar.cause()
+            if (throwable is SQLException) {
+                if (code == throwable.sqlState && throwable.message?.contains(configuration.publishedUkName) == true) {
+                    future.complete(1)
+                    return@updateWithParams
+                }
+                logger.error("Insert aggregate published version has sql exception. {}", array, throwable)
+                future.completeExceptionally(IORuntimeException(throwable))
+                return@updateWithParams
+            }
+            logger.error("Insert aggregate published version has unknown exception. {}", array, throwable)
+            future.completeExceptionally(PublishedVersionStoreException(throwable))
+            return@updateWithParams
+        }
+        return future
+    }
+
+    override fun getPublishedVersionAsync(
+        processorName: String,
+        aggregateRootTypeName: String,
+        aggregateRootId: String
+    ): CompletableFuture<Int> {
         return IOHelper.tryIOFuncAsync({
-            CoroutineScope(Dispatchers.Default).async {
-                getPublishedVersion(processorName, aggregateRootTypeName, aggregateRootId)
-            }.asCompletableFuture()
+            getPublishedVersion(processorName, aggregateRootTypeName, aggregateRootId)
         }, "UpdatePublishedVersionAsync");
     }
 
-    private suspend fun getPublishedVersion(processorName: String, aggregateRootTypeName: String, aggregateRootId: String): Int {
-        val sql = String.format(SELECT_SQL, tableName)
+    private fun getPublishedVersion(
+        processorName: String,
+        aggregateRootTypeName: String,
+        aggregateRootId: String
+    ): CompletableFuture<Int> {
+        val future = CompletableFuture<Int>()
+        val sql = String.format(SELECT_SQL, configuration.publishedTableName)
         val array = JsonArray()
         array.add(processorName)
         array.add(aggregateRootId)
-        try {
-            val result = sqlClient.querySingleWithParamsAwait(sql, array) ?: return 0
-            return result.getInteger(0)
-        } catch (throwable: Throwable) {
+        client.querySingleWithParams(sql, array) { ar: AsyncResult<JsonArray?> ->
+            if (ar.succeeded()) {
+                ar.result().let { row ->
+                    if (row == null) {
+                        future.complete(0)
+                        return@querySingleWithParams
+                    }
+                    future.complete(row.getInteger(0))
+                    return@querySingleWithParams
+                }
+            }
+            val throwable = ar.cause()
             if (throwable is SQLException) {
                 logger.error("Get aggregate published version has sql exception.", throwable)
-                throw IORuntimeException(throwable)
+                future.completeExceptionally(IORuntimeException(throwable))
+                return@querySingleWithParams
             }
             logger.error("Get aggregate published version has unknown exception.", throwable)
-            throw PublishedVersionStoreException(throwable)
+            future.completeExceptionally(PublishedVersionStoreException(throwable))
+            return@querySingleWithParams
         }
+        return future
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(JDBCPublishedVersionStore::class.java)
-        private const val INSERT_SQL = "INSERT INTO %s (processor_name, aggregate_root_type_name, aggregate_root_id, version, gmt_create) VALUES (?, ?, ?, ?, ?)"
-        private const val UPDATE_SQL = "UPDATE %s SET version = ?, gmt_create = ? WHERE processor_name = ? AND aggregate_root_id = ? AND version = ?"
+        private const val INSERT_SQL =
+            "INSERT INTO %s (processor_name, aggregate_root_type_name, aggregate_root_id, version, gmt_create) VALUES (?, ?, ?, ?, ?)"
+        private const val UPDATE_SQL =
+            "UPDATE %s SET version = ?, gmt_create = ? WHERE processor_name = ? AND aggregate_root_id = ? AND version = ?"
         private const val SELECT_SQL = "SELECT version FROM %s WHERE processor_name = ? AND aggregate_root_id = ?"
     }
 
     init {
-        Ensure.notNull(dataSource, "DataSource")
-        Ensure.notNull(dataSource, "DBConfigurationSetting")
-        this.dataSource = dataSource
-        tableName = setting.publishedVersionTableName
-        sqlState = setting.sqlState
-        uniqueIndexName = setting.publishedVersionUniqueIndexName
+        if (DbType.MySQL.name == configuration.dbType) {
+            this.code = "23000"
+        }
+        if (DbType.Pg.name == configuration.dbType) {
+            this.code = "23505"
+        }
     }
 }

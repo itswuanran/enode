@@ -8,7 +8,7 @@
     <version>${revision}</version>
     <packaging>pom</packaging>
     <properties>
-        <revision>1.0.13</revision>
+        <revision>1.0.14</revision>
         <maven.flatten.version>1.1.0</maven.flatten.version>
         <maven.gpg.version>1.6</maven.gpg.version>
     </properties>
@@ -61,17 +61,12 @@
             </dependency>
             <dependency>
                 <groupId>org.enodeframework</groupId>
-                <artifactId>enode-jdbc</artifactId>
-                <version>${revision}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.enodeframework</groupId>
                 <artifactId>enode-mysql</artifactId>
                 <version>${revision}</version>
             </dependency>
             <dependency>
                 <groupId>org.enodeframework</groupId>
-                <artifactId>enode-tidb</artifactId>
+                <artifactId>enode-jdbc</artifactId>
                 <version>${revision}</version>
             </dependency>
             <dependency>
