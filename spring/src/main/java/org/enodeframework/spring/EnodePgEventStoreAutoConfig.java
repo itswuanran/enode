@@ -1,49 +1,27 @@
 package org.enodeframework.spring;
 
-import io.vertx.core.Vertx;
+import io.vertx.pgclient.PgPool;
+import org.enodeframework.common.EventStoreConfiguration;
 import org.enodeframework.common.serializing.ISerializeService;
 import org.enodeframework.eventing.IEventSerializer;
-import org.enodeframework.jdbc.DBConfiguration;
 import org.enodeframework.pg.PgEventStore;
 import org.enodeframework.pg.PgPublishedVersionStore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
-import javax.sql.DataSource;
-
 @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "pg")
 public class EnodePgEventStoreAutoConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(EnodePgEventStoreAutoConfig.class);
-    @Autowired
-    @Qualifier("enodeVertx")
-    protected Vertx vertx;
-
     @Bean
-    @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "pg")
-    public PgEventStore pgEventStore(@Qualifier("enodePgDataSource") DataSource pgDataSource, IEventSerializer eventSerializer, ISerializeService serializeService) {
-        PgEventStore eventStore = new PgEventStore(pgDataSource, DBConfiguration.postgresql(), eventSerializer, serializeService);
-        vertx.deployVerticle(eventStore, res -> {
-            if (!res.succeeded()) {
-                logger.error("vertx deploy PgEventStore failed.", res.cause());
-            }
-        });
+    public PgEventStore pgEventStore(@Qualifier("enodePgPool") PgPool pgPool, IEventSerializer eventSerializer, ISerializeService serializeService) {
+        PgEventStore eventStore = new PgEventStore(pgPool, EventStoreConfiguration.pg(), eventSerializer, serializeService);
         return eventStore;
     }
 
-    @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "pg")
     @Bean
-    public PgPublishedVersionStore pgPublishedVersionStore(@Qualifier("enodePgDataSource") DataSource pgDataSource) {
-        PgPublishedVersionStore versionStore = new PgPublishedVersionStore(pgDataSource, DBConfiguration.postgresql());
-        vertx.deployVerticle(versionStore, res -> {
-            if (!res.succeeded()) {
-                logger.error("vertx deploy PgPublishedVersionStore failed.", res.cause());
-            }
-        });
+    public PgPublishedVersionStore pgPublishedVersionStore(@Qualifier("enodePgPool") PgPool pgPool) {
+        PgPublishedVersionStore versionStore = new PgPublishedVersionStore(pgPool, EventStoreConfiguration.pg());
         return versionStore;
     }
 }

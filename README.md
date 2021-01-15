@@ -181,7 +181,7 @@ spring.enode.mq.topic.exception=EnodeBankExceptionTopic
     }
 
     @Bean("enodeTiDBDataSource")
-    @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "tidb")
+    @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "mysql")
     public HikariDataSource tidbDataSource() {
         HikariDataSource dataSource = new HikariDataSource();
         dataSource.setJdbcUrl("jdbc:mysql://127.0.0.1:4000/enode?");
@@ -214,7 +214,6 @@ spring.enode.mq.topic.exception=EnodeBankExceptionTopic
     }
 ```
 ### 事件表新建
-这里做了一次更新，删除了published_version表的依赖，只存储事件信息，对事件表只有插入、查询操作
 
 #### MySQL & TiDB
 ```mysql

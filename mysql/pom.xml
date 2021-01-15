@@ -19,8 +19,8 @@
             <artifactId>enode</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.enodeframework</groupId>
-            <artifactId>enode-jdbc</artifactId>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-mysql-client</artifactId>
         </dependency>
     </dependencies>
 </project>
