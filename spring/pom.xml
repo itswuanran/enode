@@ -57,11 +57,5 @@
             <artifactId>enode-ons</artifactId>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.enodeframework</groupId>
-            <artifactId>enode-jdbc</artifactId>
-            <version>1.0.13</version>
-            <scope>compile</scope>
-        </dependency>
     </dependencies>
 </project>

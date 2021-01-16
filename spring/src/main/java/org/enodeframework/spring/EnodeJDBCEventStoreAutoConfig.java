@@ -14,13 +14,13 @@ import org.springframework.context.annotation.Bean;
 public class EnodeJDBCEventStoreAutoConfig {
 
     @Bean
-    public JDBCEventStore mysqlEventStore(@Qualifier("enodeSQLClient") SQLClient client, IEventSerializer eventSerializer, ISerializeService serializeService) {
+    public JDBCEventStore jdbcEventStore(@Qualifier("enodeSQLClient") SQLClient client, IEventSerializer eventSerializer, ISerializeService serializeService) {
         JDBCEventStore eventStore = new JDBCEventStore(client, EventStoreConfiguration.mysql(), eventSerializer, serializeService);
         return eventStore;
     }
 
     @Bean
-    public JDBCPublishedVersionStore mysqlPublishedVersionStore(@Qualifier("enodeSQLClient") SQLClient client) {
+    public JDBCPublishedVersionStore jdbcPublishedVersionStore(@Qualifier("enodeSQLClient") SQLClient client) {
         JDBCPublishedVersionStore publishedVersionStore = new JDBCPublishedVersionStore(client, EventStoreConfiguration.mysql());
         return publishedVersionStore;
     }
