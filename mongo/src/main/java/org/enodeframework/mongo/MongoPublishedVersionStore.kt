@@ -32,74 +32,106 @@ class MongoPublishedVersionStore @JvmOverloads constructor(
         aggregateRootId: String,
         publishedVersion: Int
     ): CompletableFuture<Int> {
-        val future = CompletableFuture<Int>()
         val insert = publishedVersion == 1
         if (insert) {
-            val document = Document()
-            document["processorName"] = processorName
-            document["aggregateRootTypeName"] = aggregateRootTypeName
-            document["aggregateRootId"] = aggregateRootId
-            document["version"] = 1
-            document["gmtCreate"] = Date()
-            mongoClient.getDatabase(configuration.dbName).getCollection(configuration.publishedTableName)
-                .insertOne(document).subscribe(object : Subscriber<InsertOneResult> {
-                    override fun onSubscribe(s: Subscription) {
-                        s.request(1)
-                    }
-
-                    override fun onNext(x: InsertOneResult) {
-                        future.complete(if (x.wasAcknowledged()) 1 else 0)
-                    }
-
-                    override fun onError(t: Throwable) {
-                        future.completeExceptionally(t)
-                    }
-
-                    override fun onComplete() {
-                        future.complete(1)
-                    }
-                })
-        } else {
-            val filter = Filters.and(
-                Filters.eq("version", publishedVersion - 1),
-                Filters.eq("processorName", processorName),
-                Filters.eq("aggregateRootId", aggregateRootId)
-            )
-            val update = Updates.combine(
-                Updates.set("version", publishedVersion),
-                Updates.set("gmtCreate", Date())
-            )
-            mongoClient.getDatabase(configuration.dbName).getCollection(configuration.publishedTableName)
-                .updateOne(filter, update).subscribe(object : Subscriber<UpdateResult> {
-                    private var updated = 0
-                    override fun onSubscribe(s: Subscription) {
-                        s.request(1)
-                    }
-
-                    override fun onNext(x: UpdateResult) {
-                        updated = x.modifiedCount.toInt()
-                    }
-
-                    override fun onError(t: Throwable) {
-                        future.completeExceptionally(t)
-                    }
-
-                    override fun onComplete() {
-                        future.complete(updated)
-                    }
-                })
+            return insertAsync(processorName, aggregateRootTypeName, aggregateRootId, publishedVersion)
         }
-        return future.exceptionally { throwable: Throwable ->
-            if (throwable is MongoWriteException) {
-                if (insert && throwable.code == code && throwable.message?.contains(configuration.publishedUkName) == true) {
-                    return@exceptionally 0
+        return updateAsync(processorName, aggregateRootTypeName, aggregateRootId, publishedVersion)
+    }
+
+    private fun insertAsync(
+        processorName: String,
+        aggregateRootTypeName: String,
+        aggregateRootId: String,
+        publishedVersion: Int
+    ): CompletableFuture<Int> {
+        val future = CompletableFuture<Int>()
+        val document = Document()
+        document["processorName"] = processorName
+        document["aggregateRootTypeName"] = aggregateRootTypeName
+        document["aggregateRootId"] = aggregateRootId
+        document["version"] = 1
+        document["gmtCreate"] = Date()
+        mongoClient.getDatabase(configuration.dbName).getCollection(configuration.publishedTableName)
+            .insertOne(document).subscribe(object : Subscriber<InsertOneResult> {
+                override fun onSubscribe(s: Subscription) {
+                    s.request(1)
                 }
-                logger.error("Insert or update aggregate published version has sql exception.", throwable)
-                throw IORuntimeException(throwable)
-            }
-            logger.error("Insert or update aggregate published version has unknown exception.", throwable)
-            throw EventStoreException(throwable)
-        }
+
+                override fun onNext(x: InsertOneResult) {
+                    future.complete(if (x.wasAcknowledged()) 1 else 0)
+                }
+
+                override fun onError(throwable: Throwable) {
+
+                    if (throwable is MongoWriteException) {
+                        if (throwable.code == code && throwable.message?.contains(configuration.publishedUkName) == true) {
+                            future.complete(1)
+                            return
+                        }
+                        logger.error("Insert or update aggregate published version has sql exception.", throwable)
+                        future.completeExceptionally(IORuntimeException(throwable))
+                        return
+                    }
+                    logger.error("Insert or update aggregate published version has unknown exception.", throwable)
+                    future.completeExceptionally(EventStoreException(throwable))
+                    return
+                }
+
+                override fun onComplete() {
+                    future.complete(1)
+                }
+            })
+        return future
+    }
+
+    private fun updateAsync(
+        processorName: String,
+        aggregateRootTypeName: String,
+        aggregateRootId: String,
+        publishedVersion: Int
+    ): CompletableFuture<Int> {
+
+        val future = CompletableFuture<Int>()
+        val filter = Filters.and(
+            Filters.eq("version", publishedVersion - 1),
+            Filters.eq("processorName", processorName),
+            Filters.eq("aggregateRootId", aggregateRootId)
+        )
+        val update = Updates.combine(
+            Updates.set("version", publishedVersion),
+            Updates.set("gmtCreate", Date())
+        )
+        mongoClient.getDatabase(configuration.dbName).getCollection(configuration.publishedTableName)
+            .updateOne(filter, update).subscribe(object : Subscriber<UpdateResult> {
+
+                private var updated = 0
+
+                override fun onSubscribe(s: Subscription) {
+                    s.request(1)
+                }
+
+                override fun onNext(x: UpdateResult) {
+                    updated = x.modifiedCount.toInt()
+                }
+
+                override fun onError(throwable: Throwable) {
+                    if (throwable is MongoWriteException) {
+                        logger.error("Update aggregate published version has sql exception.", throwable)
+                        future.completeExceptionally(IORuntimeException(throwable))
+                        return
+                    }
+                    logger.error("Update aggregate published version has unknown exception.", throwable)
+                    future.completeExceptionally(EventStoreException(throwable))
+                    return
+                }
+
+                override fun onComplete() {
+                    future.complete(updated)
+                    return
+                }
+            })
+        return future
     }
 
     override fun getPublishedVersionAsync(
@@ -124,30 +156,31 @@ class MongoPublishedVersionStore @JvmOverloads constructor(
                     future.complete(version)
                 }
 
-                override fun onError(t: Throwable) {
-                    future.completeExceptionally(t)
+                override fun onError(throwable: Throwable) {
+                    if (throwable is MongoWriteException) {
+                        logger.error(
+                            "Get aggregate published version has sql exception. aggregateRootId: {}",
+                            aggregateRootId,
+                            throwable
+                        )
+                        future.completeExceptionally(IORuntimeException(throwable))
+                        return
+                    }
+                    logger.error(
+                        "Get aggregate published version has unknown exception. aggregateRootId: {}",
+                        aggregateRootId,
+                        throwable
+                    )
+                    future.completeExceptionally(PublishedVersionStoreException(throwable))
+                    return
                 }
 
                 override fun onComplete() {
                     future.complete(version)
+                    return
                 }
             })
-        return future.exceptionally { throwable: Throwable ->
-            if (throwable is MongoWriteException) {
-                logger.error(
-                    "Get aggregate published version has sql exception. aggregateRootId: {}",
-                    aggregateRootId,
-                    throwable
-                )
-                throw IORuntimeException(throwable)
-            }
-            logger.error(
-                "Get aggregate published version has unknown exception. aggregateRootId: {}",
-                aggregateRootId,
-                throwable
-            )
-            throw PublishedVersionStoreException(throwable)
-        }
+        return future
     }
 
     companion object {

@@ -33,15 +33,14 @@ class MongoEventStore(
     private val configuration: EventStoreConfiguration,
     private val eventSerializer: IEventSerializer,
     private val serializeService: ISerializeService
-) : IEventStore, SQLDialect {
-
-    private val code = 11000
-
+) : IEventStore {
     constructor(
         mongoClient: MongoClient,
         eventSerializer: IEventSerializer,
         serializeService: ISerializeService
     ) : this(mongoClient, EventStoreConfiguration.mongo(), eventSerializer, serializeService)
+
+    private val code = 11000
 
     override fun batchAppendAsync(eventStreams: List<DomainEventStream>): CompletableFuture<EventAppendResult> {
         val future = CompletableFuture<EventAppendResult>()
@@ -118,58 +117,53 @@ class MongoEventStore(
             document["events"] = serializeService.serialize(eventSerializer.serialize(domainEventStream.events()))
             documents.add(document)
         }
-        val future = batchInsertAsync(documents)
-        return future.exceptionally { throwable: Throwable ->
-            var sqlCode = 0
-            var message = ""
-            if (throwable is MongoWriteException) {
-                sqlCode = throwable.code
-                message = throwable.message!!
-            }
-            if (throwable is MongoBulkWriteException) {
-                if (throwable.writeErrors.size >= 1) {
-                    val writeError = throwable.writeErrors[0]
-                    sqlCode = writeError.code
-                    message = writeError.message
-                }
-            }
-            if (sqlCode == this.code && message.contains(configuration.eventVersionUkName)) {
-                val appendResult = AggregateEventAppendResult()
-                appendResult.eventAppendStatus = EventAppendStatus.DuplicateEvent
-                return@exceptionally appendResult
-            }
-            if (sqlCode == this.code && message.contains(configuration.eventCommandIdUkName)) {
-                val appendResult = AggregateEventAppendResult()
-                appendResult.eventAppendStatus = EventAppendStatus.DuplicateCommand
-                val commandId = getDuplicatedId(throwable)
-                if (!Strings.isNullOrEmpty(commandId)) {
-                    appendResult.duplicateCommandIds = Lists.newArrayList(commandId)
-                    return@exceptionally appendResult
-                }
-                return@exceptionally appendResult
-            }
-            logger.error("Batch append event has unknown exception.", throwable)
-            throw EventStoreException(throwable)
-        }
-    }
 
-    private fun batchInsertAsync(documents: List<Document>?): CompletableFuture<AggregateEventAppendResult> {
         val future = CompletableFuture<AggregateEventAppendResult>()
         mongoClient.getDatabase(configuration.dbName)
             .getCollection(configuration.eventTableName)
             .insertMany(documents).subscribe(object : Subscriber<InsertManyResult?> {
+
                 override fun onSubscribe(s: Subscription) {
                     s.request(1)
                 }
 
                 override fun onNext(insertManyResult: InsertManyResult?) {
-                    val appendResult = AggregateEventAppendResult()
-                    appendResult.eventAppendStatus = EventAppendStatus.Success
-                    future.complete(appendResult)
+
                 }
 
-                override fun onError(t: Throwable) {
-                    future.completeExceptionally(t)
+                override fun onError(throwable: Throwable) {
+                    var sqlCode = 0
+                    var message = ""
+                    if (throwable is MongoWriteException) {
+                        sqlCode = throwable.code
+                        message = throwable.message!!
+                    }
+                    if (throwable is MongoBulkWriteException) {
+                        if (throwable.writeErrors.size >= 1) {
+                            val writeError = throwable.writeErrors[0]
+                            sqlCode = writeError.code
+                            message = writeError.message
+                        }
+                    }
+                    if (sqlCode == code && message.contains(configuration.eventVersionUkName)) {
+                        val appendResult = AggregateEventAppendResult()
+                        appendResult.eventAppendStatus = EventAppendStatus.DuplicateEvent
+                        future.complete(appendResult)
+                        return
+                    }
+                    if (sqlCode == code && message.contains(configuration.eventCommandIdUkName)) {
+                        val appendResult = AggregateEventAppendResult()
+                        appendResult.eventAppendStatus = EventAppendStatus.DuplicateCommand
+                        val commandId = getDuplicatedId(message)
+                        if (!Strings.isNullOrEmpty(commandId)) {
+                            appendResult.duplicateCommandIds = Lists.newArrayList(commandId)
+                            future.complete(appendResult)
+                            return
+                        }
+                    }
+                    logger.error("Batch append event has unknown exception.", throwable)
+                    future.completeExceptionally(EventStoreException(throwable))
+                    return
                 }
 
                 override fun onComplete() {
@@ -177,6 +171,8 @@ class MongoEventStore(
                     appendResult.eventAppendStatus = EventAppendStatus.Success
                     future.complete(appendResult)
                 }
+
+
             })
         return future
     }
@@ -219,8 +215,25 @@ class MongoEventStore(
                         streams.add(eventStream)
                     }
 
-                    override fun onError(t: Throwable) {
-                        future.completeExceptionally(t)
+                    override fun onError(throwable: Throwable) {
+                        if (throwable is MongoWriteException) {
+                            val errorMessage = String.format(
+                                "Failed to query aggregate events async, aggregateRootId: %s, aggregateRootType: %s",
+                                aggregateRootId,
+                                aggregateRootTypeName
+                            )
+                            logger.error(errorMessage, throwable)
+                            future.completeExceptionally(IORuntimeException(throwable))
+                            return
+                        }
+                        logger.error(
+                            "Failed to query aggregate events async, aggregateRootId: {}, aggregateRootType: {}",
+                            aggregateRootId,
+                            aggregateRootTypeName,
+                            throwable
+                        )
+                        future.completeExceptionally(EventStoreException(throwable))
+                        return
                     }
 
                     override fun onComplete() {
@@ -228,24 +241,7 @@ class MongoEventStore(
                         future.complete(streams)
                     }
                 })
-            future.exceptionally { throwable: Throwable? ->
-                if (throwable is MongoWriteException) {
-                    val errorMessage = String.format(
-                        "Failed to query aggregate events async, aggregateRootId: %s, aggregateRootType: %s",
-                        aggregateRootId,
-                        aggregateRootTypeName
-                    )
-                    logger.error(errorMessage, throwable)
-                    throw IORuntimeException(throwable)
-                }
-                logger.error(
-                    "Failed to query aggregate events async, aggregateRootId: {}, aggregateRootType: {}",
-                    aggregateRootId,
-                    aggregateRootTypeName,
-                    throwable
-                )
-                throw EventStoreException(throwable)
-            }
+            future
         }, "QueryAggregateEventsAsync")
     }
 
@@ -255,7 +251,9 @@ class MongoEventStore(
             val filter = Filters.and(Filters.eq("aggregateRootId", aggregateRootId), Filters.eq("version", version))
             mongoClient.getDatabase(configuration.dbName).getCollection(configuration.eventTableName)
                 .find(filter).subscribe(object : Subscriber<Document> {
+
                     private var eventStream: DomainEventStream? = null
+
                     override fun onSubscribe(s: Subscription) {
                         s.request(1)
                     }
@@ -270,40 +268,42 @@ class MongoEventStore(
                                 serializeService.deserialize(
                                     document.getString("events"),
                                     MutableMap::class.java
-                                ) as MutableMap<String, String>?
+                                ) as MutableMap<String, String>
                             ),
                             Maps.newHashMap()
                         )
                         this.eventStream = eventStream
                         future.complete(eventStream)
+                        return
                     }
 
-                    override fun onError(t: Throwable) {
-                        future.completeExceptionally(t)
+                    override fun onError(throwable: Throwable) {
+                        if (throwable is MongoWriteException) {
+                            logger.error(
+                                "Find event by version has sql exception, aggregateRootId: {}, version: {}",
+                                aggregateRootId,
+                                version,
+                                throwable
+                            )
+                            future.completeExceptionally(IORuntimeException(throwable))
+                            return
+                        }
+                        logger.error(
+                            "Find event by version has unknown exception, aggregateRootId: {}, version: {}",
+                            aggregateRootId,
+                            version,
+                            throwable
+                        )
+                        future.completeExceptionally(EventStoreException(throwable))
+                        return
                     }
 
                     override fun onComplete() {
                         future.complete(eventStream)
+                        return
                     }
                 })
-            future.exceptionally { throwable: Throwable? ->
-                if (throwable is MongoWriteException) {
-                    logger.error(
-                        "Find event by version has sql exception, aggregateRootId: {}, version: {}",
-                        aggregateRootId,
-                        version,
-                        throwable
-                    )
-                    throw IORuntimeException(throwable)
-                }
-                logger.error(
-                    "Find event by version has unknown exception, aggregateRootId: {}, version: {}",
-                    aggregateRootId,
-                    version,
-                    throwable
-                )
-                throw EventStoreException(throwable)
-            }
+            future
         }, "FindEventByVersionAsync")
     }
 
@@ -313,7 +313,8 @@ class MongoEventStore(
             val filter = Filters.and(Filters.eq("aggregateRootId", aggregateRootId), Filters.eq("commandId", commandId))
             mongoClient.getDatabase(configuration.dbName).getCollection(configuration.eventTableName)
                 .find(filter).subscribe(object : Subscriber<Document> {
-                    private lateinit var eventStream: DomainEventStream
+
+                    private var eventStream: DomainEventStream? = null
 
                     override fun onSubscribe(s: Subscription) {
                         s.request(1)
@@ -329,53 +330,51 @@ class MongoEventStore(
                                 serializeService.deserialize(
                                     document.getString("events"),
                                     MutableMap::class.java
-                                ) as MutableMap<String, String>?
+                                ) as MutableMap<String, String>
                             ),
                             Maps.newHashMap()
                         )
                         this.eventStream = eventStream
                         future.complete(eventStream)
+                        return
                     }
 
-                    override fun onError(t: Throwable) {
-                        future.completeExceptionally(t)
+                    override fun onError(throwable: Throwable) {
+
+                        if (throwable is MongoWriteException) {
+                            logger.error(
+                                "Find event by commandId has sql exception, aggregateRootId: {}, commandId: {}",
+                                aggregateRootId,
+                                commandId,
+                                throwable
+                            )
+                            future.completeExceptionally(IORuntimeException(throwable))
+                            return
+                        }
+                        logger.error(
+                            "Find event by commandId has unknown exception, aggregateRootId: {}, commandId: {}",
+                            aggregateRootId,
+                            commandId,
+                            throwable
+                        )
+                        future.completeExceptionally(EventStoreException(throwable))
+                        return
                     }
 
                     override fun onComplete() {
                         future.complete(eventStream)
+                        return
                     }
                 })
-            future.exceptionally { throwable: Throwable? ->
-                if (throwable is MongoWriteException) {
-                    logger.error(
-                        "Find event by commandId has sql exception, aggregateRootId: {}, commandId: {}",
-                        aggregateRootId,
-                        commandId,
-                        throwable
-                    )
-                    throw IORuntimeException(throwable)
-                }
-                logger.error(
-                    "Find event by commandId has unknown exception, aggregateRootId: {}, commandId: {}",
-                    aggregateRootId,
-                    commandId,
-                    throwable
-                )
-                throw EventStoreException(throwable)
-            }
+            future
         }, "FindEventByCommandIdAsync")
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(MongoEventStore::class.java)
-        private val PATTERN_MONGO = Pattern.compile("\\{.+?commandId: \"(.+?)\" }$")
     }
 
     /**
      * E11000 duplicate key error collection: enode.event_stream index: aggregateRootId_1_commandId_1 dup key: { aggregateRootId: "5ee8b610d7671114741829c7", commandId: "5ee8b61bd7671114741829cf" }
      */
-    override fun getDuplicatedId(throwable: Throwable): String {
-        val matcher = PATTERN_MONGO.matcher(throwable.message!!)
+    private fun getDuplicatedId(message: String): String {
+        val matcher = PATTERN_MONGO.matcher(message)
         if (matcher.find()) {
             if (matcher.groupCount() == 1) {
                 return matcher.group(1)
@@ -384,4 +383,8 @@ class MongoEventStore(
         return ""
     }
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(MongoEventStore::class.java)
+        private val PATTERN_MONGO = Pattern.compile("\\{.+?commandId: \"(.+?)\" }$")
+    }
 }

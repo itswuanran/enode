@@ -52,7 +52,7 @@
         </dependency>
         <dependency>
             <groupId>org.enodeframework</groupId>
-            <artifactId>enode-mysql</artifactId>
+            <artifactId>enode-jdbc</artifactId>
         </dependency>
         <dependency>
             <groupId>org.enodeframework</groupId>
