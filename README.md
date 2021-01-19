@@ -170,7 +170,7 @@ spring.enode.mq.topic.exception=EnodeBankExceptionTopic
     }
 ```
 
-### eventstore 数据源配置，目前支持四种（MySQL, TiDB, MongoDB, PostgreSQL ...）
+### eventstore 数据源配置，目前支持(MySQL, MongoDB, PostgreSQL ...）
 
 ```java
 
@@ -180,38 +180,46 @@ spring.enode.mq.topic.exception=EnodeBankExceptionTopic
         return MongoClients.create();
     }
 
-    @Bean("enodeTiDBDataSource")
-    @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "mysql")
-    public HikariDataSource tidbDataSource() {
-        HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl("jdbc:mysql://127.0.0.1:4000/enode?");
-        dataSource.setUsername("root");
-        dataSource.setPassword("");
-        dataSource.setDriverClassName(com.mysql.cj.jdbc.Driver.class.getName());
-        return dataSource;
+    @Bean("enodeSQLClient")
+    @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "jdbc-mysql")
+    public JDBCClient enodeMySQLClient(Vertx enodeVertx) {
+            HikariDataSource dataSource = new HikariDataSource();
+            dataSource.setJdbcUrl(jdbcUrl);
+            dataSource.setUsername(username);
+            dataSource.setPassword(password);
+            dataSource.setDriverClassName(com.mysql.cj.jdbc.Driver.class.getName());
+            JDBCClient client = JDBCClient.create(enodeVertx, dataSource);
+            return client;
     }
 
-    @Bean("enodeMySQLDataSource")
+    @Bean("enodeMySQLPool")
     @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "mysql")
-    public HikariDataSource mysqlDataSource() {
-        HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl("jdbc:mysql://localhost:3306/enode?");
-        dataSource.setUsername("root");
-        dataSource.setPassword("mysecretpassword");
-        dataSource.setDriverClassName(com.mysql.cj.jdbc.Driver.class.getName());
-        return dataSource;
+    public MySQLPool enodeMySQLPool() {
+            MySQLConnectOptions connectOptions = new MySQLConnectOptions()
+            .setPort(3306)
+            .setHost("127.0.0.1")
+            .setDatabase("enode")
+            .setUser(username)
+            .setPassword(password);
+            PoolOptions poolOptions = new PoolOptions()
+            .setMaxSize(5);
+            return MySQLPool.pool(connectOptions, poolOptions);
     }
 
-    @Bean("enodePgDataSource")
+    @Bean("enodePgPool")
     @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "pg")
-    public HikariDataSource pgDataSource() {
-        HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl("jdbc:postgresql://localhost:5432/enode");
-        dataSource.setUsername("postgres");
-        dataSource.setPassword("mysecretpassword");
-        dataSource.setDriverClassName(org.postgresql.Driver.class.getName());
-        return dataSource;
+    public PgPool pgPool() {
+            PgConnectOptions connectOptions = new PgConnectOptions()
+            .setPort(3306)
+            .setHost("127.0.0.1")
+            .setDatabase("enode")
+            .setUser(username)
+            .setPassword(password);
+            PoolOptions poolOptions = new PoolOptions()
+            .setMaxSize(5);
+            return PgPool.pool(connectOptions, poolOptions);
     }
+
 ```
 ### 事件表新建
 

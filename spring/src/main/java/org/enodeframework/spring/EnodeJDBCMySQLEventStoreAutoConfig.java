@@ -10,8 +10,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
-@ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "jdbc")
-public class EnodeJDBCEventStoreAutoConfig {
+@ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "jdbc-mysql")
+public class EnodeJDBCMySQLEventStoreAutoConfig {
 
     @Bean
     public JDBCEventStore jdbcEventStore(@Qualifier("enodeSQLClient") SQLClient client, IEventSerializer eventSerializer, ISerializeService serializeService) {

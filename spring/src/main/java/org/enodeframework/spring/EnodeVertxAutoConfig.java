@@ -7,21 +7,22 @@ import org.enodeframework.queue.DefaultSendReplyService;
 import org.enodeframework.queue.command.DefaultCommandResultProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+
+import javax.annotation.Resource;
 
 public class EnodeVertxAutoConfig {
 
     private final static Logger logger = LoggerFactory.getLogger(EnodeVertxAutoConfig.class);
 
-    @Autowired
-    @Qualifier("enodeVertx")
-    protected Vertx vertx;
+    @Resource(name = "enodeVertx")
+    protected Vertx enodeVertx;
+
     @Value("${spring.enode.server.port:2019}")
     private int port;
+
     @Value("${spring.enode.server.wait.timeout:10000}")
     private int timeout;
 
@@ -34,7 +35,7 @@ public class EnodeVertxAutoConfig {
     @ConditionalOnProperty(prefix = "spring.enode", name = "server.port")
     public DefaultCommandResultProcessor defaultCommandResultProcessor(IScheduleService scheduleService, ISerializeService serializeService) {
         DefaultCommandResultProcessor processor = new DefaultCommandResultProcessor(scheduleService, serializeService, port, timeout);
-        vertx.deployVerticle(processor, res -> {
+        enodeVertx.deployVerticle(processor).onComplete(res -> {
             if (!res.succeeded()) {
                 logger.error("vertx deploy DefaultCommandResultProcessor failed.", res.cause());
             }
@@ -45,7 +46,7 @@ public class EnodeVertxAutoConfig {
     @Bean(name = "defaultSendReplyService")
     public DefaultSendReplyService defaultSendReplyService(ISerializeService serializeService) {
         DefaultSendReplyService sendReplyService = new DefaultSendReplyService(serializeService);
-        vertx.deployVerticle(sendReplyService, res -> {
+        enodeVertx.deployVerticle(sendReplyService).onComplete(res -> {
             if (!res.succeeded()) {
                 logger.error("vertx deploy DefaultSendReplyService failed.", res.cause());
             }
