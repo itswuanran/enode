@@ -14,7 +14,7 @@ import java.util.concurrent.CountDownLatch;
  * @author anruence@gmail.com
  */
 public class RocketMQTool {
-    private static QueueMessage covertToQueueMessage(MessageExt messageExt) {
+    public static QueueMessage covertToQueueMessage(MessageExt messageExt) {
         QueueMessage queueMessage = new QueueMessage();
         queueMessage.setBody(new String(messageExt.getBody(), StandardCharsets.UTF_8));
         queueMessage.setTopic(messageExt.getTopic());
@@ -32,7 +32,7 @@ public class RocketMQTool {
         int size = msgs.size();
         CountDownLatch latch = new CountDownLatch(size);
         handleConcurrently(0, size, msgs, latch, messageHandler);
-        Task.await(latch);
+
     }
 
     private static void handleConcurrently(int index, int total, List<MessageExt> msgs, CountDownLatch latch, IMessageHandler messageHandler) {

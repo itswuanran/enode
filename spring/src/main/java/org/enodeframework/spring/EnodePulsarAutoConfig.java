@@ -4,13 +4,28 @@ import org.apache.pulsar.client.api.Producer;
 import org.enode.pulsar.message.PulsarMessageListener;
 import org.enode.pulsar.message.PulsarSendMessageService;
 import org.enodeframework.queue.IMessageHandler;
-import org.enodeframework.queue.QueueMessage;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
+
 @ConditionalOnProperty(prefix = "spring.enode", name = "mq", havingValue = "pulsar")
 public class EnodePulsarAutoConfig {
+
+    @Resource(name = "enodePulsarDomainEventProducer")
+    private Producer<byte[]> enodePulsarDomainEventProducer;
+
+    @Resource(name = "enodePulsarCommandProducer")
+    private Producer<byte[]> enodePulsarCommandProducer;
+
+    @Resource(name = "enodePulsarApplicationMessageProducer")
+    private Producer<byte[]> enodePulsarApplicationMessageProducer;
+
+    @Resource(name = "enodePulsarPublishableExceptionProducer")
+    private Producer<byte[]> enodePulsarPublishableExceptionProducer;
 
     @Bean(name = "pulsarPublishableExceptionListener")
     @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "exception")
@@ -37,7 +52,12 @@ public class EnodePulsarAutoConfig {
     }
 
     @Bean(name = "pulsarSendMessageService")
-    public PulsarSendMessageService pulsarSendMessageService(@Qualifier(value = "enodePulsarProducer") Producer<QueueMessage> producer) {
-        return new PulsarSendMessageService(producer);
+    public PulsarSendMessageService pulsarSendMessageService() {
+        List<Producer<byte[]>> producers = new ArrayList<>();
+        producers.add(enodePulsarCommandProducer);
+        producers.add(enodePulsarDomainEventProducer);
+        producers.add(enodePulsarPublishableExceptionProducer);
+        producers.add(enodePulsarApplicationMessageProducer);
+        return new PulsarSendMessageService(producers);
     }
 }

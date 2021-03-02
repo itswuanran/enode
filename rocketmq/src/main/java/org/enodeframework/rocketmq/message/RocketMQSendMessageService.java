@@ -13,6 +13,7 @@ import org.enodeframework.queue.QueueMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -31,7 +32,7 @@ public class RocketMQSendMessageService implements ISendMessageService {
     @Override
     public CompletableFuture<Boolean> sendMessageAsync(QueueMessage queueMessage) {
         CompletableFuture<Boolean> promise = new CompletableFuture<>();
-        Message message = RocketMQTool.covertToProducerRecord(queueMessage);
+        Message message = this.covertToProducerRecord(queueMessage);
         try {
             producer.send(message, new SelectMessageQueueByHash(), queueMessage.getRouteKey(), new SendCallback() {
                 @Override
@@ -53,5 +54,10 @@ public class RocketMQSendMessageService implements ISendMessageService {
             logger.error("Enode message async send has exception, message: {}, routingKey: {}", message, queueMessage.getRouteKey(), ex);
         }
         return promise;
+    }
+
+    private Message covertToProducerRecord(QueueMessage queueMessage) {
+        Message message = new Message(queueMessage.getTopic(), queueMessage.getTag(), queueMessage.getKey(), queueMessage.getBody().getBytes(StandardCharsets.UTF_8));
+        return message;
     }
 }
