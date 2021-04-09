@@ -11,7 +11,7 @@
     </parent>
     <artifactId>enode-mysql</artifactId>
     <name>${project.artifactId}</name>
-    <description>enodeframework eventstore mysql jdbc driver</description>
+    <description>enodeframework eventstore mysql driver</description>
     <packaging>jar</packaging>
     <dependencies>
         <dependency>

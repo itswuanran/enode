@@ -12,7 +12,7 @@
     <artifactId>enode-pulsar</artifactId>
     <name>${project.artifactId}</name>
     <packaging>jar</packaging>
-    <description>enodeframework message queue ons adapter</description>
+    <description>enodeframework message queue pulsar adapter</description>
     <dependencies>
         <dependency>
             <groupId>org.enodeframework</groupId>

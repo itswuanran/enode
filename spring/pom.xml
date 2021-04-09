@@ -11,7 +11,7 @@
     </parent>
     <artifactId>enode-spring</artifactId>
     <name>${project.artifactId}</name>
-    <description>enodeframework eventstore postgresql driver</description>
+    <description>enodeframework spring integration.</description>
     <packaging>jar</packaging>
     <dependencies>
         <dependency>
