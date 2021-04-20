@@ -12,4 +12,5 @@ public class UpdateConference extends Command<String> {
     public String twitterSearch;
     public Date startDate;
     public Date endDate;
+    public Boolean isPublished;
 }

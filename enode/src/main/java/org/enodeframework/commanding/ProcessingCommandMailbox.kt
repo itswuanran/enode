@@ -69,7 +69,7 @@ class ProcessingCommandMailbox(var aggregateRootId: String, private val messageH
             if (logger.isDebugEnabled) {
                 logger.debug("{} start run, aggregateRootId: {}, consumingSequence: {}", javaClass.name, aggregateRootId, consumingSequence.get())
             }
-            CoroutineScope(Dispatchers.Default).launch { processMessagesAwait() }
+            CoroutineScope(Dispatchers.IO).launch { processMessagesAwait() }
         }
     }
 
@@ -126,7 +126,7 @@ class ProcessingCommandMailbox(var aggregateRootId: String, private val messageH
     }
 
     fun resetConsumingSequence(consumingSequence: Long) {
-        this.consumingSequence.set(consumingSequence);
+        this.consumingSequence.set(consumingSequence)
         lastActiveTime = Date()
         if (logger.isDebugEnabled) {
             logger.debug("{} reset consumingSequence, aggregateRootId: {}, consumingSequence: {}", javaClass.name, aggregateRootId, consumingSequence)
@@ -164,7 +164,7 @@ class ProcessingCommandMailbox(var aggregateRootId: String, private val messageH
                         }
                         messageHandler.handleAsync(message).asDeferred().await()
                     }
-                    consumingSequence.incrementAndGet();
+                    consumingSequence.incrementAndGet()
                     scannedCount++
                 }
             } catch (ex: Exception) {

@@ -2,6 +2,7 @@ package org.enodeframework.eventing.impl
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asDeferred
 import kotlinx.coroutines.launch
 import org.enodeframework.commanding.CommandResult
@@ -64,14 +65,14 @@ class DefaultEventCommittingService(private val memoryCache: IMemoryCache, priva
         IOHelper.tryAsyncActionRecursively("BatchPersistEventAsync", {
             eventStore.batchAppendAsync(committingContexts.stream().map { obj: EventCommittingContext -> obj.eventStream }.collect(Collectors.toList()))
         }, { result: EventAppendResult? ->
-            CoroutineScope(Dispatchers.Default).launch {
+            CoroutineScope(Dispatchers.IO).async {
                 val eventMailBox = committingContexts.stream()
                         .findFirst()
                         .orElseThrow { MailBoxInvalidException("eventMailBox can not be null") }
                         .mailBox
                 if (result == null) {
                     logger.error("Batch persist events success, but the persist result is null, the current event committing mailbox should be pending, mailboxNumber: {}", eventMailBox.number)
-                    return@launch
+                    return@async
                 }
                 val appendContextList = ArrayList<EventAppendContext>()
                 //针对持久化成功的聚合根，正常发布这些聚合根的事件到Q端

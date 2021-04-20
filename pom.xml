@@ -24,7 +24,7 @@
     <packaging>pom</packaging>
 
     <properties>
-        <revision>1.0.17</revision>
+        <revision>1.0.18</revision>
         <maven.skip.deploy>false</maven.skip.deploy>
         <maven.jar.version>3.2.0</maven.jar.version>
         <maven.surefire.version>2.22.2</maven.surefire.version>
@@ -41,16 +41,17 @@
         <kotlinx-coroutines.version>1.4.3</kotlinx-coroutines.version>
         <slfj4.version>1.7.30</slfj4.version>
         <guava.version>30.1.1-jre</guava.version>
-        <jackson.version>2.12.2</jackson.version>
+        <jackson.version>2.12.3</jackson.version>
         <mongodb.version>4.2.3</mongodb.version>
         <junit.version>4.13.2</junit.version>
+        <jmh.version>1.29</jmh.version>
         <rocketmq.version>4.8.0</rocketmq.version>
         <ons.version>1.8.8.Final</ons.version>
         <pulsar.version>2.7.1</pulsar.version>
-        <mysql.version>8.0.23</mysql.version>
+        <mysql.version>8.0.24</mysql.version>
         <reflections.version>0.9.12</reflections.version>
         <vertx.version>4.0.3</vertx.version>
-        <spring-boot.version>2.4.4</spring-boot.version>
+        <spring-boot.version>2.4.5</spring-boot.version>
     </properties>
 
     <name>${project.artifactId}</name>
@@ -131,6 +132,11 @@
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <version>${junit.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjdk.jmh</groupId>
+                <artifactId>jmh-core</artifactId>
+                <version>${jmh.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>

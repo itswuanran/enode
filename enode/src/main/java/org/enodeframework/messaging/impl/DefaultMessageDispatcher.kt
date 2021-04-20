@@ -115,7 +115,7 @@ class DefaultMessageDispatcher(
     private fun handleSingleMessageAsync(singleMessageDispatching: SingleMessageDispatching, handlerProxy: IMessageHandlerProxy1, handlerTypeName: String, messageTypeName: String, queueHandler: QueuedHandler<IMessageHandlerProxy1>?, retryTimes: Int) {
         val message = singleMessageDispatching.message
         IOHelper.tryAsyncActionRecursivelyWithoutResult("HandleSingleMessageAsync", {
-            CoroutineScope(Dispatchers.Default).async {
+            CoroutineScope(Dispatchers.IO).async {
                 handlerProxy.handleAsync(message)
             }.asCompletableFuture()
         }, {
@@ -134,7 +134,7 @@ class DefaultMessageDispatcher(
         val message1 = messages[0]
         val message2 = messages[1]
         IOHelper.tryAsyncActionRecursively("HandleTwoMessageAsync", {
-            CoroutineScope(Dispatchers.Default).async {
+            CoroutineScope(Dispatchers.IO).async {
                 handlerProxy.handleAsync(message1, message2)
             }.asCompletableFuture()
         }, {
@@ -156,7 +156,7 @@ class DefaultMessageDispatcher(
         val message2 = messages[1]
         val message3 = messages[2]
         IOHelper.tryAsyncActionRecursively("HandleThreeMessageAsync", {
-            CoroutineScope(Dispatchers.Default).async {
+            CoroutineScope(Dispatchers.IO).async {
                 handlerProxy.handleAsync(message1, message2, message3)
             }.asCompletableFuture()
         }, {

@@ -15,6 +15,5 @@
             <groupId>com.microsoft.conference</groupId>
             <artifactId>conference-common</artifactId>
         </dependency>
-
     </dependencies>
 </project>

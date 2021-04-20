@@ -132,7 +132,7 @@ class ProcessingEventMailBox(val aggregateRootTypeName: String, val aggregateRoo
     /**
      * 尝试运行一次MailBox，一次运行会处理一个消息或者一批消息，当前MailBox不能是运行中或者暂停中或者已暂停
      */
-    fun tryRun() {
+    private fun tryRun() {
         synchronized(lockObj) {
             if (isRunning()) {
                 return
@@ -141,7 +141,7 @@ class ProcessingEventMailBox(val aggregateRootTypeName: String, val aggregateRoo
             if (logger.isDebugEnabled) {
                 logger.debug("{} start run, aggregateRootId: {}", javaClass.name, aggregateRootId)
             }
-            CoroutineScope(Dispatchers.Default).launch { processMessage() }
+            CoroutineScope(Dispatchers.IO).launch { processMessage() }
         }
     }
 

@@ -67,7 +67,7 @@ class DefaultProcessingCommandHandler(private val eventStore: IEventStore, priva
         val taskSource = CompletableFuture<Boolean>()
         IOHelper.tryAsyncActionRecursivelyWithoutResult("HandleCommandAsync", {
             commandContext.clear()
-            CoroutineScope(Dispatchers.Default).async {
+            CoroutineScope(Dispatchers.IO).async {
                 commandHandler.handleAsync(commandContext, command)
             }.asCompletableFuture()
         }, {

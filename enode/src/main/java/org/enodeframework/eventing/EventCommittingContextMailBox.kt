@@ -2,7 +2,7 @@ package org.enodeframework.eventing
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.enodeframework.common.exception.DuplicateEventStreamException
@@ -70,7 +70,7 @@ class EventCommittingContextMailBox(val number: Int, private val batchSize: Int,
             if (logger.isDebugEnabled) {
                 logger.debug("{} start run, mailboxNumber: {}", javaClass.name, number)
             }
-            CoroutineScope(Dispatchers.Default).async { processMessages() }
+            CoroutineScope(Dispatchers.IO).launch { processMessages() }
         }
     }
 

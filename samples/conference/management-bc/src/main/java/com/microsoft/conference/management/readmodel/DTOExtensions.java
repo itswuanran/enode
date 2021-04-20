@@ -28,8 +28,6 @@ public interface DTOExtensions {
 
     CreateConference toCreateConferenceCommand(ConferenceInfo conference);
 
-    @Mapping(source = "model.name", target = "name")
-    @Mapping(source = "model.description", target = "description")
     UpdateConference toUpdateConferenceCommand(EditableConferenceInfo model);
 
     @Mapping(source = "model.id", target = "id")
@@ -48,7 +46,7 @@ public interface DTOExtensions {
     @Mapping(target = "id", ignore = true)
     ConferenceDO toDO(ConferenceCreated evnt, com.microsoft.conference.management.domain.model.ConferenceInfo info);
 
-    @Mapping(target = "isPublished", qualifiedByName = "toBoolean")
+    @Mapping(source = "isPublished", target = "isPublished", qualifiedByName = "toBoolean")
     ConferenceVO toVO(ConferenceDO conferenceDO);
 
     @Named("toBoolean")
