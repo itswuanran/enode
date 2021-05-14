@@ -9,7 +9,7 @@ import org.enodeframework.messaging.IMessagePublisher;
 import java.util.concurrent.CompletableFuture;
 
 public class MockApplicationMessagePublisher implements IMessagePublisher<IApplicationMessage> {
-    private static CompletableFuture<Boolean> successResultTask = Task.completedTask;
+    private static final CompletableFuture<Boolean> successResultTask = Task.completedTask;
     private int expectFailedCount = 0;
     private int currentFailedCount = 0;
     private FailedType failedType;

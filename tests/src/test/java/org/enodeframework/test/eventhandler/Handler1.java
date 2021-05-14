@@ -13,7 +13,7 @@ import java.util.ArrayList;
 @Priority(1)
 @Event
 public class Handler1 {
-    private Logger logger = LoggerFactory.getLogger(Handler1.class);
+    private final Logger logger = LoggerFactory.getLogger(Handler1.class);
 
     @Priority(4)
     @Subscribe

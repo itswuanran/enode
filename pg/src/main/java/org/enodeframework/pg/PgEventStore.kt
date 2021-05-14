@@ -190,7 +190,7 @@ class PgEventStore(
             future.completeExceptionally(EventStoreException(throwable))
             return@onComplete
         }
-        return future;
+        return future
     }
 
     override fun findAsync(aggregateRootId: String, version: Int): CompletableFuture<DomainEventStream?> {

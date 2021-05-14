@@ -243,7 +243,7 @@ class JDBCEventStore(
             future.completeExceptionally(EventStoreException(throwable))
             return@queryWithParams
         }
-        return future;
+        return future
     }
 
     override fun findAsync(aggregateRootId: String, version: Int): CompletableFuture<DomainEventStream?> {

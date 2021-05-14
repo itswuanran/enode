@@ -24,7 +24,7 @@
     <packaging>pom</packaging>
 
     <properties>
-        <revision>1.0.18</revision>
+        <revision>1.0.19</revision>
         <maven.skip.deploy>false</maven.skip.deploy>
         <maven.jar.version>3.2.0</maven.jar.version>
         <maven.surefire.version>2.22.2</maven.surefire.version>
@@ -35,7 +35,7 @@
         <maven.javadoc.version>3.2.0</maven.javadoc.version>
         <maven.gpg.version>1.6</maven.gpg.version>
         <maven.flatten.version>1.2.7</maven.flatten.version>
-        <dokka.version>1.4.30</dokka.version>
+        <dokka.version>1.4.32</dokka.version>
 
         <kotlin.version>1.4.32</kotlin.version>
         <kotlinx-coroutines.version>1.4.3</kotlinx-coroutines.version>
@@ -47,7 +47,10 @@
         <jmh.version>1.29</jmh.version>
         <rocketmq.version>4.8.0</rocketmq.version>
         <ons.version>1.8.8.Final</ons.version>
-        <pulsar.version>2.7.1</pulsar.version>
+        <hbase.version>2.4.2</hbase.version>
+        <rxjava.version>3.0.12</rxjava.version>
+        <sentinel.version>1.8.1</sentinel.version>
+        <pulsar.version>2.7.2</pulsar.version>
         <mysql.version>8.0.24</mysql.version>
         <reflections.version>0.9.12</reflections.version>
         <vertx.version>4.0.3</vertx.version>
@@ -144,6 +147,16 @@
                 <version>${guava.version}</version>
             </dependency>
             <dependency>
+                <groupId>io.reactivex.rxjava3</groupId>
+                <artifactId>rxjava</artifactId>
+                <version>${rxjava.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.csp</groupId>
+                <artifactId>sentinel-core</artifactId>
+                <version>${sentinel.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-core</artifactId>
                 <version>${jackson.version}</version>
@@ -172,6 +185,11 @@
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>
                 <version>${mysql.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hbase</groupId>
+                <artifactId>hbase-client</artifactId>
+                <version>${hbase.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>

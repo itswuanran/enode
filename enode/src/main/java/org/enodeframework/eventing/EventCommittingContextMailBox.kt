@@ -1,3 +1,4 @@
+
 package org.enodeframework.eventing
 
 import kotlinx.coroutines.CoroutineScope
@@ -103,7 +104,7 @@ class EventCommittingContextMailBox(val number: Int, private val batchSize: Int,
             while (messageList.size < batchSize) {
                 val message = messageQueue.poll()
                 if (message != null) {
-                    val eventDict = aggregateDictDict.getOrDefault(message.eventStream.aggregateRootId, null)
+                    val eventDict = aggregateDictDict[message.eventStream.aggregateRootId]
                     if (eventDict != null) {
                         if (eventDict.remove(message.eventStream.id) != null) {
                             messageList.add(message)

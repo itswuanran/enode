@@ -9,9 +9,9 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class DomainEventStreamProcessContext implements IEventProcessContext {
-    private DomainEventStreamMessage domainEventStreamMessage;
-    private ManualResetEvent manualResetEvent;
-    private List<Integer> versionList;
+    private final DomainEventStreamMessage domainEventStreamMessage;
+    private final ManualResetEvent manualResetEvent;
+    private final List<Integer> versionList;
 
     public DomainEventStreamProcessContext(DomainEventStreamMessage domainEventStreamMessage, ManualResetEvent waitHandle, List<Integer> versionList) {
         this.domainEventStreamMessage = domainEventStreamMessage;

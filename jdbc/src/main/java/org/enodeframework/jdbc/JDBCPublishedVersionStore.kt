@@ -1,4 +1,4 @@
-package org.enodeframework.jdbc;
+package org.enodeframework.jdbc
 
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.AsyncResult
@@ -48,7 +48,7 @@ class JDBCPublishedVersionStore(
     ): CompletableFuture<Int> {
         return IOHelper.tryIOFuncAsync({
             updatePublishedVersion(processorName, aggregateRootTypeName, aggregateRootId, publishedVersion)
-        }, "UpdatePublishedVersionAsync");
+        }, "UpdatePublishedVersionAsync")
     }
 
     private fun updatePublishedVersion(
@@ -91,7 +91,7 @@ class JDBCPublishedVersionStore(
                     )
                     return@updateWithParams
                 }
-                future.complete(ar.result().updated);
+                future.complete(ar.result().updated)
                 return@updateWithParams
             }
             val throwable = ar.cause()
@@ -134,7 +134,7 @@ class JDBCPublishedVersionStore(
                     )
                     return@updateWithParams
                 }
-                future.complete(ar.result().updated);
+                future.complete(ar.result().updated)
                 return@updateWithParams
             }
             val throwable = ar.cause()
@@ -161,7 +161,7 @@ class JDBCPublishedVersionStore(
     ): CompletableFuture<Int> {
         return IOHelper.tryIOFuncAsync({
             getPublishedVersion(processorName, aggregateRootTypeName, aggregateRootId)
-        }, "UpdatePublishedVersionAsync");
+        }, "UpdatePublishedVersionAsync")
     }
 
     private fun getPublishedVersion(

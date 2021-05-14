@@ -8,7 +8,7 @@ import org.enodeframework.eventing.impl.InMemoryPublishedVersionStore;
 import java.util.concurrent.CompletableFuture;
 
 public class MockPublishedVersionStore implements IPublishedVersionStore {
-    private InMemoryPublishedVersionStore _inMemoryPublishedVersionStore = new InMemoryPublishedVersionStore();
+    private final InMemoryPublishedVersionStore _inMemoryPublishedVersionStore = new InMemoryPublishedVersionStore();
     private int _expectGetFailedCount = 0;
     private int _expectUpdateFailedCount = 0;
     private int _currentGetFailedCount = 0;

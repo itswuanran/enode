@@ -115,7 +115,7 @@ public class DefaultScheduleService implements IScheduleService {
     }
 
     class TaskCallback implements Runnable {
-        private String taskName;
+        private final String taskName;
 
         public TaskCallback(String taskName) {
             this.taskName = taskName;

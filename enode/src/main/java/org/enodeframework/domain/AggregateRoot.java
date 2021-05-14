@@ -25,7 +25,7 @@ public abstract class AggregateRoot<TAggregateRootId> implements IAggregateRoot 
     private final IAggregateRootInternalHandlerProvider aggregateRootInternalHandlerProvider;
     protected TAggregateRootId id;
     protected int version;
-    private List<IDomainEvent<?>> emptyEvents = new ArrayList<>();
+    private final List<IDomainEvent<?>> emptyEvents = new ArrayList<>();
     private Queue<IDomainEvent<?>> uncommittedEvents = new ConcurrentLinkedQueue<>();
 
     protected AggregateRoot() {

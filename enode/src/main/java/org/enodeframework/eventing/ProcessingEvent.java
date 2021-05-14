@@ -4,9 +4,9 @@ package org.enodeframework.eventing;
  * @author anruence@gmail.com
  */
 public class ProcessingEvent {
-    private DomainEventStreamMessage message;
+    private final DomainEventStreamMessage message;
     private ProcessingEventMailBox mailbox;
-    private IEventProcessContext processContext;
+    private final IEventProcessContext processContext;
 
     public ProcessingEvent(DomainEventStreamMessage message, IEventProcessContext processContext) {
         this.message = message;

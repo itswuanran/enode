@@ -18,7 +18,11 @@ import java.util.concurrent.atomic.AtomicLong
 /**
  * @author anruence@gmail.com
  */
-class ProcessingCommandMailbox(var aggregateRootId: String, private val messageHandler: IProcessingCommandHandler, private val batchSize: Int) {
+class ProcessingCommandMailbox(
+    var aggregateRootId: String,
+    private val messageHandler: IProcessingCommandHandler,
+    private val batchSize: Int
+) {
     private val lockObj = Any()
     private val mutex = Mutex()
     private var messageDict: ConcurrentHashMap<Long, ProcessingCommand> = ConcurrentHashMap()
@@ -50,12 +54,23 @@ class ProcessingCommandMailbox(var aggregateRootId: String, private val messageH
             if (messageDict.putIfAbsent(message.sequence, message) == null) {
                 nextSequence++
                 if (logger.isDebugEnabled) {
-                    logger.debug("{} enqueued new message, aggregateRootId: {}, messageSequence: {}", javaClass.name, aggregateRootId, message.sequence)
+                    logger.debug(
+                        "{} enqueued new message, aggregateRootId: {}, messageSequence: {}",
+                        javaClass.name,
+                        aggregateRootId,
+                        message.sequence
+                    )
                 }
                 lastActiveTime = Date()
                 tryRun()
             } else {
-                logger.error("{} enqueue message failed, aggregateRootId: {}, messageId: {}, messageSequence: {}", javaClass.name, aggregateRootId, message.message.id, message.sequence)
+                logger.error(
+                    "{} enqueue message failed, aggregateRootId: {}, messageId: {}, messageSequence: {}",
+                    javaClass.name,
+                    aggregateRootId,
+                    message.message.id,
+                    message.sequence
+                )
             }
         }
     }
@@ -67,7 +82,12 @@ class ProcessingCommandMailbox(var aggregateRootId: String, private val messageH
             }
             setAsRunning()
             if (logger.isDebugEnabled) {
-                logger.debug("{} start run, aggregateRootId: {}, consumingSequence: {}", javaClass.name, aggregateRootId, consumingSequence.get())
+                logger.debug(
+                    "{} start run, aggregateRootId: {}, consumingSequence: {}",
+                    javaClass.name,
+                    aggregateRootId,
+                    consumingSequence.get()
+                )
             }
             CoroutineScope(Dispatchers.IO).launch { processMessagesAwait() }
         }
@@ -101,7 +121,12 @@ class ProcessingCommandMailbox(var aggregateRootId: String, private val messageH
             count++
             if (count % 100 == 0L) {
                 if (logger.isDebugEnabled) {
-                    logger.debug("{} pause requested, but wait for too long to stop the current mailbox, aggregateRootId: {}, waitCount: {}", javaClass.name, aggregateRootId, count)
+                    logger.debug(
+                        "{} pause requested, but wait for too long to stop the current mailbox, aggregateRootId: {}, waitCount: {}",
+                        javaClass.name,
+                        aggregateRootId,
+                        count
+                    )
                 }
             }
         }
@@ -117,7 +142,12 @@ class ProcessingCommandMailbox(var aggregateRootId: String, private val messageH
         isPaused = false
         lastActiveTime = Date()
         if (logger.isDebugEnabled) {
-            logger.debug("{} resume requested, aggregateRootId: {}, consumingSequence: {}", javaClass.name, aggregateRootId, consumingSequence.get())
+            logger.debug(
+                "{} resume requested, aggregateRootId: {}, consumingSequence: {}",
+                javaClass.name,
+                aggregateRootId,
+                consumingSequence.get()
+            )
         }
     }
 
@@ -129,7 +159,12 @@ class ProcessingCommandMailbox(var aggregateRootId: String, private val messageH
         this.consumingSequence.set(consumingSequence)
         lastActiveTime = Date()
         if (logger.isDebugEnabled) {
-            logger.debug("{} reset consumingSequence, aggregateRootId: {}, consumingSequence: {}", javaClass.name, aggregateRootId, consumingSequence)
+            logger.debug(
+                "{} reset consumingSequence, aggregateRootId: {}, consumingSequence: {}",
+                javaClass.name,
+                aggregateRootId,
+                consumingSequence
+            )
         }
     }
 
@@ -142,7 +177,15 @@ class ProcessingCommandMailbox(var aggregateRootId: String, private val messageH
                 return message.completeAsync(result)
             }
         } catch (ex: Exception) {
-            logger.error("{} complete message with result failed, aggregateRootId: {}, messageId: {}, messageSequence: {}, result: {}", javaClass.name, aggregateRootId, message.message.id, message.sequence, result, ex)
+            logger.error(
+                "{} complete message with result failed, aggregateRootId: {}, messageId: {}, messageSequence: {}, result: {}",
+                javaClass.name,
+                aggregateRootId,
+                message.message.id,
+                message.sequence,
+                result,
+                ex
+            )
         }
         return Task.completedTask
     }
@@ -177,7 +220,7 @@ class ProcessingCommandMailbox(var aggregateRootId: String, private val messageH
     }
 
     private fun getMessage(sequence: Long): ProcessingCommand? {
-        return messageDict.getOrDefault(sequence, null)
+        return messageDict[sequence]
     }
 
     private fun setAsRunning() {

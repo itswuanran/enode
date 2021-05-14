@@ -95,7 +95,7 @@ class DefaultSendReplyService(private val serializeService: ISerializeService) :
             }
             FrameHelper.sendFrame("send", address, replyAddress, JsonObject(message), socket)
         }
-        return Task.completedTask;
+        return Task.completedTask
     }
 
     companion object {

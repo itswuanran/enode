@@ -13,7 +13,7 @@ import java.util.ArrayList;
 @Priority(3)
 @Event
 public class Handler2 {
-    private Logger logger = LoggerFactory.getLogger(Handler2.class);
+    private final Logger logger = LoggerFactory.getLogger(Handler2.class);
 
     @Subscribe
     public void handleAsync(Event1 evnt) {

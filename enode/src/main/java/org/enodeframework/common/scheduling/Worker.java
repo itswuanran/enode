@@ -10,8 +10,8 @@ import org.slf4j.LoggerFactory;
 public class Worker {
     private static final Logger logger = LoggerFactory.getLogger(Worker.class);
     private final Object lockObject = new Object();
-    private String actionName;
-    private Action action;
+    private final String actionName;
+    private final Action action;
     private Status status;
     private Thread thread;
 

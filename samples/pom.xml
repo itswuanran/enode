@@ -17,6 +17,5 @@
     <version>${revision}</version>
     <modules>
         <module>bank-transfer</module>
-        <module>conference</module>
     </modules>
 </project>

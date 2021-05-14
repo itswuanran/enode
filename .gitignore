@@ -12,3 +12,4 @@ logs/
 target/
 .sts4-cache/
 .flattened-pom.xml
+.DS_Store

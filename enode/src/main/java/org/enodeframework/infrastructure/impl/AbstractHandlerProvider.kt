@@ -17,10 +17,11 @@ import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.util.*
 import java.util.function.Consumer
+import java.util.stream.Collectors
 import kotlin.reflect.jvm.kotlinFunction
-import kotlin.streams.toList
 
-abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface, THandlerSource> : IAssemblyInitializer where THandlerProxyInterface : IObjectProxy, THandlerProxyInterface : MethodInvocation {
+abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface, THandlerSource> :
+    IAssemblyInitializer where THandlerProxyInterface : IObjectProxy, THandlerProxyInterface : MethodInvocation {
     private val handlerDict: MutableMap<TKey, MutableList<THandlerProxyInterface>> = HashMap()
     private val messageHandlerDict: MutableMap<TKey, MessageHandlerData<THandlerProxyInterface>> = HashMap()
     private val lookup = MethodHandles.lookup()
@@ -45,15 +46,16 @@ abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface, THandlerSou
         get() = ObjectContainer.INSTANCE
 
     override fun initialize(componentTypes: Set<Class<*>>) {
-        componentTypes.stream().filter { type: Class<*> -> isHandlerType(type) }.forEach { handlerType: Class<*> -> registerHandler(handlerType) }
+        componentTypes.stream().filter { type: Class<*> -> isHandlerType(type) }
+            .forEach { handlerType: Class<*> -> registerHandler(handlerType) }
         initializeHandlerPriority()
     }
 
     fun getHandlersInternal(source: THandlerSource): List<MessageHandlerData<THandlerProxyInterface>> {
         val handlerDataList: MutableList<MessageHandlerData<THandlerProxyInterface>> = ArrayList()
         messageHandlerDict.keys.stream()
-                .filter { key: TKey -> isHandlerSourceMatchKey(source, key) }
-                .forEach { key: TKey -> handlerDataList.add(messageHandlerDict[key]!!) }
+            .filter { key: TKey -> isHandlerSourceMatchKey(source, key) }
+            .forEach { key: TKey -> handlerDataList.add(messageHandlerDict[key]!!) }
         return handlerDataList
     }
 
@@ -73,8 +75,8 @@ abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface, THandlerSou
             handlerData.allHandlers = handlers
             handlerData.listHandlers = listHandlers
             handlerData.queuedHandlers = queueHandlerDict.entries.stream()
-                    .sorted(Comparator.comparingInt { v -> v.value })
-                    .map { x -> x.key }.toList()
+                .sorted(Comparator.comparingInt { v -> v.value })
+                .map { x -> x.key }.collect(Collectors.toList())
             messageHandlerDict[key] = handlerData
         }
     }
@@ -116,7 +118,11 @@ abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface, THandlerSou
         val handleMethods = ReflectionUtils.getMethods(handlerType, { method: Method -> isHandleMethodMatch(method) })
         handleMethods.forEach { method: Method ->
             // 反射Method转换为MethodHandle，提高效率
-            val handleMethod = lookup.findVirtual(handlerType, method.name, MethodType.methodType(method.returnType, method.parameterTypes))
+            val handleMethod = lookup.findVirtual(
+                handlerType,
+                method.name,
+                MethodType.methodType(method.returnType, method.parameterTypes)
+            )
             val key = this.getKey(method)
             val handlers = handlerDict.computeIfAbsent(key, { ArrayList() })
             val handlerProxy = this.getHandlerProxyImplementationType().getDeclaredConstructor().newInstance()

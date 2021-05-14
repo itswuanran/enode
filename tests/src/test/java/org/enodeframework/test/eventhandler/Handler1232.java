@@ -15,7 +15,7 @@ import java.util.ArrayList;
 @Priority(2)
 @Event
 public class Handler1232 {
-    private Logger _logger = LoggerFactory.getLogger(Handler123.class);
+    private final Logger _logger = LoggerFactory.getLogger(Handler123.class);
 
     @Subscribe
     public void handleAsync(Event1 evnt, Event2 evnt2, Event3 evnt3) {

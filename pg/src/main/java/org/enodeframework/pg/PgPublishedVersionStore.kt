@@ -30,7 +30,7 @@ class PgPublishedVersionStore(private val client: PgPool, private val configurat
     ): CompletableFuture<Int> {
         return IOHelper.tryIOFuncAsync({
             updatePublishedVersion(processorName, aggregateRootTypeName, aggregateRootId, publishedVersion)
-        }, "UpdatePublishedVersionAsync");
+        }, "UpdatePublishedVersionAsync")
     }
 
     private fun updatePublishedVersion(
@@ -58,7 +58,7 @@ class PgPublishedVersionStore(private val client: PgPool, private val configurat
             Tuple.of(publishedVersion, LocalDateTime.now(), processorName, aggregateRootId, publishedVersion - 1)
         client.preparedQuery(sql).execute(tuple).onComplete { ar ->
             if (ar.succeeded()) {
-                future.complete(ar.result().rowCount());
+                future.complete(ar.result().rowCount())
                 if (ar.result().rowCount() == 0) {
                     future.completeExceptionally(
                         PublishedVersionStoreException(
@@ -92,10 +92,10 @@ class PgPublishedVersionStore(private val client: PgPool, private val configurat
     ): CompletableFuture<Int> {
         val future = CompletableFuture<Int>()
         val sql = String.format(INSERT_SQL, configuration.publishedTableName)
-        val tuple = Tuple.of(processorName, aggregateRootTypeName, aggregateRootId, 1, LocalDateTime.now());
+        val tuple = Tuple.of(processorName, aggregateRootTypeName, aggregateRootId, 1, LocalDateTime.now())
         client.preparedQuery(sql).execute(tuple).onComplete { ar ->
             if (ar.succeeded()) {
-                future.complete(ar.result().rowCount());
+                future.complete(ar.result().rowCount())
                 return@onComplete
             }
             val throwable = ar.cause()
@@ -122,7 +122,7 @@ class PgPublishedVersionStore(private val client: PgPool, private val configurat
     ): CompletableFuture<Int> {
         return IOHelper.tryIOFuncAsync({
             getPublishedVersion(processorName, aggregateRootTypeName, aggregateRootId)
-        }, "UpdatePublishedVersionAsync");
+        }, "UpdatePublishedVersionAsync")
     }
 
     private fun getPublishedVersion(

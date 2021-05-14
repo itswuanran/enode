@@ -41,7 +41,7 @@ class MessageHandlerProxy2 : IMessageHandlerProxy2 {
     }
 
     override fun setInnerObject(innerObject: Any) {
-        this.innerObject = innerObject;
+        this.innerObject = innerObject
     }
 
     override fun setMethodHandle(methodHandle: MethodHandle) {

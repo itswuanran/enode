@@ -8,7 +8,7 @@ import org.enodeframework.messaging.IMessagePublisher;
 import java.util.concurrent.CompletableFuture;
 
 public class MockPublishableExceptionPublisher implements IMessagePublisher<IDomainException> {
-    private static CompletableFuture<Boolean> successResultTask = CompletableFuture.completedFuture(true);
+    private static final CompletableFuture<Boolean> successResultTask = CompletableFuture.completedFuture(true);
     private int expectFailedCount = 0;
     private int currentFailedCount = 0;
     private FailedType failedType;
