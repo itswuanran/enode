@@ -8,22 +8,17 @@
 
 ## 框架特色
 - 一个DDD开发框架，完美支持基于六边形架构思想开发
-- 实现CQRS架构思想，解决CQRS架构的C端的高并发写的问题，以及CQ两端数据同步的顺序性保证和幂等性问题；
+- 实现CQRS架构，解决CQRS架构的C端的高并发写的问题，以及CQ两端数据同步的顺序性保证和幂等性，支持C端完成后立即返回Command的结果，也支持CQ两端都完成后才返回Command的结果
 - 聚合根常驻内存（In-Memory Domain Model），可以完全以OO的方式来设计实现聚合根，不必为ORM的阻抗失衡而烦恼；
-- 聚合根的处理基于Command Mailbox, Event Mailbox的思想，类似Actor Model, Actor Mailbox
-- Group Commit Domain event
 - 基于聚合根ID+事件版本号的唯一索引，实现聚合根的乐观并发控制
-- 通过聚合根ID对命令或事件进行路由，做到最小的并发冲突、最大的并行处理
+- 通过聚合根ID对命令或事件进行路由，聚合根的处理基于Actor思想，做到最小的并发冲突、最大的并行处理，Group Commit Domain event
 - 架构层面严格规范了开发人员该如何写代码，和DDD开发紧密结合，严格遵守聚合内强一致性、聚合之间最终一致性的原则
-- 实现CQRS架构，支持Command结果的返回；支持C端完成后立即返回Command的结果，也支持CQ两端都完成后才返回Command的结果，同时框架保证了Command的幂等处理 
 - 先进的Saga机制，以事件驱动的流程管理器（Process Manager）的方式支持一个用户操作跨多个聚合根的业务场景，如订单处理，从而避免分布式事务的使用
 - 基于ES（Event Sourcing）的思想持久化C端的聚合根的状态，让C端的数据持久化变得通用化，具有一切ES的优点
-- 将并发写降低到最低，从而做到最大程度的并行、最大的吞吐量；
 - 通过基于分布式消息队列横向扩展的方式实现系统的可伸缩性（基于队列的动态扩容/缩容）
-- enode实现了CQRS架构面临的大部分技术问题，让开发者可以专注于业务逻辑和业务流程的开发，而无需关心纯技术问题
 
 ## 整体架构
-enode是一个基于【DDD】【CQRS】【ES】【EDA】【In-Memory】架构风格的应用框架
+enode是一个基于【DDD】【CQRS】【ES】【EDA】【In-Memory】架构风格的应用框架，实现了CQRS架构面临的大部分技术问题，让开发者可以专注于业务逻辑和业务流程的开发，而无需关心纯技术问题
 
 ![](enode-arch.png)
 
@@ -33,40 +28,11 @@ enode是一个基于【DDD】【CQRS】【ES】【EDA】【In-Memory】架构风
 
 > [conference](https://github.com/anruence/conference)
 
-## 详细文档
-[使用文档](https://github.com/anruence/enode/wiki)
-
-## 更新历史（注意点）
-
-### 为什么采用异步单一长连接?
-因为服务的现状大都是服务提供者少，通常只有几台机器，而服务的消费者多，可能整个网站都在访问该服务。
-在我们的这个场景里面，command-web只需要很少的机器就能满足前端大量的请求，command-consumer和event-consumer的机器相对较多些。
-如果采用常规的 "单请求单连接" 的方式，服务提供者很容易就被压跨，通过单一连接，保证单一消费者不会压死提供者，长连接，减少连接握手验证等，并使用异步 IO，复用线程池，防止 C10K 问题。
-
-### ICommandHandler和ICommandAsyncHandler区别 (现在合并成一个了，但处理思路没变)
-
-ICommandHandler是为了操作内存中的聚合根的，所以不会有异步操作，但后来ICommandHandler的Handle方法也设计为了handleAsync了，目的是为了异步到底，否则异步链路中断的话，异步就没效果了
-而ICommandAsyncHandler是为了让开发者调用外部系统的接口的，也就是访问外部IO，所以用了Async
-ICommandHandler，ICommandAsyncHandler这两个接口是用于不同的业务场景，ICommandHandler.handleAsync方法执行完成后，框架要从context中获取当前修改的聚合根的领域事件，然后去提交。而ICommandAsyncHandler.handleAsync方法执行完成后，不会有这个逻辑，而是看一下handleAsync方法执行的异步消息结果是什么，也就是IApplicationMessage。
-目前已经删除了 ICommandAsyncHandler，统一使用ICommandHandler来处理，异步结果会放在context中
-
-### ICommandService sendAsync 和 executeAsync的区别
-sendAsync只关注发送消息的结果
-executeAsync发送消息的同时，关注命令的返回结果，返回的时机如下：
-- CommandReturnType.CommandExecuted：Command执行完成，Event发布成功后返回结果
-- CommandReturnType.EventHandled：Event处理完成后才返回结果
-
-### event使用哪个订阅者发送处理结果
-event的订阅者可能有很多个，所以enode只要求有一个订阅者处理完事件后发送结果给发送命令的人即可，通过defaultDomainEventMessageHandler中sendEventHandledMessage参数来设置是否发送，最终来决定由哪个订阅者来发送命令处理结果
+## 详细介绍
+[wiki](https://github.com/anruence/enode/wiki)
 
 ## 使用说明
-enode在使用便利性了做了很多尝试和努力，而且针对消息队列和EventStore对开发者都是开放的，同时和Spring高度集成
-
-### 聚合根
-聚合根需要定义一个无参构造函数，因为聚合根初始化时使用了
-```java
-aggregateRootType.getDeclaredConstructor().newInstance();
-```
+enode在使用便利性了做了很多尝试和努力，而且针对消息队列和EventStore的实现对开发者都是开放的，同时和Spring高度集成，开箱即用
 
 ## 启动配置
 新增@EnableEnode 注解，可自动配置Bean，简化了接入方式
@@ -309,8 +275,7 @@ db.published_version.createIndex({processorName:1,aggregateRootId:1},{unique:tru
 - @Event
 - @Subscribe
 
-启动时会扫描包路径下的注解，注册成Spring bean，类似@Component的作用
-
+启动时会扫描包路径下的注解，注册成Spring Bean，和@Component作用相同
 
 ### 消息
 **_更新了kotlin支持，@Subscribe 方法体支持suspend标记_**
@@ -457,9 +422,45 @@ nohup sh bin/mqbroker -n 127.0.0.1:9876 &
 - 领域事件处理服务
 > 事件可能会多次投递，所以需要消费端逻辑保证幂等处理，这里框架无法完成支持，需要开发者自己实现
 
-### 测试
-- 接入了Swagger3.0，打开swagger-ui即可
-http://localhost:8080/swagger-ui/
+## 转账的例子
+转账的业务场景，涉及了三个聚合根
+- 银行存款交易记录，表示一笔银行存款交易
+- 银行转账交易记录，表示一笔银行内账户之间的转账交易
+- 银行账户聚合根，封装银行账户余额变动的数据一致性
+
+## 测试
+- 接入了OpenApi3.0，打开swagger-ui即可
+http://localhost:8080/swagger-ui.html
+
+## FAQ
+
+### 聚合根的定义
+聚合根需要定义一个无参构造函数，因为聚合根初始化时使用了
+```java
+aggregateRootType.getDeclaredConstructor().newInstance();
+```
+
+### 为什么采用异步单一长连接?
+因为服务的现状大都是服务提供者少，通常只有几台机器，而服务的消费者多，可能整个网站都在访问该服务。
+在我们的这个场景里面，command-web只需要很少的机器就能满足前端大量的请求，command-consumer和event-consumer的机器相对较多些。
+如果采用常规的 "单请求单连接" 的方式，服务提供者很容易就被压跨，通过单一连接，保证单一消费者不会压死提供者，长连接，减少连接握手验证等，并使用异步 IO，复用线程池，防止 C10K 问题。
+
+### ICommandHandler和ICommandAsyncHandler区别 (现在合并成一个了，但处理思路没变)
+
+ICommandHandler是为了操作内存中的聚合根的，所以不会有异步操作，但后来ICommandHandler的Handle方法也设计为了handleAsync了，目的是为了异步到底，否则异步链路中断的话，异步就没效果了
+而ICommandAsyncHandler是为了让开发者调用外部系统的接口的，也就是访问外部IO，所以用了Async
+ICommandHandler，ICommandAsyncHandler这两个接口是用于不同的业务场景，ICommandHandler.handleAsync方法执行完成后，框架要从context中获取当前修改的聚合根的领域事件，然后去提交。而ICommandAsyncHandler.handleAsync方法执行完成后，不会有这个逻辑，而是看一下handleAsync方法执行的异步消息结果是什么，也就是IApplicationMessage。
+目前已经删除了 ICommandAsyncHandler，统一使用ICommandHandler来处理，异步结果会放在context中
+
+### ICommandService sendAsync 和 executeAsync的区别
+sendAsync只关注发送消息的结果
+executeAsync发送消息的同时，关注命令的返回结果，返回的时机如下：
+- CommandReturnType.CommandExecuted：Command执行完成，Event发布成功后返回结果
+- CommandReturnType.EventHandled：Event处理完成后才返回结果
+
+### event使用哪个订阅者发送处理结果
+event的订阅者可能有很多个，所以enode只要求有一个订阅者处理完事件后发送结果给发送命令的人即可，通过defaultDomainEventMessageHandler中sendEventHandledMessage参数来设置是否发送，最终来决定由哪个订阅者来发送命令处理结果
+
 
 ## 参考项目
 - https://github.com/tangxuehua/enode
