@@ -42,9 +42,6 @@ abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface, THandlerSou
         return method.kotlinFunction?.isSuspend == true
     }
 
-    protected open val objectContainer: IObjectContainer
-        get() = ObjectContainer.INSTANCE
-
     override fun initialize(componentTypes: Set<Class<*>>) {
         componentTypes.stream().filter { type: Class<*> -> isHandlerType(type) }
             .forEach { handlerType: Class<*> -> registerHandler(handlerType) }
@@ -126,7 +123,7 @@ abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface, THandlerSou
             val key = this.getKey(method)
             val handlers = handlerDict.computeIfAbsent(key, { ArrayList() })
             val handlerProxy = this.getHandlerProxyImplementationType().getDeclaredConstructor().newInstance()
-            handlerProxy.setInnerObject(objectContainer.resolve(handlerType))
+            handlerProxy.setInnerObject(ObjectContainer.resolve(handlerType))
             handlerProxy.setMethod(method)
             handlerProxy.setMethodHandle(handleMethod)
             handlers.add(handlerProxy)

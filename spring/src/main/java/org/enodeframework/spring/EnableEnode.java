@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-@Import({EnodeConfigurationSelector.class, EnodeBeanInitialize.class})
+@Import({EnodeConfigurationSelector.class})
 public @interface EnableEnode {
     /**
      * Alias for {@link #basePackages}.

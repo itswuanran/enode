@@ -13,17 +13,16 @@ import org.springframework.context.ApplicationContextAware;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class EnodeBeanInitialize implements ApplicationContextAware {
+public class EnodeBeanContainerAutoConfig implements ApplicationContextAware {
 
-    private final static Logger logger = LoggerFactory.getLogger(EnodeAutoConfiguration.class);
+    private final static Logger logger = LoggerFactory.getLogger(EnodeBeanContainerAutoConfig.class);
 
     private ApplicationContext applicationContext;
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
-        SpringObjectContainer container = new SpringObjectContainer(applicationContext);
-        ObjectContainer.INSTANCE = container;
+        ObjectContainer.INSTANCE = new SpringObjectContainer(applicationContext);
         scanConfiguredPackages(ObjectContainer.BASE_PACKAGES);
     }
 
@@ -31,7 +30,7 @@ public class EnodeBeanInitialize implements ApplicationContextAware {
         applicationContext.getBeansOfType(IAssemblyInitializer.class).values().forEach(provider -> {
             provider.initialize(classSet);
             if (logger.isDebugEnabled()) {
-                logger.debug("{} initial success", provider.getClass().getName());
+                logger.debug("{} initialize success", provider.getClass().getName());
             }
         });
     }
