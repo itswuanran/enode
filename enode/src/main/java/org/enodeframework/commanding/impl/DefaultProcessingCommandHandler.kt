@@ -6,7 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asCompletableFuture
 import org.enodeframework.commanding.*
-import org.enodeframework.common.SysProperties
+import org.enodeframework.configurations.SysProperties
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.common.io.Task
 import org.enodeframework.common.serializing.ISerializeService

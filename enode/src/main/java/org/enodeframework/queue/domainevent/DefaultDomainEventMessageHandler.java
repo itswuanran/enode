@@ -1,11 +1,11 @@
 package org.enodeframework.queue.domainevent;
 
 import com.google.common.base.Strings;
-import org.enodeframework.common.SysProperties;
 import org.enodeframework.common.io.Task;
 import org.enodeframework.common.remoting.ReplySocketAddress;
 import org.enodeframework.common.serializing.ISerializeService;
 import org.enodeframework.common.utils.ReplyUtil;
+import org.enodeframework.configurations.SysProperties;
 import org.enodeframework.eventing.DomainEventStreamMessage;
 import org.enodeframework.eventing.IEventProcessContext;
 import org.enodeframework.eventing.IEventSerializer;
@@ -101,7 +101,7 @@ public class DefaultDomainEventMessageHandler implements IMessageHandler {
             if (!eventConsumer.isSendEventHandledMessage()) {
                 return Task.completedTask;
             }
-            String address = (String) domainEventStreamMessage.getItems().getOrDefault(SysProperties.ITEMS_COMMAND_REPLY_ADDRESS_KEY, "");
+            String address = Optional.ofNullable(domainEventStreamMessage.getItems()).map(x -> (String) x.get(SysProperties.ITEMS_COMMAND_REPLY_ADDRESS_KEY)).orElse("");
             if (Strings.isNullOrEmpty(address)) {
                 return Task.completedTask;
             }
@@ -111,7 +111,7 @@ public class DefaultDomainEventMessageHandler implements IMessageHandler {
                 return Task.completedTask;
             }
             ReplySocketAddress replyAddress = socketAddressOptional.get();
-            String commandResult = (String) domainEventStreamMessage.getItems().getOrDefault(SysProperties.ITEMS_COMMAND_RESULT_KEY, "");
+            String commandResult = Optional.ofNullable(domainEventStreamMessage.getItems()).map(x -> (String) x.get(SysProperties.ITEMS_COMMAND_RESULT_KEY)).orElse("");
             DomainEventHandledMessage domainEventHandledMessage = new DomainEventHandledMessage();
             domainEventHandledMessage.setCommandId(domainEventStreamMessage.getCommandId());
             domainEventHandledMessage.setAggregateRootId(domainEventStreamMessage.getAggregateRootId());

@@ -8,7 +8,7 @@ import io.vertx.mysqlclient.MySQLException
 import io.vertx.mysqlclient.MySQLPool
 import io.vertx.sqlclient.Row
 import io.vertx.sqlclient.Tuple
-import org.enodeframework.common.EventStoreConfiguration
+import org.enodeframework.configurations.EventStoreConfiguration
 import org.enodeframework.common.exception.EventStoreException
 import org.enodeframework.common.exception.IORuntimeException
 import org.enodeframework.common.io.IOHelper

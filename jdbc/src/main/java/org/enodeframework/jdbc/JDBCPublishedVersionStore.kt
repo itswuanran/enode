@@ -6,8 +6,8 @@ import io.vertx.core.json.JsonArray
 import io.vertx.ext.jdbc.JDBCClient
 import io.vertx.ext.sql.SQLClient
 import io.vertx.ext.sql.UpdateResult
-import org.enodeframework.common.DbType
-import org.enodeframework.common.EventStoreConfiguration
+import org.enodeframework.configurations.DbType
+import org.enodeframework.configurations.EventStoreConfiguration
 import org.enodeframework.common.exception.IORuntimeException
 import org.enodeframework.common.exception.PublishedVersionStoreException
 import org.enodeframework.common.io.IOHelper

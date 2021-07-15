@@ -1,6 +1,6 @@
 package org.enodeframework.domain.impl
 
-import org.enodeframework.common.SysProperties
+import org.enodeframework.configurations.SysProperties
 import org.enodeframework.common.exception.HandlerNotFoundException
 import org.enodeframework.common.function.Action2
 import org.enodeframework.domain.IAggregateRoot

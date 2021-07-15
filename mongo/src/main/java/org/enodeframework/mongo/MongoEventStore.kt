@@ -10,7 +10,7 @@ import com.mongodb.client.model.Sorts
 import com.mongodb.client.result.InsertManyResult
 import com.mongodb.reactivestreams.client.MongoClient
 import org.bson.Document
-import org.enodeframework.common.EventStoreConfiguration
+import org.enodeframework.configurations.EventStoreConfiguration
 import org.enodeframework.common.exception.EventStoreException
 import org.enodeframework.common.exception.IORuntimeException
 import org.enodeframework.common.io.IOHelper.tryAsyncActionRecursively

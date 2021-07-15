@@ -7,7 +7,7 @@ import com.mongodb.client.result.InsertOneResult
 import com.mongodb.client.result.UpdateResult
 import com.mongodb.reactivestreams.client.MongoClient
 import org.bson.Document
-import org.enodeframework.common.EventStoreConfiguration
+import org.enodeframework.configurations.EventStoreConfiguration
 import org.enodeframework.common.exception.EventStoreException
 import org.enodeframework.common.exception.IORuntimeException
 import org.enodeframework.common.exception.PublishedVersionStoreException

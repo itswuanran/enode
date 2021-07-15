@@ -5,7 +5,7 @@ import org.enodeframework.commanding.ICommand;
 import org.enodeframework.commanding.ICommandProcessor;
 import org.enodeframework.commanding.ProcessingCommand;
 import org.enodeframework.commanding.impl.CommandExecuteContext;
-import org.enodeframework.common.SysProperties;
+import org.enodeframework.configurations.SysProperties;
 import org.enodeframework.common.serializing.ISerializeService;
 import org.enodeframework.common.utils.ReplyUtil;
 import org.enodeframework.domain.IAggregateStorage;

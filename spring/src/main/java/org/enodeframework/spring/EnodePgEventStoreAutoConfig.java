@@ -1,7 +1,7 @@
 package org.enodeframework.spring;
 
 import io.vertx.pgclient.PgPool;
-import org.enodeframework.common.EventStoreConfiguration;
+import org.enodeframework.configurations.EventStoreConfiguration;
 import org.enodeframework.common.serializing.ISerializeService;
 import org.enodeframework.eventing.IEventSerializer;
 import org.enodeframework.pg.PgEventStore;

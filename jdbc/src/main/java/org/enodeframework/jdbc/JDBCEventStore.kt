@@ -13,8 +13,8 @@ import io.vertx.ext.jdbc.JDBCClient
 import io.vertx.ext.sql.ResultSet
 import io.vertx.ext.sql.SQLClient
 import io.vertx.ext.sql.SQLConnection
-import org.enodeframework.common.DbType
-import org.enodeframework.common.EventStoreConfiguration
+import org.enodeframework.configurations.DbType
+import org.enodeframework.configurations.EventStoreConfiguration
 import org.enodeframework.common.exception.EventStoreException
 import org.enodeframework.common.exception.IORuntimeException
 import org.enodeframework.common.io.IOHelper

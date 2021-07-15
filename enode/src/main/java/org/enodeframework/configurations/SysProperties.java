@@ -1,4 +1,4 @@
-package org.enodeframework.common;
+package org.enodeframework.configurations;
 
 /**
  * @author anruence@gmail.com

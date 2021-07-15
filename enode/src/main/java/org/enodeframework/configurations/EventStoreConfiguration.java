@@ -1,4 +1,4 @@
-package org.enodeframework.common;
+package org.enodeframework.configurations;
 
 /**
  * 可以将EventStore的元数据全部配置化
