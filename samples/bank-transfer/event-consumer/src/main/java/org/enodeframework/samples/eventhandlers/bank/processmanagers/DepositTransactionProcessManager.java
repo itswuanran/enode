@@ -14,7 +14,8 @@ import org.enodeframework.samples.domain.bank.bankaccount.TransactionPreparation
 import org.enodeframework.samples.domain.bank.bankaccount.TransactionPreparationCommittedEvent;
 import org.enodeframework.samples.domain.bank.deposittransaction.DepositTransactionPreparationCompletedEvent;
 import org.enodeframework.samples.domain.bank.deposittransaction.DepositTransactionStartedEvent;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.Resource;
 
 /**
  * 银行存款交易流程管理器，用于协调银行存款交易流程中各个参与者聚合根之间的消息交互
@@ -26,17 +27,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Event
 public class DepositTransactionProcessManager {
 
-    @Autowired
+    @Resource
     private ICommandService commandService;
 
     @Subscribe
     public void handleAsync(DepositTransactionStartedEvent evnt) {
         AddTransactionPreparationCommand command = new AddTransactionPreparationCommand(
-                evnt.accountId,
-                evnt.getAggregateRootId(),
-                TransactionType.DEPOSIT_TRANSACTION,
-                PreparationType.CREDIT_PREPARATION,
-                evnt.amount);
+            evnt.accountId,
+            evnt.getAggregateRootId(),
+            TransactionType.DEPOSIT_TRANSACTION,
+            PreparationType.CREDIT_PREPARATION,
+            evnt.amount);
         command.setId(evnt.getId());
         Task.await(commandService.sendAsync(command));
     }
@@ -44,7 +45,7 @@ public class DepositTransactionProcessManager {
     @Subscribe
     public void handleAsync(TransactionPreparationAddedEvent evnt) {
         if (evnt.transactionPreparation.transactionType == TransactionType.DEPOSIT_TRANSACTION
-                && evnt.transactionPreparation.preparationType == PreparationType.CREDIT_PREPARATION) {
+            && evnt.transactionPreparation.preparationType == PreparationType.CREDIT_PREPARATION) {
             ConfirmDepositPreparationCommand command = new ConfirmDepositPreparationCommand(evnt.transactionPreparation.transactionId);
             command.setId(evnt.getId());
             Task.await(commandService.sendAsync(command));
@@ -61,7 +62,7 @@ public class DepositTransactionProcessManager {
     @Subscribe
     public void handleAsync(TransactionPreparationCommittedEvent evnt) {
         if (evnt.transactionPreparation.transactionType == TransactionType.DEPOSIT_TRANSACTION &&
-                evnt.transactionPreparation.preparationType == PreparationType.CREDIT_PREPARATION) {
+            evnt.transactionPreparation.preparationType == PreparationType.CREDIT_PREPARATION) {
             ConfirmDepositCommand command = new ConfirmDepositCommand(evnt.transactionPreparation.transactionId);
             command.setId(evnt.getId());
             Task.await(commandService.sendAsync(command));

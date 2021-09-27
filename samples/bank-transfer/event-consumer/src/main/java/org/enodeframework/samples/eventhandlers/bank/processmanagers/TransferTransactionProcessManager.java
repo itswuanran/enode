@@ -24,8 +24,8 @@ import org.enodeframework.samples.domain.bank.transfertransaction.AccountValidat
 import org.enodeframework.samples.domain.bank.transfertransaction.TransferInPreparationConfirmedEvent;
 import org.enodeframework.samples.domain.bank.transfertransaction.TransferOutPreparationConfirmedEvent;
 import org.enodeframework.samples.domain.bank.transfertransaction.TransferTransactionStartedEvent;
-import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.annotation.Resource;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -42,7 +42,7 @@ import java.util.concurrent.CompletableFuture;
 @Event
 public class TransferTransactionProcessManager {
 
-    @Autowired
+    @Resource
     private ICommandService commandService;
 
     @Subscribe
@@ -73,11 +73,11 @@ public class TransferTransactionProcessManager {
     @Subscribe
     public void handleAsync(AccountValidatePassedConfirmCompletedEvent evnt) {
         AddTransactionPreparationCommand command = new AddTransactionPreparationCommand(
-                evnt.transferTransactionInfo.sourceAccountId,
-                evnt.getAggregateRootId(),
-                TransactionType.TRANSFER_TRANSACTION,
-                PreparationType.DEBIT_PREPARATION,
-                evnt.transferTransactionInfo.amount);
+            evnt.transferTransactionInfo.sourceAccountId,
+            evnt.getAggregateRootId(),
+            TransactionType.TRANSFER_TRANSACTION,
+            PreparationType.DEBIT_PREPARATION,
+            evnt.transferTransactionInfo.amount);
         command.setId(evnt.getId());
         Task.await(commandService.sendAsync(command));
     }
@@ -109,11 +109,11 @@ public class TransferTransactionProcessManager {
     @Subscribe
     public void handleAsync(TransferOutPreparationConfirmedEvent evnt) {
         AddTransactionPreparationCommand command = new AddTransactionPreparationCommand(
-                evnt.transferTransactionInfo.targetAccountId,
-                evnt.getAggregateRootId(),
-                TransactionType.TRANSFER_TRANSACTION,
-                PreparationType.CREDIT_PREPARATION,
-                evnt.transferTransactionInfo.amount);
+            evnt.transferTransactionInfo.targetAccountId,
+            evnt.getAggregateRootId(),
+            TransactionType.TRANSFER_TRANSACTION,
+            PreparationType.CREDIT_PREPARATION,
+            evnt.transferTransactionInfo.amount);
         command.setId(evnt.getId());
         Task.await(commandService.sendAsync(command));
     }

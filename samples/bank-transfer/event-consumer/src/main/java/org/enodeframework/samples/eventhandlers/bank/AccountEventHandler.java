@@ -25,7 +25,6 @@ public class AccountEventHandler {
     @Subscribe
     public void handleAsync(AccountCreatedEvent evnt) {
         logger.info("账户已创建，账户：{}，所有者：{}", evnt.getAggregateRootId(), evnt.owner);
-
     }
 
     @Subscribe
@@ -47,7 +46,6 @@ public class AccountEventHandler {
                 logger.info("账户预转入成功，交易ID：{}，账户：{}，金额：{}", evnt.transactionPreparation.transactionId, evnt.transactionPreparation.accountId, evnt.transactionPreparation.amount);
             }
         }
-
     }
 
     @Subscribe
@@ -71,36 +69,30 @@ public class AccountEventHandler {
     @Subscribe
     public void handleAsync(TransferTransactionStartedEvent evnt) {
         logger.info("转账交易已开始，交易ID：{}，源账户：{}，目标账户：{}，转账金额：{}", evnt.getAggregateRootId(), evnt.transferTransactionInfo.sourceAccountId, evnt.transferTransactionInfo.targetAccountId, evnt.transferTransactionInfo.amount);
-
     }
 
     @Subscribe
     public void handleAsync(TransferOutPreparationConfirmedEvent evnt) {
         logger.info("预转出确认成功，交易ID：{}，账户：{}", evnt.getAggregateRootId(), evnt.transferTransactionInfo.sourceAccountId);
-
     }
 
     @Subscribe
     public void handleAsync(TransferInPreparationConfirmedEvent evnt) {
         logger.info("预转入确认成功，交易ID：{}，账户：{}", evnt.getAggregateRootId(), evnt.transferTransactionInfo.targetAccountId);
-
     }
 
     @Subscribe
     public void handleAsync(TransferTransactionCompletedEvent evnt) {
         logger.info("转账交易已完成，交易ID：{}", evnt.getAggregateRootId());
-
     }
 
     @Subscribe
     public void handleAsync(InsufficientBalanceException exception) {
         logger.info("账户的余额不足，交易ID：{}，账户：{}，可用余额：{}，转出金额：{}", exception.transactionId, exception.accountId, exception.currentAvailableBalance, exception.amount);
-
     }
 
     @Subscribe
     public void handleAsync(TransferTransactionCanceledEvent evnt) {
         logger.info("转账交易已取消，交易ID：{}", evnt.getAggregateRootId());
-
     }
 }
