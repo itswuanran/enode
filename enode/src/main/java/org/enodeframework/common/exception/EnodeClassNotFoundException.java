@@ -3,7 +3,7 @@ package org.enodeframework.common.exception;
 /**
  * @author anruence@gmail.com
  */
-public class EnodeClassNotFoundException extends RuntimeException {
+public class EnodeClassNotFoundException extends EnodeRuntimeException {
 
     private static final long serialVersionUID = 2514628822193223823L;
 

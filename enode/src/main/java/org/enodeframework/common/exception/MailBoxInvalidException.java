@@ -3,7 +3,7 @@ package org.enodeframework.common.exception;
 /**
  * @author anruence@gmail.com
  */
-public class MailBoxInvalidException extends RuntimeException {
+public class MailBoxInvalidException extends EnodeRuntimeException {
 
     public MailBoxInvalidException() {
         super();

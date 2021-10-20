@@ -3,7 +3,7 @@ package org.enodeframework.common.exception;
 /**
  * @author anruence@gmail.com
  */
-public class PublishedVersionStoreException extends RuntimeException {
+public class PublishedVersionStoreException extends EnodeRuntimeException {
 
     public PublishedVersionStoreException() {
         super();

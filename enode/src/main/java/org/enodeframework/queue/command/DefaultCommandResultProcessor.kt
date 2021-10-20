@@ -16,12 +16,11 @@ import org.enodeframework.commanding.CommandReturnType
 import org.enodeframework.commanding.CommandStatus
 import org.enodeframework.commanding.ICommand
 import org.enodeframework.common.exception.DuplicateCommandRegisterException
+import org.enodeframework.common.extensions.SystemClock
 import org.enodeframework.common.scheduling.IScheduleService
 import org.enodeframework.common.scheduling.Worker
 import org.enodeframework.common.serializing.ISerializeService
 import org.enodeframework.common.utils.ReplyUtil
-import org.enodeframework.common.remoting.ReplyMessage
-import org.enodeframework.common.extensions.SystemClock
 import org.enodeframework.queue.domainevent.DomainEventHandledMessage
 import org.slf4j.LoggerFactory
 import java.net.InetAddress
@@ -55,24 +54,41 @@ class DefaultCommandResultProcessor constructor(
     private fun startServer(port: Int) {
         bindAddress = InetSocketAddress(InetAddress.getLocalHost(), port)
         val address = ReplyUtil.toUri(bindAddress)
-        vertx.eventBus().consumer(address) { msg: Message<JsonObject> ->
-            val replyMessage = msg.body().mapTo(ReplyMessage::class.java)
-            processRequestInternal(replyMessage)
-            msg.reply(JsonObject().put("value", "success"))
+        val eb = vertx.eventBus()
+        eb.consumer(address) { msg: Message<JsonObject> ->
+            processRequestInternal(msg.body())
         }
         val bridgeOptions = BridgeOptions()
         bridgeOptions.addInboundPermitted(PermittedOptions().setAddress(address))
         bridgeOptions.addOutboundPermitted(PermittedOptions().setAddress(address))
-        tcpEventBusBridge = TcpEventBusBridge.create(vertx, bridgeOptions).listen(port) { res: AsyncResult<TcpEventBusBridge> ->
-            if (!res.succeeded()) {
-                logger.error("vertx netServer start failed. port: {}", port, res.cause())
+        tcpEventBusBridge =
+            TcpEventBusBridge.create(vertx, bridgeOptions).listen(port) { res: AsyncResult<TcpEventBusBridge> ->
+                if (!res.succeeded()) {
+                    logger.error("vertx netServer start failed. port: {}", port, res.cause())
+                }
             }
-        }
     }
 
-    override fun registerProcessingCommand(command: ICommand, commandReturnType: CommandReturnType, taskCompletionSource: CompletableFuture<CommandResult>) {
-        if (commandTaskDict.asMap().putIfAbsent(command.id, CommandTaskCompletionSource(command.aggregateRootId, commandReturnType, taskCompletionSource)) != null) {
-            throw DuplicateCommandRegisterException(String.format("Duplicate processing command registration, type:%s, id:%s", command.javaClass.name, command.id))
+    override fun registerProcessingCommand(
+        command: ICommand,
+        commandReturnType: CommandReturnType,
+        taskCompletionSource: CompletableFuture<CommandResult>
+    ) {
+        if (commandTaskDict.asMap().putIfAbsent(
+                command.id, CommandTaskCompletionSource(
+                    command.aggregateRootId,
+                    commandReturnType,
+                    taskCompletionSource
+                )
+            ) != null
+        ) {
+            throw DuplicateCommandRegisterException(
+                String.format(
+                    "Duplicate processing command registration, type:%s, id:%s",
+                    command.javaClass.name,
+                    command.id
+                )
+            )
         }
     }
 
@@ -103,13 +119,14 @@ class DefaultCommandResultProcessor constructor(
         return bindAddress
     }
 
-    private fun processRequestInternal(reply: ReplyMessage) {
-        if (reply.code == CommandReturnType.CommandExecuted.value) {
-            val result = reply.commandResult
-            commandExecutedMessageLocalQueue.add(result)
-        } else if (reply.code == CommandReturnType.EventHandled.value) {
-            val message = reply.eventHandledMessage
-            domainEventHandledMessageLocalQueue.add(message)
+    private fun processRequestInternal(reply: JsonObject) {
+        val code = reply.getInteger("code", 0)
+        if (code == CommandReturnType.CommandExecuted.value) {
+            val result = reply.getJsonObject("commandResult")
+            commandExecutedMessageLocalQueue.add(result.mapTo(CommandResult::class.java))
+        } else if (code == CommandReturnType.EventHandled.value) {
+            val message = reply.getJsonObject("eventHandledMessage")
+            domainEventHandledMessageLocalQueue.add(message.mapTo(DomainEventHandledMessage::class.java))
         }
     }
 
@@ -128,7 +145,12 @@ class DefaultCommandResultProcessor constructor(
         val commandTaskCompletionSource = commandTaskDict.asMap()[commandResult.commandId]
         if (commandTaskCompletionSource == null) {
             if (logger.isDebugEnabled) {
-                logger.debug("Command result return, {}, but commandTaskCompletionSource maybe timeout expired.", serializeService.serialize(commandResult))
+                logger.debug(
+                    "Command result return, {}, but commandTaskCompletionSource maybe timeout expired.",
+                    serializeService.serialize(
+                        commandResult
+                    )
+                )
             }
             return
         }
@@ -144,7 +166,10 @@ class DefaultCommandResultProcessor constructor(
                 commandTaskDict.asMap().remove(commandResult.commandId)
                 if (commandTaskCompletionSource.taskCompletionSource.complete(commandResult)) {
                     if (logger.isDebugEnabled) {
-                        logger.debug("Command result return EventHandled, {}", serializeService.serialize(commandResult))
+                        logger.debug(
+                            "Command result return EventHandled, {}",
+                            serializeService.serialize(commandResult)
+                        )
                     }
                 }
             }
@@ -154,7 +179,13 @@ class DefaultCommandResultProcessor constructor(
     private fun processTimeoutCommand(commandId: String, commandTaskCompletionSource: CommandTaskCompletionSource?) {
         if (commandTaskCompletionSource != null) {
             logger.error("Wait command notify timeout, commandId: {}", commandId)
-            val commandResult = CommandResult(CommandStatus.Failed, commandId, commandTaskCompletionSource.aggregateRootId, "Wait command notify timeout.", String::class.java.name)
+            val commandResult = CommandResult(
+                CommandStatus.Failed,
+                commandId,
+                commandTaskCompletionSource.aggregateRootId,
+                "Wait command notify timeout.",
+                String::class.java.name
+            )
             // 任务超时失败
             commandTaskCompletionSource.taskCompletionSource.complete(commandResult)
         }
@@ -163,7 +194,13 @@ class DefaultCommandResultProcessor constructor(
     override fun processFailedSendingCommand(command: ICommand) {
         val commandTaskCompletionSource = commandTaskDict.asMap().remove(command.id)
         if (commandTaskCompletionSource != null) {
-            val commandResult = CommandResult(CommandStatus.Failed, command.id, command.aggregateRootId, "Failed to send the command.", String::class.java.name)
+            val commandResult = CommandResult(
+                CommandStatus.Failed,
+                command.id,
+                command.aggregateRootId,
+                "Failed to send the command.",
+                String::class.java.name
+            )
             // 发送失败消息
             commandTaskCompletionSource.taskCompletionSource.complete(commandResult)
         }
@@ -177,7 +214,13 @@ class DefaultCommandResultProcessor constructor(
                 return
             }
             commandTaskDict.asMap().remove(message.commandId)
-            val commandResult = CommandResult(CommandStatus.Success, message.commandId, message.aggregateRootId, message.commandResult, "")
+            val commandResult = CommandResult(
+                CommandStatus.Success,
+                message.commandId,
+                message.aggregateRootId,
+                message.commandResult,
+                ""
+            )
             commandTaskCompletionSource.taskCompletionSource.complete(commandResult)
             if (logger.isDebugEnabled) {
                 logger.debug("DomainEvent result return, {}", serializeService.serialize(message))
@@ -190,14 +233,23 @@ class DefaultCommandResultProcessor constructor(
     }
 
     init {
-        commandTaskDict = CacheBuilder.newBuilder().removalListener { notification: RemovalNotification<String, CommandTaskCompletionSource> ->
-            if (notification.cause == RemovalCause.EXPIRED) {
-                processTimeoutCommand(notification.key, notification.value)
-            }
-        }.expireAfterWrite(completionSourceTimeout.toLong(), TimeUnit.MILLISECONDS).build()
+        commandTaskDict = CacheBuilder.newBuilder()
+            .removalListener { notification: RemovalNotification<String, CommandTaskCompletionSource> ->
+                if (notification.cause == RemovalCause.EXPIRED) {
+                    processTimeoutCommand(notification.key, notification.value)
+                }
+            }.expireAfterWrite(completionSourceTimeout.toLong(), TimeUnit.MILLISECONDS).build()
         commandExecutedMessageLocalQueue = LinkedBlockingQueue()
         domainEventHandledMessageLocalQueue = LinkedBlockingQueue()
-        commandExecutedMessageWorker = Worker("ProcessExecutedCommandMessage") { processExecutedCommandMessage(commandExecutedMessageLocalQueue.take()) }
-        domainEventHandledMessageWorker = Worker("ProcessDomainEventHandledMessage") { processDomainEventHandledMessage(domainEventHandledMessageLocalQueue.take()) }
+        commandExecutedMessageWorker = Worker("ProcessExecutedCommandMessage") {
+            processExecutedCommandMessage(
+                commandExecutedMessageLocalQueue.take()
+            )
+        }
+        domainEventHandledMessageWorker = Worker("ProcessDomainEventHandledMessage") {
+            processDomainEventHandledMessage(
+                domainEventHandledMessageLocalQueue.take()
+            )
+        }
     }
 }

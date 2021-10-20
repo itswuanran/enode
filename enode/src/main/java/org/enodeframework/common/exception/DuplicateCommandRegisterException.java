@@ -3,7 +3,7 @@ package org.enodeframework.common.exception;
 /**
  * @author anruence@gmail.com
  */
-public class DuplicateCommandRegisterException extends RuntimeException {
+public class DuplicateCommandRegisterException extends EnodeRuntimeException {
 
     public DuplicateCommandRegisterException() {
         super();

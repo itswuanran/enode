@@ -3,7 +3,7 @@ package org.enodeframework.common.exception;
 /**
  * @author anruence@gmail.com
  */
-public class MessageInstanceCreateException extends RuntimeException {
+public class MessageInstanceCreateException extends EnodeRuntimeException {
 
     public MessageInstanceCreateException() {
         super();

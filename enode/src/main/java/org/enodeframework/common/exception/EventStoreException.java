@@ -3,7 +3,7 @@ package org.enodeframework.common.exception;
 /**
  * @author anruence@gmail.com
  */
-public class EventStoreException extends RuntimeException {
+public class EventStoreException extends EnodeRuntimeException {
 
     public EventStoreException() {
         super();

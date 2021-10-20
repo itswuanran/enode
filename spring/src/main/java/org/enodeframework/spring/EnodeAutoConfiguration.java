@@ -108,9 +108,8 @@ public class EnodeAutoConfiguration {
     }
 
     @Bean(name = "defaultSendReplyService")
-    public DefaultSendReplyService defaultSendReplyService(ISerializeService serializeService) {
-        DefaultSendReplyService sendReplyService = new DefaultSendReplyService(serializeService);
-        return sendReplyService;
+    public DefaultSendReplyService defaultSendReplyService() {
+        return new DefaultSendReplyService();
     }
 
     @Bean(name = "defaultScheduleService")

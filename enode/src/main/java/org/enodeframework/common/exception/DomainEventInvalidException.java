@@ -3,7 +3,7 @@ package org.enodeframework.common.exception;
 /**
  * @author anruence@gmail.com
  */
-public class DomainEventInvalidException extends RuntimeException {
+public class DomainEventInvalidException extends EnodeRuntimeException {
 
     public DomainEventInvalidException() {
         super();

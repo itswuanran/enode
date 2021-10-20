@@ -3,7 +3,7 @@ package org.enodeframework.common.exception;
 /**
  * @author anruence@gmail.com
  */
-public class AggregateRootNotFoundException extends RuntimeException {
+public class AggregateRootNotFoundException extends EnodeRuntimeException {
     private static final String EXCEPTION_MESSAGE = "aggregate root [type=%s,id=%s] not found.";
 
     public AggregateRootNotFoundException() {

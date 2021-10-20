@@ -1,5 +1,6 @@
 package org.enodeframework.commanding.impl
 
+import com.google.common.base.Strings
 import org.enodeframework.commanding.CommandResult
 import org.enodeframework.commanding.ICommandExecuteContext
 import org.enodeframework.common.exception.AggregateRootAlreadyExistException
@@ -23,12 +24,12 @@ import java.util.concurrent.ConcurrentMap
  * @author anruence@gmail.com
  */
 class CommandExecuteContext(
-        repository: IRepository,
-        aggregateRootStorage: IAggregateStorage,
-        queueMessage: QueueMessage,
-        messageContext: IMessageContext,
-        commandMessage: CommandMessage,
-        sendReplyService: ISendReplyService
+    repository: IRepository,
+    aggregateRootStorage: IAggregateStorage,
+    queueMessage: QueueMessage,
+    messageContext: IMessageContext,
+    commandMessage: CommandMessage,
+    sendReplyService: ISendReplyService
 ) : ICommandExecuteContext {
     private val trackingAggregateRootDict: ConcurrentMap<String, IAggregateRoot>
     private val repository: IRepository
@@ -41,7 +42,7 @@ class CommandExecuteContext(
     override var applicationMessage: IApplicationMessage? = null
     override fun onCommandExecutedAsync(commandResult: CommandResult): CompletableFuture<Boolean> {
         messageContext.onMessageHandled(queueMessage)
-        return if (Objects.isNull(commandMessage.replyAddress)) {
+        return if (Strings.isNullOrEmpty(commandMessage.replyAddress)) {
             Task.completedTask
         } else sendReplyService.sendCommandReply(commandResult, commandMessage.replyAddress)
     }
@@ -65,7 +66,11 @@ class CommandExecuteContext(
     /**
      * Get an aggregate from the current command context.
      */
-    override fun <T : IAggregateRoot> getAsync(id: Any, firstFromCache: Boolean, aggregateRootType: Class<T>): CompletableFuture<T> {
+    override fun <T : IAggregateRoot> getAsync(
+        id: Any,
+        firstFromCache: Boolean,
+        aggregateRootType: Class<T>
+    ): CompletableFuture<T> {
         Assert.nonNull(id, "id")
         val aggregateRootId = id.toString()
         val iAggregateRoot = trackingAggregateRootDict[aggregateRootId] as T?

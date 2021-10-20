@@ -3,7 +3,7 @@ package org.enodeframework.common.exception;
 /**
  * @author anruence@gmail.com
  */
-public class AggregateRootTypeNotMatchException extends RuntimeException {
+public class AggregateRootTypeNotMatchException extends EnodeRuntimeException {
 
     public AggregateRootTypeNotMatchException() {
         super();

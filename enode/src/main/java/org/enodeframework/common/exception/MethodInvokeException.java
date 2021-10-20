@@ -3,7 +3,7 @@ package org.enodeframework.common.exception;
 /**
  * @author anruence@gmail.com
  */
-public class MethodInvokeException extends RuntimeException {
+public class MethodInvokeException extends EnodeRuntimeException {
 
     private static final long serialVersionUID = -3652102021062999423L;
 

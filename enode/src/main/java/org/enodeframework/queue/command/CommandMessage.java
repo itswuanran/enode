@@ -1,7 +1,5 @@
 package org.enodeframework.queue.command;
 
-import org.enodeframework.common.remoting.ReplySocketAddress;
-
 import java.io.Serializable;
 
 /**
@@ -10,7 +8,7 @@ import java.io.Serializable;
 public class CommandMessage implements Serializable {
     private String commandType;
     private String commandData;
-    private ReplySocketAddress replyAddress;
+    private String replyAddress;
 
     public String getCommandType() {
         return commandType;
@@ -28,11 +26,11 @@ public class CommandMessage implements Serializable {
         this.commandData = commandData;
     }
 
-    public ReplySocketAddress getReplyAddress() {
+    public String getReplyAddress() {
         return replyAddress;
     }
 
-    public void setReplyAddress(ReplySocketAddress replyAddress) {
+    public void setReplyAddress(String replyAddress) {
         this.replyAddress = replyAddress;
     }
 

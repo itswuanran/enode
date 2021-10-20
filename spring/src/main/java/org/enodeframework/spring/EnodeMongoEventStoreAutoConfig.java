@@ -1,6 +1,6 @@
 package org.enodeframework.spring;
 
-import com.mongodb.reactivestreams.client.MongoClient;
+import io.vertx.ext.mongo.MongoClient;
 import org.enodeframework.common.serializing.ISerializeService;
 import org.enodeframework.eventing.IEventSerializer;
 import org.enodeframework.mongo.MongoEventStore;

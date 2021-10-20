@@ -2,9 +2,7 @@ package org.enodeframework.queue.domainevent;
 
 import com.google.common.base.Strings;
 import org.enodeframework.common.io.Task;
-import org.enodeframework.common.remoting.ReplySocketAddress;
 import org.enodeframework.common.serializing.ISerializeService;
-import org.enodeframework.common.utils.ReplyUtil;
 import org.enodeframework.configurations.SysProperties;
 import org.enodeframework.eventing.DomainEventStreamMessage;
 import org.enodeframework.eventing.IEventProcessContext;
@@ -105,18 +103,12 @@ public class DefaultDomainEventMessageHandler implements IMessageHandler {
             if (Strings.isNullOrEmpty(address)) {
                 return Task.completedTask;
             }
-            Optional<ReplySocketAddress> socketAddressOptional = ReplyUtil.toSocketAddress(address);
-            if (!socketAddressOptional.isPresent()) {
-                logger.error("can not parse notify address, {}", domainEventStreamMessage);
-                return Task.completedTask;
-            }
-            ReplySocketAddress replyAddress = socketAddressOptional.get();
             String commandResult = Optional.ofNullable(domainEventStreamMessage.getItems()).map(x -> (String) x.get(SysProperties.ITEMS_COMMAND_RESULT_KEY)).orElse("");
             DomainEventHandledMessage domainEventHandledMessage = new DomainEventHandledMessage();
             domainEventHandledMessage.setCommandId(domainEventStreamMessage.getCommandId());
             domainEventHandledMessage.setAggregateRootId(domainEventStreamMessage.getAggregateRootId());
             domainEventHandledMessage.setCommandResult(commandResult);
-            return eventConsumer.getSendReplyService().sendEventReply(domainEventHandledMessage, replyAddress);
+            return eventConsumer.getSendReplyService().sendEventReply(domainEventHandledMessage, address);
         }
     }
 }

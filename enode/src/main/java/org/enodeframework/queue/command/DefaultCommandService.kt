@@ -68,8 +68,7 @@ class DefaultCommandService(
         val commandData = serializeService.serialize(command)
         val commandMessage = CommandMessage()
         if (needReply) {
-            ReplyUtil.toSocketAddress(commandResultProcessor.bindAddress)
-                .ifPresent { socketAddress -> commandMessage.replyAddress = socketAddress }
+            commandMessage.replyAddress = ReplyUtil.toUri(commandResultProcessor.bindAddress)
         }
         commandMessage.commandData = commandData
         commandMessage.commandType = command.javaClass.name

@@ -3,7 +3,7 @@ package org.enodeframework.common.exception;
 /**
  * @author anruence@gmail.com
  */
-public class HandlerRegisterException extends RuntimeException {
+public class HandlerRegisterException extends EnodeRuntimeException {
 
     private static final long serialVersionUID = -3652102021062999423L;
 

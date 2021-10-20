@@ -1,9 +1,9 @@
 package org.enodeframework.test.config;
 
-import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
 import com.zaxxer.hikari.HikariDataSource;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.mongo.MongoClient;
 import io.vertx.mysqlclient.MySQLConnectOptions;
 import io.vertx.mysqlclient.MySQLPool;
 import io.vertx.pgclient.PgConnectOptions;
@@ -59,8 +59,8 @@ public class EnodeTestDataSourceConfig {
 
     @Bean("enodeMongoClient")
     @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "mongo")
-    public MongoClient mongoClient() {
-        return MongoClients.create();
+    public MongoClient mongoClient(Vertx vertx) {
+        return MongoClient.create(vertx, new JsonObject().put("db_name", "test"));
     }
 
     @Bean("enodeMySQLPool")
