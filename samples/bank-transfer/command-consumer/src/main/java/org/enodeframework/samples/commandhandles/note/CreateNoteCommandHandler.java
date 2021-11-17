@@ -14,6 +14,6 @@ public class CreateNoteCommandHandler {
     @Subscribe
     public void handleAsync(ICommandContext context, CreateNoteCommand command) {
         Note note = new Note(command.getAggregateRootId(), command.getTitle());
-        context.add(note);
+        context.addAsync(note);
     }
 }

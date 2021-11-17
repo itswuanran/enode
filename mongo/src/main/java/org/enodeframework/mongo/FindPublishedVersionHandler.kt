@@ -7,10 +7,10 @@ import org.enodeframework.common.exception.PublishedVersionStoreException
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 
-class QueryVersionHandler : Handler<AsyncResult<JsonObject>> {
+class FindPublishedVersionHandler : Handler<AsyncResult<JsonObject>> {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(QueryVersionHandler::class.java)
+        private val logger = LoggerFactory.getLogger(FindPublishedVersionHandler::class.java)
     }
 
     var future = CompletableFuture<Int>()

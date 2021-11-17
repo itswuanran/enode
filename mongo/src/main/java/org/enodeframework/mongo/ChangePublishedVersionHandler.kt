@@ -1,17 +1,15 @@
 package org.enodeframework.mongo
 
-import com.mongodb.MongoWriteException
+import com.mongodb.MongoServerException
 import io.vertx.core.AsyncResult
 import io.vertx.core.Handler
+import io.vertx.ext.mongo.MongoClientUpdateResult
 import org.enodeframework.common.exception.EventStoreException
 import org.enodeframework.common.exception.IORuntimeException
-import org.enodeframework.configurations.EventStoreConfiguration
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 
-class InsertPublishedVersionHandler(private val configuration: EventStoreConfiguration) : Handler<AsyncResult<String>> {
-
-    private val code = 11000
+class ChangePublishedVersionHandler : Handler<AsyncResult<MongoClientUpdateResult>> {
 
     companion object {
         private val logger = LoggerFactory.getLogger(MongoEventStore::class.java)
@@ -19,7 +17,7 @@ class InsertPublishedVersionHandler(private val configuration: EventStoreConfigu
 
     var future = CompletableFuture<Int>()
 
-    override fun handle(ar: AsyncResult<String>) {
+    override fun handle(ar: AsyncResult<MongoClientUpdateResult>) {
         if (ar.succeeded()) {
             val result = ar.result()
             if (result == null) {
@@ -30,11 +28,7 @@ class InsertPublishedVersionHandler(private val configuration: EventStoreConfigu
             return
         }
         val throwable = ar.cause()
-        if (throwable is MongoWriteException) {
-            if (throwable.code == code && throwable.message?.contains(configuration.publishedUkName) == true) {
-                future.complete(1)
-                return
-            }
+        if (throwable is MongoServerException) {
             logger.error("Insert or update aggregate published version has sql exception.", throwable)
             future.completeExceptionally(IORuntimeException(throwable))
             return

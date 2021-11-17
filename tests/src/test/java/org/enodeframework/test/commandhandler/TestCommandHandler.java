@@ -26,18 +26,27 @@ import org.enodeframework.test.command.ThrowExceptionCommand;
 import org.enodeframework.test.command.TwoHandlersCommand;
 import org.enodeframework.test.domain.InheritTestAggregate;
 import org.enodeframework.test.domain.TestAggregate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.CompletableFuture;
 
 @Command
 public class TestCommandHandler {
 
+    private static final Logger logger = LoggerFactory.getLogger(TestCommandHandler.class);
+
     @Subscribe
-    public void handleAsync(ICommandContext context, ChangeTestAggregateTitleWhenDirtyCommand command) {
-        TestAggregate testAggregate = context.getAsync(command.getAggregateRootId(), TestAggregate.class).join();
+    public CompletableFuture<TestAggregate> handleAsync(ICommandContext context, ChangeTestAggregateTitleWhenDirtyCommand command) {
+        CompletableFuture<TestAggregate> future = context.getAsync(command.getAggregateRootId(), TestAggregate.class);
         if (command.isFirstExecute()) {
             ObjectContainer.resolve(IMemoryCache.class).refreshAggregateFromEventStoreAsync(TestAggregate.class.getName(), command.getAggregateRootId());
         }
-        testAggregate.changeTitle(command.getTitle());
-        command.setFirstExecute(false);
+        future.thenAccept(testAggregate -> {
+            testAggregate.changeTitle(command.getTitle());
+            command.setFirstExecute(false);
+        });
+        return future;
     }
 
     @Subscribe
@@ -45,42 +54,48 @@ public class TestCommandHandler {
         if (command.sleepMilliseconds > 0) {
             Task.sleep(command.sleepMilliseconds);
         }
-        context.add(new TestAggregate(command.getAggregateRootId(), command.title));
+        context.addAsync(new TestAggregate(command.getAggregateRootId(), command.title));
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, ChangeTestAggregateTitleCommand command) {
-        TestAggregate testAggregate = Task.await(context.getAsync(command.aggregateRootId, TestAggregate.class));
-        testAggregate.changeTitle(command.title);
+    public CompletableFuture<Void> handleAsync(ICommandContext context, ChangeTestAggregateTitleCommand command) {
+        return context.getAsync(command.aggregateRootId, TestAggregate.class).thenAccept(testAggregate -> {
+            testAggregate.changeTitle(command.title);
+        });
     }
 
     @Subscribe
     public void handleAsync(ICommandContext context, CreateInheritTestAggregateCommand command) {
-        context.add(new InheritTestAggregate(command.getAggregateRootId(), command.Title));
+        context.addAsync(new InheritTestAggregate(command.getAggregateRootId(), command.Title));
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, ChangeInheritTestAggregateTitleCommand command) {
-        InheritTestAggregate testAggregate = Task.await(context.getAsync(command.getAggregateRootId(), InheritTestAggregate.class));
-        testAggregate.changeMyTitle(command.Title);
+    public CompletableFuture<Void> handleAsync(ICommandContext context, ChangeInheritTestAggregateTitleCommand command) {
+        return context.getAsync(command.getAggregateRootId(), InheritTestAggregate.class).thenAccept(inheritTestAggregate -> {
+            inheritTestAggregate.changeMyTitle(command.Title);
+        });
     }
 
     @Subscribe
     public void handleAsync(ICommandContext context, ChangeNothingCommand command) {
+        logger.info("nothing changed exec, {}", command);
     }
 
     @Subscribe
     public void handleAsync(ICommandContext context, SetResultCommand command) {
-        context.add(new TestAggregate(command.getAggregateRootId(), ""));
+        context.addAsync(new TestAggregate(command.getAggregateRootId(), ""));
         context.setResult(command.Result);
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, ChangeMultipleAggregatesCommand command) {
-        TestAggregate testAggregate1 = Task.await(context.getAsync(command.getAggregateRootId1(), TestAggregate.class));
-        TestAggregate testAggregate2 = Task.await(context.getAsync(command.getAggregateRootId2(), TestAggregate.class));
-        testAggregate1.testEvents();
-        testAggregate2.testEvents();
+    public CompletableFuture<Boolean> handleAsync(ICommandContext context, ChangeMultipleAggregatesCommand command) {
+        context.getAsync(command.getAggregateRootId1(), TestAggregate.class).thenAccept(testAggregate1 -> {
+            testAggregate1.testEvents();
+        });
+        context.getAsync(command.getAggregateRootId2(), TestAggregate.class).thenAccept(testAggregate2 -> {
+            testAggregate2.testEvents();
+        });
+        return Task.completedTask;
     }
 
     @Subscribe
@@ -89,15 +104,18 @@ public class TestCommandHandler {
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, AggregateThrowExceptionCommand command) throws Exception {
-        TestAggregate testAggregate = Task.await(context.getAsync(command.aggregateRootId, TestAggregate.class));
-        testAggregate.ThrowException(command.publishableException);
+    public CompletableFuture<TestAggregate> handleAsync(ICommandContext context, AggregateThrowExceptionCommand command) throws Exception {
+        return context.getAsync(command.getAggregateRootId(), TestAggregate.class).thenApply(testAggregate -> {
+            testAggregate.throwException(command.publishableException);
+            return testAggregate;
+        });
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, TestEventPriorityCommand command) {
-        TestAggregate testAggregate = Task.await(context.getAsync(command.aggregateRootId, TestAggregate.class));
-        testAggregate.testEvents();
+    public CompletableFuture<Void> handleAsync(ICommandContext context, TestEventPriorityCommand command) {
+        return context.getAsync(command.getAggregateRootId(), TestAggregate.class).thenAccept(testAggregate -> {
+            testAggregate.testEvents();
+        });
     }
 
     @Subscribe

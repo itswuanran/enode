@@ -561,7 +561,7 @@ public class EnodeCoreTest extends AbstractTest {
         AtomicLong count = new AtomicLong(0);
         AtomicBoolean createCommandSuccess = new AtomicBoolean(false);
         for (ICommand updateCommand : commandList) {
-            commandService.executeAsync(updateCommand).thenAccept(commandResult -> {
+            commandService.executeAsync(updateCommand).whenComplete((commandResult, y) -> {
                 Assert.assertNotNull(commandResult);
                 Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
                 if (!Objects.equals(commandResult.getCommandId(), commandId)) {

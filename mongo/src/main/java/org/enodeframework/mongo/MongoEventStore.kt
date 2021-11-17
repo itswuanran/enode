@@ -1,6 +1,6 @@
 package org.enodeframework.mongo
 
-import FindEventHandler
+import FindDomainEventHandler
 import com.google.common.collect.Lists
 import com.mongodb.client.model.Filters
 import io.vertx.core.json.JsonObject
@@ -93,7 +93,7 @@ class MongoEventStore(
         aggregateRootId: String,
         eventStreamList: List<DomainEventStream>
     ): CompletableFuture<AggregateEventAppendResult> {
-        val promise = BulkEventHandler(configuration)
+        val promise = AddDomainEventsHandler(configuration)
         val bulks: MutableList<BulkOperation> = Lists.newArrayList()
         for (domainEventStream in eventStreamList) {
             val document = JsonObject()
@@ -124,7 +124,7 @@ class MongoEventStore(
             )
             val jsonObject = JsonObject(filter.toBsonDocument().toJson())
             val msg = String.format("%s#%s#%s#%s", aggregateRootId, aggregateRootTypeName, minVersion, maxVersion)
-            val manyEventHandler = FindManyEventHandler(eventSerializer, serializeService, msg)
+            val manyEventHandler = FindDomainEventsHandler(eventSerializer, serializeService, msg)
             mongoClient.find(configuration.eventTableName, jsonObject, manyEventHandler)
             manyEventHandler.future
         }, "QueryAggregateEventsAsync")
@@ -135,7 +135,7 @@ class MongoEventStore(
             val queryBson = Filters.and(Filters.eq("aggregateRootId", aggregateRootId), Filters.eq("version", version))
             val query = JsonObject(queryBson.toBsonDocument().toJson())
             val msg = String.format("%s#%s", aggregateRootId, version)
-            val findEventHandler = FindEventHandler(eventSerializer, serializeService, msg)
+            val findEventHandler = FindDomainEventHandler(eventSerializer, serializeService, msg)
             mongoClient.findOne(configuration.eventTableName, query, null, findEventHandler)
             findEventHandler.future
         }, "FindEventByVersionAsync")
@@ -149,7 +149,7 @@ class MongoEventStore(
             )
             val queryJson = JsonObject(query.toBsonDocument().toJson())
             val msg = String.format("%s#%s", aggregateRootId, commandId)
-            val findEventHandler = FindEventHandler(eventSerializer, serializeService, msg)
+            val findEventHandler = FindDomainEventHandler(eventSerializer, serializeService, msg)
             mongoClient.findOne(configuration.eventTableName, queryJson, null, findEventHandler)
             findEventHandler.future
         }, "FindEventByCommandIdAsync")

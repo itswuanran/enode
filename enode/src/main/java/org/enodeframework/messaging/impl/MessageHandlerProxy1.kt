@@ -1,9 +1,11 @@
 package org.enodeframework.messaging.impl
 
+import kotlinx.coroutines.future.asDeferred
 import org.enodeframework.messaging.IMessage
 import org.enodeframework.messaging.IMessageHandlerProxy1
 import java.lang.invoke.MethodHandle
 import java.lang.reflect.Method
+import java.util.concurrent.CompletionStage
 import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 import kotlin.reflect.jvm.kotlinFunction
 
@@ -20,12 +22,16 @@ class MessageHandlerProxy1 : IMessageHandlerProxy1 {
             invokeSuspend(getInnerObject(), message)
             return
         }
-        methodHandle.invoke(getInnerObject(), message)
+        val result = methodHandle.invoke(getInnerObject(), message)
+        if (result is CompletionStage<*>) {
+            result.asDeferred().await()
+        }
     }
 
-    private suspend fun invokeSuspend(obj: Any, message: IMessage): Any? = suspendCoroutineUninterceptedOrReturn { continuation ->
-        methodHandle.invoke(obj, message, continuation)
-    }
+    private suspend fun invokeSuspend(obj: Any, message: IMessage): Any? =
+        suspendCoroutineUninterceptedOrReturn { continuation ->
+            methodHandle.invoke(obj, message, continuation)
+        }
 
     override fun getInnerObject(): Any {
         return innerObject

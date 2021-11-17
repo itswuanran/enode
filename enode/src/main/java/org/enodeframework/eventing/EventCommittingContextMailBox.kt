@@ -1,24 +1,20 @@
-
 package org.enodeframework.eventing
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import org.enodeframework.common.exception.DuplicateEventStreamException
+import org.enodeframework.common.extensions.SystemClock
 import org.enodeframework.common.function.Action1
 import org.enodeframework.common.io.Task
-import org.enodeframework.common.extensions.SystemClock
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.stream.Collectors
 
-class EventCommittingContextMailBox(val number: Int, private val batchSize: Int, handleEventAction: Action1<List<EventCommittingContext>>) {
+class EventCommittingContextMailBox(
+    val number: Int, private val batchSize: Int, handleEventAction: Action1<List<EventCommittingContext>>
+) {
     private val lockObj = Any()
-    private val processMessageMutex = Mutex()
+    private val asyncLockObj = Any()
     private val aggregateDictDict: ConcurrentHashMap<String, ConcurrentHashMap<String, Byte>> = ConcurrentHashMap()
     private val messageQueue: ConcurrentLinkedQueue<EventCommittingContext> = ConcurrentLinkedQueue()
     private val handleMessageAction: Action1<List<EventCommittingContext>> = handleEventAction
@@ -35,21 +31,22 @@ class EventCommittingContextMailBox(val number: Int, private val batchSize: Int,
      */
     fun enqueueMessage(message: EventCommittingContext) {
         synchronized(lockObj) {
-            val eventDict = aggregateDictDict.computeIfAbsent(message.eventStream.aggregateRootId) { ConcurrentHashMap() }
+            val eventDict =
+                aggregateDictDict.computeIfAbsent(message.eventStream.aggregateRootId) { ConcurrentHashMap() }
             // If the specified key is not already associated with a value (or is mapped to null) associates it with the given value and returns null, else returns the current value.
             if (eventDict.putIfAbsent(message.eventStream.id, ONE_BYTE) == null) {
                 message.mailBox = this
                 messageQueue.add(message)
                 if (logger.isDebugEnabled) {
                     logger.debug("{} enqueued new message, mailboxNumber: {}, aggregateRootId: {}, commandId: {}, eventVersion: {}, eventStreamId: {}, eventIds: {}",
-                            javaClass.name,
-                            number,
-                            message.eventStream.aggregateRootId,
-                            message.processingCommand.message.id,
-                            message.eventStream.version,
-                            message.eventStream.id,
-                            message.eventStream.events.stream().map { obj: IDomainEvent<*> -> obj.id }.collect(Collectors.joining("|"))
-                    )
+                        javaClass.name,
+                        number,
+                        message.eventStream.aggregateRootId,
+                        message.processingCommand.message.id,
+                        message.eventStream.version,
+                        message.eventStream.id,
+                        message.eventStream.events.stream().map { obj: IDomainEvent<*> -> obj.id }
+                            .collect(Collectors.joining("|")))
                 }
                 lastActiveTime = Date()
                 tryRun()
@@ -71,7 +68,7 @@ class EventCommittingContextMailBox(val number: Int, private val batchSize: Int,
             if (logger.isDebugEnabled) {
                 logger.debug("{} start run, mailboxNumber: {}", javaClass.name, number)
             }
-            CoroutineScope(Dispatchers.IO).launch { processMessages() }
+            processMessages()
         }
     }
 
@@ -97,8 +94,8 @@ class EventCommittingContextMailBox(val number: Int, private val batchSize: Int,
         return SystemClock.now() - lastActiveTime.time >= timeoutSeconds
     }
 
-    private suspend fun processMessages() {
-        processMessageMutex.withLock {
+    private fun processMessages() {
+        synchronized(asyncLockObj) {
             lastActiveTime = Date()
             val messageList: MutableList<EventCommittingContext> = ArrayList()
             while (messageList.size < batchSize) {

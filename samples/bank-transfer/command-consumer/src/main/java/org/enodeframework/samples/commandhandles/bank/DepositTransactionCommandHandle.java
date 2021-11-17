@@ -3,7 +3,6 @@ package org.enodeframework.samples.commandhandles.bank;
 import org.enodeframework.annotation.Command;
 import org.enodeframework.annotation.Subscribe;
 import org.enodeframework.commanding.ICommandContext;
-import org.enodeframework.common.io.Task;
 import org.enodeframework.samples.commands.bank.ConfirmDepositCommand;
 import org.enodeframework.samples.commands.bank.ConfirmDepositPreparationCommand;
 import org.enodeframework.samples.commands.bank.StartDepositTransactionCommand;
@@ -25,16 +24,16 @@ public class DepositTransactionCommandHandle {
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, ConfirmDepositPreparationCommand command) {
+    public CompletableFuture<DepositTransaction> handleAsync(ICommandContext context, ConfirmDepositPreparationCommand command) {
         CompletableFuture<DepositTransaction> future = context.getAsync(command.getAggregateRootId(), DepositTransaction.class);
-        DepositTransaction depositTransaction = Task.await(future);
-        depositTransaction.confirmDepositPreparation();
+        future.thenAccept(DepositTransaction::confirmDepositPreparation);
+        return future;
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, ConfirmDepositCommand command) {
+    public CompletableFuture<DepositTransaction> handleAsync(ICommandContext context, ConfirmDepositCommand command) {
         CompletableFuture<DepositTransaction> future = context.getAsync(command.getAggregateRootId(), DepositTransaction.class);
-        DepositTransaction depositTransaction = Task.await(future);
-        depositTransaction.confirmDeposit();
+        future.thenAccept(DepositTransaction::confirmDeposit);
+        return future;
     }
 }

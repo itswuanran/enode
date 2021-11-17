@@ -73,7 +73,7 @@ class JDBCPublishedVersionStore(
         val future = CompletableFuture<Int>()
         val array = JsonArray()
         array.add(publishedVersion)
-        array.add(Date().toInstant())
+        array.add(Date())
         array.add(processorName)
         array.add(aggregateRootId)
         array.add(publishedVersion - 1)
@@ -119,7 +119,7 @@ class JDBCPublishedVersionStore(
         array.add(aggregateRootTypeName)
         array.add(aggregateRootId)
         array.add(1)
-        array.add(Date().toInstant())
+        array.add(Date())
         val sql = String.format(INSERT_SQL, configuration.publishedTableName)
         sqlClient.updateWithParams(sql, array) { ar: AsyncResult<UpdateResult> ->
             if (ar.succeeded()) {

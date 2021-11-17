@@ -1,12 +1,9 @@
 package org.enodeframework.eventing
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.enodeframework.common.exception.MailBoxProcessException
+import org.enodeframework.common.extensions.SystemClock
 import org.enodeframework.common.function.Action1
 import org.enodeframework.common.io.Task
-import org.enodeframework.common.extensions.SystemClock
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -14,7 +11,11 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.stream.Collectors
 
-class ProcessingEventMailBox(val aggregateRootTypeName: String, val aggregateRootId: String, private var handleProcessingEventAction: Action1<ProcessingEvent>) {
+class ProcessingEventMailBox(
+    val aggregateRootTypeName: String,
+    val aggregateRootId: String,
+    private var handleProcessingEventAction: Action1<ProcessingEvent>
+) {
     private val lockObj = Any()
     private val isUsing = AtomicInteger(0)
     private val isRemoved = AtomicInteger(0)
@@ -29,16 +30,20 @@ class ProcessingEventMailBox(val aggregateRootTypeName: String, val aggregateRoo
             if (waitingProcessingEventDict.containsKey(key)) {
                 val processingEvent = waitingProcessingEventDict.remove(key)
                 processingEvent!!.complete()
-                logger.warn("{} invalid waiting message removed, aggregateRootType: {}, aggregateRootId: {}, commandId: {}, eventVersion: {}, eventStreamId: {}, eventTypes: {}, eventIds: {}, nextExpectingEventVersion: {}",
-                        javaClass.name,
-                        processingEvent.message.getAggregateRootTypeName(),
-                        processingEvent.message.getAggregateRootId(),
-                        processingEvent.message.commandId,
-                        processingEvent.message.getVersion(),
-                        processingEvent.message.id,
-                        processingEvent.message.events.stream().map { x: IDomainEvent<*> -> x.javaClass.name }.collect(Collectors.joining("|")),
-                        processingEvent.message.events.stream().map { obj: IDomainEvent<*> -> obj.id }.collect(Collectors.joining("|")),
-                        version)
+                logger.warn(
+                    "{} invalid waiting message removed, aggregateRootType: {}, aggregateRootId: {}, commandId: {}, eventVersion: {}, eventStreamId: {}, eventTypes: {}, eventIds: {}, nextExpectingEventVersion: {}",
+                    javaClass.name,
+                    processingEvent.message.getAggregateRootTypeName(),
+                    processingEvent.message.getAggregateRootId(),
+                    processingEvent.message.commandId,
+                    processingEvent.message.getVersion(),
+                    processingEvent.message.id,
+                    processingEvent.message.events.stream().map { x: IDomainEvent<*> -> x.javaClass.name }
+                        .collect(Collectors.joining("|")),
+                    processingEvent.message.events.stream().map { obj: IDomainEvent<*> -> obj.id }
+                        .collect(Collectors.joining("|")),
+                    version
+                )
             }
         }
     }
@@ -51,7 +56,13 @@ class ProcessingEventMailBox(val aggregateRootTypeName: String, val aggregateRoo
             val nextProcessingEvent = waitingProcessingEventDict.remove(nextExpectingEventVersion)
             if (nextProcessingEvent != null) {
                 enqueueEventStream(nextProcessingEvent)
-                logger.info("{} enqueued waiting processingEvent, aggregateRootId: {}, aggregateRootTypeName: {}, eventVersion: {}", javaClass.name, aggregateRootId, aggregateRootTypeName, nextProcessingEvent.message.getVersion())
+                logger.info(
+                    "{} enqueued waiting processingEvent, aggregateRootId: {}, aggregateRootTypeName: {}, eventVersion: {}",
+                    javaClass.name,
+                    aggregateRootId,
+                    aggregateRootTypeName,
+                    nextProcessingEvent.message.getVersion()
+                )
             }
         }
     }
@@ -65,14 +76,34 @@ class ProcessingEventMailBox(val aggregateRootTypeName: String, val aggregateRoo
             tryRemovedInvalidWaitingMessages(version)
             if (this.nextExpectingEventVersion == null || version > this.nextExpectingEventVersion!!) {
                 nextExpectingEventVersion = version
-                logger.info("{} refreshed nextExpectingEventVersion, aggregateRootId: {}, aggregateRootTypeName: {}, version: {}", javaClass.name, aggregateRootId, aggregateRootTypeName, nextExpectingEventVersion)
+                logger.info(
+                    "{} refreshed nextExpectingEventVersion, aggregateRootId: {}, aggregateRootTypeName: {}, version: {}",
+                    javaClass.name,
+                    aggregateRootId,
+                    aggregateRootTypeName,
+                    nextExpectingEventVersion
+                )
                 tryEnqueueValidWaitingMessage()
                 lastActiveTime = Date()
                 tryRun()
             } else if (version == this.nextExpectingEventVersion) {
-                logger.info("{} equals nextExpectingEventVersion ignored, aggregateRootId: {}, aggregateRootTypeName: {}, version: {}, current nextExpectingEventVersion: {}", javaClass.name, aggregateRootId, aggregateRootTypeName, version, nextExpectingEventVersion)
+                logger.info(
+                    "{} equals nextExpectingEventVersion ignored, aggregateRootId: {}, aggregateRootTypeName: {}, version: {}, current nextExpectingEventVersion: {}",
+                    javaClass.name,
+                    aggregateRootId,
+                    aggregateRootTypeName,
+                    version,
+                    nextExpectingEventVersion
+                )
             } else {
-                logger.info("{} nextExpectingEventVersion ignored, aggregateRootId: {}, aggregateRootTypeName: {}, version: {}, current nextExpectingEventVersion: {}", javaClass.name, aggregateRootId, aggregateRootTypeName, version, nextExpectingEventVersion)
+                logger.info(
+                    "{} nextExpectingEventVersion ignored, aggregateRootId: {}, aggregateRootTypeName: {}, version: {}, current nextExpectingEventVersion: {}",
+                    javaClass.name,
+                    aggregateRootId,
+                    aggregateRootTypeName,
+                    version,
+                    nextExpectingEventVersion
+                )
             }
         }
     }
@@ -83,15 +114,18 @@ class ProcessingEventMailBox(val aggregateRootTypeName: String, val aggregateRoo
             processingEventQueue.add(processingEvent)
             nextExpectingEventVersion = processingEvent.message.getVersion() + 1
             if (logger.isDebugEnabled) {
-                logger.debug("{} enqueued new message, aggregateRootType: {}, aggregateRootId: {}, commandId: {}, eventVersion: {}, eventStreamId: {}, eventTypes: {}, eventIds: {}",
-                        javaClass.name,
-                        processingEvent.message.getAggregateRootTypeName(),
-                        processingEvent.message.getAggregateRootId(),
-                        processingEvent.message.commandId,
-                        processingEvent.message.getVersion(),
-                        processingEvent.message.id,
-                        processingEvent.message.events.stream().map { x: IDomainEvent<*> -> x.javaClass.name }.collect(Collectors.joining("|")),
-                        processingEvent.message.events.stream().map { x: IDomainEvent<*> -> x.id }.collect(Collectors.joining("|"))
+                logger.debug(
+                    "{} enqueued new message, aggregateRootType: {}, aggregateRootId: {}, commandId: {}, eventVersion: {}, eventStreamId: {}, eventTypes: {}, eventIds: {}",
+                    javaClass.name,
+                    processingEvent.message.getAggregateRootTypeName(),
+                    processingEvent.message.getAggregateRootId(),
+                    processingEvent.message.commandId,
+                    processingEvent.message.getVersion(),
+                    processingEvent.message.id,
+                    processingEvent.message.events.stream().map { x: IDomainEvent<*> -> x.javaClass.name }
+                        .collect(Collectors.joining("|")),
+                    processingEvent.message.events.stream().map { x: IDomainEvent<*> -> x.id }
+                        .collect(Collectors.joining("|"))
                 )
             }
         }
@@ -100,21 +134,30 @@ class ProcessingEventMailBox(val aggregateRootTypeName: String, val aggregateRoo
     fun enqueueMessage(processingEvent: ProcessingEvent): EnqueueMessageResult {
         synchronized(lockObj) {
             if (isRemoved()) {
-                throw MailBoxProcessException(String.format("ProcessingEventMailBox was removed, cannot allow to enqueue message, aggregateRootTypeName: %s, aggregateRootId: %s", aggregateRootTypeName, aggregateRootId))
+                throw MailBoxProcessException(
+                    String.format(
+                        "ProcessingEventMailBox was removed, cannot allow to enqueue message, aggregateRootTypeName: %s, aggregateRootId: %s",
+                        aggregateRootTypeName,
+                        aggregateRootId
+                    )
+                )
             }
             val eventStream = processingEvent.message
             if (nextExpectingEventVersion == null || eventStream.getVersion() > this.nextExpectingEventVersion!!) {
                 if (waitingProcessingEventDict.putIfAbsent(eventStream.getVersion(), processingEvent) == null) {
-                    logger.warn("{} waiting message added, aggregateRootType: {}, aggregateRootId: {}, commandId: {}, eventVersion: {}, eventStreamId: {}, eventTypes: {}, eventIds: {}, nextExpectingEventVersion: {}",
-                            javaClass.name,
-                            eventStream.getAggregateRootTypeName(),
-                            eventStream.getAggregateRootId(),
-                            eventStream.commandId,
-                            eventStream.getVersion(),
-                            eventStream.id,
-                            eventStream.events.stream().map { x: IDomainEvent<*> -> x.javaClass.name }.collect(Collectors.joining("|")),
-                            eventStream.events.stream().map { obj: IDomainEvent<*> -> obj.id }.collect(Collectors.joining("|")),
-                            nextExpectingEventVersion
+                    logger.warn(
+                        "{} waiting message added, aggregateRootType: {}, aggregateRootId: {}, commandId: {}, eventVersion: {}, eventStreamId: {}, eventTypes: {}, eventIds: {}, nextExpectingEventVersion: {}",
+                        javaClass.name,
+                        eventStream.getAggregateRootTypeName(),
+                        eventStream.getAggregateRootId(),
+                        eventStream.commandId,
+                        eventStream.getVersion(),
+                        eventStream.id,
+                        eventStream.events.stream().map { x: IDomainEvent<*> -> x.javaClass.name }
+                            .collect(Collectors.joining("|")),
+                        eventStream.events.stream().map { obj: IDomainEvent<*> -> obj.id }
+                            .collect(Collectors.joining("|")),
+                        nextExpectingEventVersion
                     )
                 }
                 return EnqueueMessageResult.AddToWaitingList
@@ -141,7 +184,7 @@ class ProcessingEventMailBox(val aggregateRootTypeName: String, val aggregateRoo
             if (logger.isDebugEnabled) {
                 logger.debug("{} start run, aggregateRootId: {}", javaClass.name, aggregateRootId)
             }
-            CoroutineScope(Dispatchers.IO).launch { processMessage() }
+            processMessage()
         }
     }
 

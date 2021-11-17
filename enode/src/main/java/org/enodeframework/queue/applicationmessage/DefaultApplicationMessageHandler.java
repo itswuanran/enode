@@ -29,7 +29,7 @@ public class DefaultApplicationMessageHandler implements IMessageHandler {
         ApplicationDataMessage appDataMessage = serializeService.deserialize(msg, ApplicationDataMessage.class);
         Class<?> applicationMessageType = typeNameProvider.getType(appDataMessage.getApplicationMessageType());
         IApplicationMessage message = (IApplicationMessage) serializeService.deserialize(appDataMessage.getApplicationMessageData(), applicationMessageType);
-        messageDispatcher.dispatchMessageAsync(message).thenAccept(x -> {
+        messageDispatcher.dispatchMessageAsync(message).whenComplete((x, y) -> {
             context.onMessageHandled(queueMessage);
         });
     }

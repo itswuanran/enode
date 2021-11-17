@@ -17,7 +17,7 @@ interface ICommandService {
     /**
      * Send a command synchronously.
      */
-    fun send(command: ICommand): Boolean
+    suspend fun send(command: ICommand): Boolean
 
     /**
      * Execute a command asynchronously with the default command return type.
@@ -30,7 +30,7 @@ interface ICommandService {
     /**
      * Execute a command asynchronously with the default command return type.
      */
-    fun execute(command: ICommand): CommandResult
+    suspend fun execute(command: ICommand): CommandResult
 
     /**
      * Execute a command asynchronously with the specified command return type.
@@ -44,5 +44,5 @@ interface ICommandService {
     /**
      * Execute a command synchronously with the specified command return type.
      */
-    fun execute(command: ICommand, commandReturnType: CommandReturnType): CommandResult
+    suspend fun execute(command: ICommand, commandReturnType: CommandReturnType): CommandResult
 }

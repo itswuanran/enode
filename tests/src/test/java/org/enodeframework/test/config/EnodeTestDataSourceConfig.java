@@ -67,13 +67,13 @@ public class EnodeTestDataSourceConfig {
     @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "mysql")
     public MySQLPool enodeMySQLPool() {
         MySQLConnectOptions connectOptions = new MySQLConnectOptions()
-                .setPort(3306)
-                .setHost("127.0.0.1")
-                .setDatabase("enode")
-                .setUser(username)
-                .setPassword(password);
+            .setPort(3306)
+            .setHost("127.0.0.1")
+            .setDatabase("enode")
+            .setUser(username)
+            .setPassword(password);
         PoolOptions poolOptions = new PoolOptions()
-                .setMaxSize(5);
+            .setMaxSize(5);
         return MySQLPool.pool(connectOptions, poolOptions);
     }
 
@@ -81,13 +81,13 @@ public class EnodeTestDataSourceConfig {
     @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "pg")
     public PgPool pgPool() {
         PgConnectOptions connectOptions = new PgConnectOptions()
-                .setPort(3306)
-                .setHost("127.0.0.1")
-                .setDatabase("enode")
-                .setUser(username)
-                .setPassword(password);
+            .setPort(3306)
+            .setHost("127.0.0.1")
+            .setDatabase("enode")
+            .setUser(username)
+            .setPassword(password);
         PoolOptions poolOptions = new PoolOptions()
-                .setMaxSize(5);
+            .setMaxSize(5);
         return PgPool.pool(connectOptions, poolOptions);
     }
 

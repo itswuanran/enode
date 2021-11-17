@@ -17,7 +17,9 @@ import java.util.stream.Collectors
 /**
  * @author anruence@gmail.com
  */
-class DefaultCommandProcessor(private val processingCommandHandler: IProcessingCommandHandler, private val scheduleService: IScheduleService) : ICommandProcessor {
+class DefaultCommandProcessor(
+    private val processingCommandHandler: IProcessingCommandHandler, private val scheduleService: IScheduleService
+) : ICommandProcessor {
     private val mailboxDict: ConcurrentMap<String, ProcessingCommandMailbox>
     private val taskName: String
     var aggregateRootMaxInactiveSeconds = 3600 * 24 * 3
@@ -25,27 +27,46 @@ class DefaultCommandProcessor(private val processingCommandHandler: IProcessingC
     var scanExpiredAggregateIntervalMilliseconds = 5000
     override fun process(processingCommand: ProcessingCommand) {
         val aggregateRootId = processingCommand.message.aggregateRootId
-        require(!Strings.isNullOrEmpty(aggregateRootId)) { String.format("aggregateRootId of command cannot be null or empty, commandId: %s", processingCommand.message.id) }
-        var mailbox = mailboxDict.computeIfAbsent(aggregateRootId) { x: String -> ProcessingCommandMailbox(x, processingCommandHandler, commandMailBoxPersistenceMaxBatchSize) }
+        require(!Strings.isNullOrEmpty(aggregateRootId)) {
+            String.format(
+                "aggregateRootId of command cannot be null or empty, commandId: %s", processingCommand.message.id
+            )
+        }
+        var mailbox = mailboxDict.computeIfAbsent(aggregateRootId) { x: String ->
+            ProcessingCommandMailbox(
+                x, processingCommandHandler, commandMailBoxPersistenceMaxBatchSize
+            )
+        }
         var mailboxTryUsingCount = 0L
         while (!mailbox.tryUsing()) {
             Task.sleep(1)
             mailboxTryUsingCount++
             if (mailboxTryUsingCount % 10000 == 0L) {
-                logger.warn("Command mailbox try using count: {}, aggregateRootId: {}", mailboxTryUsingCount, mailbox.aggregateRootId)
+                logger.warn(
+                    "Command mailbox try using count: {}, aggregateRootId: {}",
+                    mailboxTryUsingCount,
+                    mailbox.aggregateRootId
+                )
             }
         }
         if (mailbox.isRemoved()) {
-            mailbox = mailboxDict.computeIfAbsent(aggregateRootId) { x: String -> ProcessingCommandMailbox(x, processingCommandHandler, commandMailBoxPersistenceMaxBatchSize) }
+            mailbox = mailboxDict.computeIfAbsent(aggregateRootId) { x: String ->
+                ProcessingCommandMailbox(
+                    x, processingCommandHandler, commandMailBoxPersistenceMaxBatchSize
+                )
+            }
         }
         mailbox.enqueueMessage(processingCommand)
         mailbox.exitUsing()
     }
 
     override fun start() {
-        scheduleService.startTask(taskName, { cleanInactiveMailbox() },
-                scanExpiredAggregateIntervalMilliseconds,
-                scanExpiredAggregateIntervalMilliseconds)
+        scheduleService.startTask(
+            taskName,
+            { cleanInactiveMailbox() },
+            scanExpiredAggregateIntervalMilliseconds,
+            scanExpiredAggregateIntervalMilliseconds
+        )
     }
 
     override fun stop() {
@@ -58,8 +79,8 @@ class DefaultCommandProcessor(private val processingCommandHandler: IProcessingC
 
     private fun cleanInactiveMailbox() {
         val inactiveList: List<Map.Entry<String, ProcessingCommandMailbox>> = mailboxDict.entries.stream()
-                .filter { entry: Map.Entry<String, ProcessingCommandMailbox> -> isMailBoxAllowRemove(entry.value) }
-                .collect(Collectors.toList())
+            .filter { entry: Map.Entry<String, ProcessingCommandMailbox> -> isMailBoxAllowRemove(entry.value) }
+            .collect(Collectors.toList())
         inactiveList.forEach(Consumer { entry: Map.Entry<String, ProcessingCommandMailbox> ->
             if (isMailBoxAllowRemove(entry.value)) {
                 val removed = mailboxDict.remove(entry.key)

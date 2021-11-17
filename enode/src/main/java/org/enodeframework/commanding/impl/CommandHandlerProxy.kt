@@ -1,10 +1,12 @@
 package org.enodeframework.commanding.impl
 
+import kotlinx.coroutines.future.asDeferred
 import org.enodeframework.commanding.ICommand
 import org.enodeframework.commanding.ICommandContext
 import org.enodeframework.commanding.ICommandHandlerProxy
 import java.lang.invoke.MethodHandle
 import java.lang.reflect.Method
+import java.util.concurrent.CompletionStage
 import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 import kotlin.reflect.jvm.kotlinFunction
 
@@ -21,12 +23,16 @@ class CommandHandlerProxy : ICommandHandlerProxy {
             invokeSuspend(getInnerObject(), context, command)
             return
         }
-        methodHandle.invoke(getInnerObject(), context, command)
+        val result = methodHandle.invoke(getInnerObject(), context, command)
+        if (result is CompletionStage<*>) {
+            result.asDeferred().await()
+        }
     }
 
-    private suspend fun invokeSuspend(obj: Any, context: ICommandContext, command: ICommand): Any? = suspendCoroutineUninterceptedOrReturn { continuation ->
-        methodHandle.invoke(obj, context, command, continuation)
-    }
+    private suspend fun invokeSuspend(obj: Any, context: ICommandContext, command: ICommand): Any? =
+        suspendCoroutineUninterceptedOrReturn { continuation ->
+            methodHandle.invoke(obj, context, command, continuation)
+        }
 
     override fun getInnerObject(): Any {
         return innerObject

@@ -1,6 +1,6 @@
 package org.enodeframework.mongo
 
-import QueryVersionHandler
+import FindPublishedVersionHandler
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
 import io.vertx.core.json.JsonObject
@@ -42,7 +42,7 @@ class MongoPublishedVersionStore @JvmOverloads constructor(
         document.put("aggregateRootId", aggregateRootId)
         document.put("version", 1)
         document.put("gmtCreate", Date().toInstant())
-        val publishedVersionHandler = InsertPublishedVersionHandler(configuration)
+        val publishedVersionHandler = AddPublishedVersionHandler(configuration)
         mongoClient.insert(configuration.publishedTableName, document, publishedVersionHandler)
         return publishedVersionHandler.future
     }
@@ -64,7 +64,7 @@ class MongoPublishedVersionStore @JvmOverloads constructor(
         )
         val queryJson = JsonObject(filter.toBsonDocument().toJson())
         val updateJson = JsonObject(update.toBsonDocument().toJson())
-        val publishHandle = UpdatePublishedVersionHandler(configuration)
+        val publishHandle = ChangePublishedVersionHandler()
         mongoClient.updateCollection(configuration.publishedTableName, queryJson, updateJson, publishHandle)
         return publishHandle.future
     }
@@ -79,7 +79,7 @@ class MongoPublishedVersionStore @JvmOverloads constructor(
             Filters.eq("aggregateRootId", aggregateRootId)
         )
         val queryJson = JsonObject(updateFilter.toBsonDocument().toJson())
-        val queryVersionHandler = QueryVersionHandler()
+        val queryVersionHandler = FindPublishedVersionHandler()
         mongoClient.findOne(configuration.publishedTableName, queryJson, null, queryVersionHandler)
         return queryVersionHandler.future
     }

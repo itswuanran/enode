@@ -13,16 +13,17 @@ import io.vertx.ext.jdbc.JDBCClient
 import io.vertx.ext.sql.ResultSet
 import io.vertx.ext.sql.SQLClient
 import io.vertx.ext.sql.SQLConnection
-import org.enodeframework.configurations.DbType
-import org.enodeframework.configurations.EventStoreConfiguration
 import org.enodeframework.common.exception.EventStoreException
 import org.enodeframework.common.exception.IORuntimeException
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.common.serializing.ISerializeService
+import org.enodeframework.configurations.DbType
+import org.enodeframework.configurations.EventStoreConfiguration
 import org.enodeframework.eventing.*
 import org.slf4j.LoggerFactory
 import java.sql.SQLException
-import java.time.ZonedDateTime
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.regex.Pattern
@@ -125,7 +126,7 @@ class JDBCEventStore(
             array.add(domainEventStream.aggregateRootTypeName)
             array.add(domainEventStream.commandId)
             array.add(domainEventStream.version)
-            array.add(domainEventStream.timestamp.toInstant())
+            array.add(domainEventStream.timestamp)
             array.add(serializeService.serialize(eventSerializer.serialize(domainEventStream.events())))
             jsonArrays.add(array)
         }
@@ -331,12 +332,15 @@ class JDBCEventStore(
 
     }
 
+    /**
+     * 数据库DATETIME类型LocalDateTime
+     */
     private fun convertFrom(record: JsonObject): DomainEventStream {
         return DomainEventStream(
             record.getString("command_id"),
             record.getString("aggregate_root_id"),
             record.getString("aggregate_root_type_name"),
-            Date.from(ZonedDateTime.parse(record.getString("gmt_create")).toInstant()),
+            Date.from((record.getValue("gmt_create") as LocalDateTime).atZone(ZoneId.systemDefault()).toInstant()),
             eventSerializer.deserialize(
                 serializeService.deserialize(
                     record.getString("events"),

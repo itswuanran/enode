@@ -16,6 +16,7 @@ import org.enodeframework.samples.domain.bank.deposittransaction.DepositTransact
 import org.enodeframework.samples.domain.bank.deposittransaction.DepositTransactionStartedEvent;
 
 import javax.annotation.Resource;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * 银行存款交易流程管理器，用于协调银行存款交易流程中各个参与者聚合根之间的消息交互
@@ -31,7 +32,7 @@ public class DepositTransactionProcessManager {
     private ICommandService commandService;
 
     @Subscribe
-    public void handleAsync(DepositTransactionStartedEvent evnt) {
+    public CompletableFuture<Boolean> handleAsync(DepositTransactionStartedEvent evnt) {
         AddTransactionPreparationCommand command = new AddTransactionPreparationCommand(
             evnt.accountId,
             evnt.getAggregateRootId(),
@@ -39,33 +40,35 @@ public class DepositTransactionProcessManager {
             PreparationType.CREDIT_PREPARATION,
             evnt.amount);
         command.setId(evnt.getId());
-        Task.await(commandService.sendAsync(command));
+        return commandService.sendAsync(command);
     }
 
     @Subscribe
-    public void handleAsync(TransactionPreparationAddedEvent evnt) {
+    public CompletableFuture<Boolean> handleAsync(TransactionPreparationAddedEvent evnt) {
         if (evnt.transactionPreparation.transactionType == TransactionType.DEPOSIT_TRANSACTION
             && evnt.transactionPreparation.preparationType == PreparationType.CREDIT_PREPARATION) {
             ConfirmDepositPreparationCommand command = new ConfirmDepositPreparationCommand(evnt.transactionPreparation.transactionId);
             command.setId(evnt.getId());
-            Task.await(commandService.sendAsync(command));
+            return commandService.sendAsync(command);
         }
+        return Task.completedTask;
     }
 
     @Subscribe
-    public void handleAsync(DepositTransactionPreparationCompletedEvent evnt) {
+    public CompletableFuture<Boolean> handleAsync(DepositTransactionPreparationCompletedEvent evnt) {
         CommitTransactionPreparationCommand command = new CommitTransactionPreparationCommand(evnt.accountId, evnt.getAggregateRootId());
         command.setId(evnt.getId());
-        Task.await(commandService.sendAsync(command));
+        return (commandService.sendAsync(command));
     }
 
     @Subscribe
-    public void handleAsync(TransactionPreparationCommittedEvent evnt) {
+    public CompletableFuture<Boolean> handleAsync(TransactionPreparationCommittedEvent evnt) {
         if (evnt.transactionPreparation.transactionType == TransactionType.DEPOSIT_TRANSACTION &&
             evnt.transactionPreparation.preparationType == PreparationType.CREDIT_PREPARATION) {
             ConfirmDepositCommand command = new ConfirmDepositCommand(evnt.transactionPreparation.transactionId);
             command.setId(evnt.getId());
-            Task.await(commandService.sendAsync(command));
+            return (commandService.sendAsync(command));
         }
+        return Task.completedTask;
     }
 }

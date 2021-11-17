@@ -1,13 +1,7 @@
 package org.enodeframework.commanding
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.future.asDeferred
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import org.enodeframework.common.io.Task
 import org.enodeframework.common.extensions.SystemClock
+import org.enodeframework.common.io.Task
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.CompletableFuture
@@ -19,12 +13,10 @@ import java.util.concurrent.atomic.AtomicLong
  * @author anruence@gmail.com
  */
 class ProcessingCommandMailbox(
-    var aggregateRootId: String,
-    private val messageHandler: IProcessingCommandHandler,
-    private val batchSize: Int
+    var aggregateRootId: String, private val messageHandler: IProcessingCommandHandler, private val batchSize: Int
 ) {
     private val lockObj = Any()
-    private val mutex = Mutex()
+    private val asyncLockObj = Any()
     private var messageDict: ConcurrentHashMap<Long, ProcessingCommand> = ConcurrentHashMap()
     private var duplicateCommandIdDict: ConcurrentHashMap<String, Byte> = ConcurrentHashMap()
     private val isUsing = AtomicInteger(0)
@@ -89,14 +81,14 @@ class ProcessingCommandMailbox(
                     consumingSequence.get()
                 )
             }
-            CoroutineScope(Dispatchers.IO).launch { processMessagesAwait() }
+            processMessages()
         }
     }
 
     /**
      * 请求完成MailBox的单次运行，如果MailBox中还有剩余消息，则继续尝试运行下一次
      */
-    fun completeRun() {
+    private fun completeRun() {
         lastActiveTime = Date()
         if (logger.isDebugEnabled) {
             logger.debug("{} complete run, aggregateRootId: {}", javaClass.name, aggregateRootId)
@@ -194,30 +186,42 @@ class ProcessingCommandMailbox(
         return SystemClock.now() - lastActiveTime.time >= timeoutSeconds
     }
 
-    private suspend fun processMessagesAwait() {
-        mutex.withLock {
+    private fun processMessages() {
+        synchronized(asyncLockObj) {
             lastActiveTime = Date()
             try {
-                var scannedCount = 0
-                while (getTotalUnHandledMessageCount() > 0 && scannedCount < batchSize && !isPauseRequested) {
-                    val message = getMessage(consumingSequence.get())
-                    if (message != null) {
-                        if (duplicateCommandIdDict.containsKey(message.message.id)) {
-                            message.isDuplicated = true
-                        }
-                        messageHandler.handleAsync(message).asDeferred().await()
-                    }
-                    consumingSequence.incrementAndGet()
-                    scannedCount++
-                }
+                processMessagesRecursively(getTotalUnHandledMessageCount(), 0)
             } catch (ex: Exception) {
                 logger.error("{} run has unknown exception, aggregateRootId: {}", javaClass.name, aggregateRootId, ex)
                 Task.sleep(1)
-            } finally {
                 completeRun()
             }
         }
     }
+
+    /**
+     * 处理消息的递归实现
+     */
+    private fun processMessagesRecursively(unHandledMessageCount: Long, scannedCount: Long) {
+        if (!(unHandledMessageCount > 0 && scannedCount < batchSize && !isPauseRequested)) {
+            completeRun()
+            return
+        }
+        val message = getMessage(consumingSequence.get())
+        if (message != null) {
+            if (duplicateCommandIdDict.containsKey(message.message.id)) {
+                message.isDuplicated = true
+            }
+            messageHandler.handleAsync(message).whenComplete { _, _ ->
+                consumingSequence.incrementAndGet()
+                processMessagesRecursively(getTotalUnHandledMessageCount(), scannedCount + 1)
+            }
+        } else {
+            consumingSequence.incrementAndGet()
+            processMessagesRecursively(getTotalUnHandledMessageCount(), scannedCount + 1)
+        }
+    }
+
 
     private fun getMessage(sequence: Long): ProcessingCommand? {
         return messageDict[sequence]
@@ -248,7 +252,7 @@ class ProcessingCommandMailbox(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(ProcessingCommandMailbox::class.java)
+        private val logger = LoggerFactory.getLogger(ProcessingCommandMailbox::class.java)
     }
 
     init {

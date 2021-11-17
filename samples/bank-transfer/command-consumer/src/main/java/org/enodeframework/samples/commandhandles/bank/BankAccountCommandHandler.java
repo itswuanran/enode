@@ -3,7 +3,6 @@ package org.enodeframework.samples.commandhandles.bank;
 import org.enodeframework.annotation.Command;
 import org.enodeframework.annotation.Subscribe;
 import org.enodeframework.commanding.ICommandContext;
-import org.enodeframework.common.io.Task;
 import org.enodeframework.messaging.IApplicationMessage;
 import org.enodeframework.samples.applicationmessages.AccountValidateFailedMessage;
 import org.enodeframework.samples.applicationmessages.AccountValidatePassedMessage;
@@ -36,10 +35,12 @@ public class BankAccountCommandHandler {
      * 添加预操作
      */
     @Subscribe
-    public void handleAsync(ICommandContext context, AddTransactionPreparationCommand command) {
+    public CompletableFuture<BankAccount> handleAsync(ICommandContext context, AddTransactionPreparationCommand command) {
         CompletableFuture<BankAccount> future = context.getAsync(command.getAggregateRootId(), BankAccount.class);
-        BankAccount account = Task.await(future);
-        account.addTransactionPreparation(command.transactionId, command.transactionType, command.preparationType, command.amount);
+        future.thenAccept(bankAccount -> {
+            bankAccount.addTransactionPreparation(command.transactionId, command.transactionType, command.preparationType, command.amount);
+        });
+        return future;
     }
 
     /**
@@ -59,9 +60,11 @@ public class BankAccountCommandHandler {
      * 提交预操作
      */
     @Subscribe
-    public void handleAsync(ICommandContext context, CommitTransactionPreparationCommand command) {
+    public CompletableFuture<BankAccount> handleAsync(ICommandContext context, CommitTransactionPreparationCommand command) {
         CompletableFuture<BankAccount> future = context.getAsync(command.getAggregateRootId(), BankAccount.class);
-        BankAccount account = Task.await(future);
-        account.commitTransactionPreparation(command.transactionId);
+        future.thenAccept(bankAccount -> {
+            bankAccount.commitTransactionPreparation(command.transactionId);
+        });
+        return future;
     }
 }

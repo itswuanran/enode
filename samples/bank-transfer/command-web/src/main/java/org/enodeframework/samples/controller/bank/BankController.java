@@ -1,5 +1,6 @@
 package org.enodeframework.samples.controller.bank;
 
+import com.google.common.base.Stopwatch;
 import org.enodeframework.commanding.CommandReturnType;
 import org.enodeframework.commanding.ICommandService;
 import org.enodeframework.common.io.Task;
@@ -14,6 +15,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
 @RestController
@@ -44,18 +48,35 @@ public class BankController {
     }
 
     @RequestMapping("perf")
-    public Mono perf(@RequestParam("count") int totalCount) throws Exception {
-        long start = System.currentTimeMillis();
-        CountDownLatch latch = new CountDownLatch(totalCount);
-        for (int i = 0; i < totalCount; i++) {
-            try {
-                deposit();
-            } finally {
-                latch.countDown();
-            }
+    public Mono perf(@RequestParam("count") int accountCount) {
+        List<String> accountList = new ArrayList<>();
+        int transactionCount = 1000;
+        double depositAmount = 1000000000D;
+        double transferAmount = 100D;
+        //创建银行账户
+        for (int i = 0; i < accountCount; i++) {
+            String accountId = IdGenerator.nextId();
+            commandService.executeAsync(new CreateAccountCommand(accountId, "SampleAccount" + i), CommandReturnType.EventHandled).join();
+            accountList.add(accountId);
         }
-        latch.await();
-        long end = System.currentTimeMillis();
-        return Mono.justOrEmpty(end - start);
+        //每个账户都存入初始额度
+        for (String accountId : accountList) {
+            commandService.sendAsync(new StartDepositTransactionCommand(IdGenerator.nextId(), accountId, depositAmount)).join();
+        }
+        CountDownLatch countDownLatch = new CountDownLatch(transactionCount);
+        Stopwatch watch = Stopwatch.createStarted();
+        for (int i = 0; i < transactionCount; i++) {
+            int sourceAccountIndex = new Random().nextInt(accountCount - 1);
+            int targetAccountIndex = sourceAccountIndex + 1;
+            String sourceAccount = accountList.get(sourceAccountIndex);
+            String targetAccount = accountList.get(targetAccountIndex);
+            commandService.executeAsync(new StartTransferTransactionCommand(IdGenerator.nextId(), new TransferTransactionInfo(sourceAccount, targetAccount, transferAmount)), CommandReturnType.EventHandled)
+                .whenComplete((x, y) -> {
+                    countDownLatch.countDown();
+                });
+        }
+        Task.await(countDownLatch);
+        watch.stop();
+        return Mono.justOrEmpty(watch.elapsed());
     }
 }

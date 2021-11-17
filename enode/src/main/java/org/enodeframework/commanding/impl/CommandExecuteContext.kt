@@ -1,6 +1,7 @@
 package org.enodeframework.commanding.impl
 
 import com.google.common.base.Strings
+import kotlinx.coroutines.future.asDeferred
 import org.enodeframework.commanding.CommandResult
 import org.enodeframework.commanding.ICommandExecuteContext
 import org.enodeframework.common.exception.AggregateRootAlreadyExistException
@@ -15,7 +16,6 @@ import org.enodeframework.queue.IMessageContext
 import org.enodeframework.queue.ISendReplyService
 import org.enodeframework.queue.QueueMessage
 import org.enodeframework.queue.command.CommandMessage
-import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
@@ -47,7 +47,11 @@ class CommandExecuteContext(
         } else sendReplyService.sendCommandReply(commandResult, commandMessage.replyAddress)
     }
 
-    override fun add(aggregateRoot: IAggregateRoot) {
+    override suspend fun add(aggregateRoot: IAggregateRoot) {
+        addAsync(aggregateRoot).asDeferred().await()
+    }
+
+    private fun addInternal(aggregateRoot: IAggregateRoot) {
         Assert.nonNull(aggregateRoot, "aggregateRoot")
         if (trackingAggregateRootDict.containsKey(aggregateRoot.uniqueId)) {
             throw AggregateRootAlreadyExistException(aggregateRoot.uniqueId, aggregateRoot.javaClass)
@@ -55,11 +59,8 @@ class CommandExecuteContext(
         trackingAggregateRootDict[aggregateRoot.uniqueId] = aggregateRoot
     }
 
-    /**
-     * Add a new aggregate into the current command context synchronously, and then return a completed task object.
-     */
     override fun addAsync(aggregateRoot: IAggregateRoot): CompletableFuture<Boolean> {
-        add(aggregateRoot)
+        addInternal(aggregateRoot)
         return Task.completedTask
     }
 
@@ -98,12 +99,12 @@ class CommandExecuteContext(
         return getAsync(id, true, aggregateRootType)
     }
 
-    override fun <T : IAggregateRoot> get(id: Any, firstFromCache: Boolean, aggregateRootType: Class<T>): T {
-        return getAsync(id, firstFromCache, aggregateRootType).join()
+    override suspend fun <T : IAggregateRoot> get(id: Any, firstFromCache: Boolean, aggregateRootType: Class<T>): T {
+        return getAsync(id, firstFromCache, aggregateRootType).asDeferred().await()
     }
 
-    override fun <T : IAggregateRoot> get(id: Any, aggregateRootType: Class<T>): T {
-        return getAsync(id, aggregateRootType).join()
+    override suspend fun <T : IAggregateRoot> get(id: Any, aggregateRootType: Class<T>): T {
+        return getAsync(id, aggregateRootType).asDeferred().await()
     }
 
     override val trackedAggregateRoots: List<IAggregateRoot>

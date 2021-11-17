@@ -1,6 +1,5 @@
 package org.enodeframework.samples.commandhandles.note
 
-import kotlinx.coroutines.future.asDeferred
 import org.enodeframework.annotation.Command
 import org.enodeframework.annotation.Subscribe
 import org.enodeframework.commanding.ICommandContext
@@ -11,7 +10,7 @@ import org.enodeframework.samples.domain.note.Note
 class ChangeNoteTitleCommandHandler {
     @Subscribe
     suspend fun handleAsync(context: ICommandContext, command: ChangeNoteTitleCommand) {
-        val note = context.getAsync(command.getAggregateRootId(), true, Note::class.java).asDeferred().await()
+        val note = context.get(command.getAggregateRootId(), true, Note::class.java)
         note.changeTitle(command.title)
     }
 }

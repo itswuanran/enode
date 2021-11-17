@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 import java.util.regex.Pattern
 
-class BulkEventHandler(private val configuration: EventStoreConfiguration) :
+class AddDomainEventsHandler(private val configuration: EventStoreConfiguration) :
     Handler<AsyncResult<MongoClientBulkWriteResult>> {
 
     private val code = 11000

@@ -5,31 +5,32 @@
 > 真正的面向对象编程中的对象应该是一个”活“的具有主观能动性的存在于内存中的客观存在，它们不仅有状态而且还有自主行为。
 
 1. 对象的状态可以表现出来被别人看到，但是必须是只读的，没有人可以直接去修改一个对象的状态，它的状态必须是由它自己的行为导致自己的状态的改变。
-1. 对象的行为就是对象所具有的某种功能。对象的行为本质上应该是对某个消息的主动响应，这里强调的是主动，就是说对象的行为不可以被别人使用，而只能自己主动的去表现出该行为。
+2. 对象的行为就是对象所具有的某种功能。对象的行为本质上应该是对某个消息的主动响应，这里强调的是主动，就是说对象的行为不可以被别人使用，而只能自己主动的去表现出该行为。
 
 ## 框架特色
 
-- 一个`DDD`开发框架，完美支持基于六边形架构思想开发
 - 实现`CQRS`架构，解决`CQRS`架构的`C`端的高并发写的问题，以及`CQ`两端数据同步的顺序性保证和幂等性，支持`C`端完成后立即返回`Command`的结果，也支持`CQ`两端都完成后才返回`Command`的结果
-- 聚合根常驻内存（`In-Memory Domain Model`），可以完全以`OO`的方式来设计实现聚合根，不必为`ORM`的阻抗失衡而烦恼；
+- 聚合根常驻内存（`In-Memory Domain Model`），设计上尽可能的避免了聚合根重建，可以完全以`OO`的方式来设计实现聚合根，不必为`ORM`的阻抗失衡而烦恼
 - 基于聚合根`ID` + 事件版本号的唯一索引，实现聚合根的乐观并发控制
 - 通过聚合根`ID`对命令或事件进行路由，聚合根的处理基于`Actor`思想，做到最小的并发冲突、最大的并行处理，`Group Commit Domain event`
 - 架构层面严格规范了开发人员该如何写代码，和`DDD`开发紧密结合，严格遵守聚合内强一致性、聚合之间最终一致性的原则
 - 先进的`Saga`机制，以事件驱动的流程管理器（`Process Manager`）的方式支持一个用户操作跨多个聚合根的业务场景，如订单处理，从而避免分布式事务的使用
 - 基于`ES`（`Event Sourcing`）的思想持久化`C`端的聚合根的状态，让`C`端的数据持久化变得通用化，具有一切`ES`的优点
-- 通过基于分布式消息队列横向扩展的方式实现系统的可伸缩性（基于队列的动态扩容/缩容）
+- 在设计上完全与IoC容器解耦，同时保留了扩展性，目前适配了SpringBoot
+- 通过基于分布式消息队列横向扩展的方式实现系统的可伸缩性（基于队列的动态扩容/缩容），接口抽象极简，只要求最基础的队列能力，目前适配了`Kafka`、`RocketMQ（ONS）`、`Pulsar`
+- EventStore内置适配了`JDBC`、`MySQL`、`PostgreSQL`、`MongoDB`存储，可针对性实现对应扩展
+- 框架完全采用响应式编程理念，在`db`层面使用了异步驱动，同时集成了`kotlin coroutine`
 
 ## 整体架构
 
 `enode`是一个基于【`DDD`】【`CQRS`】【`ES`】【`EDA`】【`In-Memory`】架构风格的应用框架，实现了`CQRS`架构面临的大部分技术问题，让开发者可以专注于业务逻辑和业务流程的开发，而无需关心纯技术问题。
 
-![](enode-arch.png)
+![](enode-architecture.svg)
 
 ## 最佳实践
+- 可参考samples模块中的例子
 
-基于`CQRS`思想
-
-> [conference](https://github.com/anruence/conference)
+> 目前基于enode开发的项目 [conference](https://github.com/anruence/conference)
 
 ## 详细介绍
 
@@ -284,10 +285,19 @@ db.published_version.createIndex({processorName:1,aggregateRootId:1},{unique:tru
 启动时会扫描包路径下的注解，注册成`Spring Bean`，和`@Component`作用相同。
 
 ### 消息
-
-**_更新了`kotlin`支持，`@Subscribe` 方法体支持`suspend`标记。_**
-
-发送命令消息代码：
+目前enode函数调用的实现是放在`kotlin coroutine`中来执行的，这里涉及到实际执行的任务类型，针对计算密集型和IO密集型的任务，目前没有做可定制化的配置，后续的版本会考虑加上，
+**使用也很简单，`@Subscribe` 方法体加上`suspend`标记即可**。
+```kotlin
+@Command
+class ChangeNoteTitleCommandHandler {
+    @Subscribe
+    suspend fun handleAsync(context: ICommandContext, command: ChangeNoteTitleCommand) {
+        val note = context.get(command.getAggregateRootId(), true, Note::class.java)
+        note.changeTitle(command.title)
+    }
+}
+```
+发送命令消息：
 
 ```java
 CompletableFuture<CommandResult> future = commandService.executeAsync(createNoteCommand, CommandReturnType.EventHandled);

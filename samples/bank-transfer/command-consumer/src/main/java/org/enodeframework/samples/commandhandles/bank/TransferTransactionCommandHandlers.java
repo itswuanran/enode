@@ -3,7 +3,6 @@ package org.enodeframework.samples.commandhandles.bank;
 import org.enodeframework.annotation.Command;
 import org.enodeframework.annotation.Subscribe;
 import org.enodeframework.commanding.ICommandContext;
-import org.enodeframework.common.io.Task;
 import org.enodeframework.samples.commands.bank.CancelTransferTransactionCommand;
 import org.enodeframework.samples.commands.bank.ConfirmAccountValidatePassedCommand;
 import org.enodeframework.samples.commands.bank.ConfirmTransferInCommand;
@@ -34,44 +33,56 @@ public class TransferTransactionCommandHandlers {
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, ConfirmAccountValidatePassedCommand command) {
+    public CompletableFuture<TransferTransaction> handleAsync(ICommandContext context, ConfirmAccountValidatePassedCommand command) {
         CompletableFuture<TransferTransaction> future = context.getAsync(command.getAggregateRootId(), TransferTransaction.class);
-        TransferTransaction transaction = Task.await(future);
-        transaction.confirmAccountValidatePassed(command.accountId);
+        future.thenAccept(transaction -> {
+            transaction.confirmAccountValidatePassed(command.accountId);
+        });
+        return future;
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, ConfirmTransferOutPreparationCommand command) {
+    public CompletableFuture<TransferTransaction> handleAsync(ICommandContext context, ConfirmTransferOutPreparationCommand command) {
         CompletableFuture<TransferTransaction> future = context.getAsync(command.getAggregateRootId(), TransferTransaction.class);
-        TransferTransaction transaction = Task.await(future);
-        transaction.confirmTransferOutPreparation();
+        future.thenAccept(transaction -> {
+            transaction.confirmTransferOutPreparation();
+        });
+        return future;
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, ConfirmTransferInPreparationCommand command) {
+    public CompletableFuture<TransferTransaction> handleAsync(ICommandContext context, ConfirmTransferInPreparationCommand command) {
         CompletableFuture<TransferTransaction> future = context.getAsync(command.getAggregateRootId(), TransferTransaction.class);
-        TransferTransaction transaction = Task.await(future);
-        transaction.confirmTransferInPreparation();
+        future.thenAccept(transaction -> {
+            transaction.confirmTransferInPreparation();
+        });
+        return future;
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, ConfirmTransferOutCommand command) {
+    public CompletableFuture<TransferTransaction> handleAsync(ICommandContext context, ConfirmTransferOutCommand command) {
         CompletableFuture<TransferTransaction> future = context.getAsync(command.getAggregateRootId(), TransferTransaction.class);
-        TransferTransaction transaction = Task.await(future);
-        transaction.confirmTransferOut();
+        future.thenAccept(transaction -> {
+            transaction.confirmTransferOut();
+        });
+        return future;
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, ConfirmTransferInCommand command) {
+    public CompletableFuture<TransferTransaction> handleAsync(ICommandContext context, ConfirmTransferInCommand command) {
         CompletableFuture<TransferTransaction> future = context.getAsync(command.getAggregateRootId(), TransferTransaction.class);
-        TransferTransaction transaction = Task.await(future);
-        transaction.confirmTransferIn();
+        future.thenAccept(transaction -> {
+            transaction.confirmTransferIn();
+        });
+        return future;
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, CancelTransferTransactionCommand command) {
+    public CompletableFuture<TransferTransaction> handleAsync(ICommandContext context, CancelTransferTransactionCommand command) {
         CompletableFuture<TransferTransaction> future = context.getAsync(command.getAggregateRootId(), TransferTransaction.class);
-        TransferTransaction transaction = Task.await(future);
-        transaction.cancel();
+        future.thenAccept(transaction -> {
+            transaction.cancel();
+        });
+        return future;
     }
 }

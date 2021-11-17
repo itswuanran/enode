@@ -22,11 +22,11 @@ public class TestAggregate extends AggregateRoot<String> {
         applyEvent(new TestAggregateTitleChanged(title));
     }
 
-    public void ThrowException(boolean publishableException) throws Exception {
+    public void throwException(boolean publishableException) {
         if (publishableException) {
             throw new TestPublishableException(id);
         } else {
-            throw new Exception("TestException");
+            throw new RuntimeException("TestException");
         }
     }
 
