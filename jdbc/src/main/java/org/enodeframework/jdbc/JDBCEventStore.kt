@@ -22,6 +22,7 @@ import org.enodeframework.configurations.EventStoreConfiguration
 import org.enodeframework.eventing.*
 import org.slf4j.LoggerFactory
 import java.sql.SQLException
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
@@ -332,15 +333,30 @@ class JDBCEventStore(
 
     }
 
+    private fun parseDate(value: Any): Date {
+        if (value is Date) {
+            return value
+        }
+        if (value is LocalDateTime) {
+            return Date.from(value.atZone(ZoneId.systemDefault()).toInstant());
+        }
+        if (value is LocalDate) {
+            return Date.from(value.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+        }
+        return Date()
+    }
+
     /**
      * 数据库DATETIME类型LocalDateTime
      */
     private fun convertFrom(record: JsonObject): DomainEventStream {
+        val gmtCreate = record.getValue("gmt_create")
+        val date = parseDate(gmtCreate)
         return DomainEventStream(
             record.getString("command_id"),
             record.getString("aggregate_root_id"),
             record.getString("aggregate_root_type_name"),
-            Date.from((record.getValue("gmt_create") as LocalDateTime).atZone(ZoneId.systemDefault()).toInstant()),
+            date,
             eventSerializer.deserialize(
                 serializeService.deserialize(
                     record.getString("events"),
@@ -446,7 +462,7 @@ class JDBCEventStore(
         private const val SELECT_ONE_BY_COMMAND_ID_SQL =
             "SELECT * FROM %s WHERE aggregate_root_id = ? AND command_id = ?"
 
-        private val PATTERN_POSTGRESQL = Pattern.compile("=\\(.*, (.*)\\) already exists.$")
+        private val PATTERN_POSTGRESQL = Pattern.compile("=\\(.*, (.*)\\) already exists.")
         private val PATTERN_MYSQL = Pattern.compile("^Duplicate entry '.*-(.*)' for key")
     }
 

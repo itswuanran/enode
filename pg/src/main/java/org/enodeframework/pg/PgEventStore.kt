@@ -9,13 +9,14 @@ import io.vertx.pgclient.PgException
 import io.vertx.pgclient.PgPool
 import io.vertx.sqlclient.Row
 import io.vertx.sqlclient.Tuple
-import org.enodeframework.configurations.EventStoreConfiguration
 import org.enodeframework.common.exception.EventStoreException
 import org.enodeframework.common.exception.IORuntimeException
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.common.serializing.ISerializeService
+import org.enodeframework.configurations.EventStoreConfiguration
 import org.enodeframework.eventing.*
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
@@ -86,7 +87,7 @@ class PgEventStore(
         aggregateRootId: String,
         eventStreamList: List<DomainEventStream>
     ): CompletableFuture<AggregateEventAppendResult> {
-        val sql = String.format(INSERT_EVENT_SQL, configuration)
+        val sql = String.format(INSERT_EVENT_SQL, configuration.eventTableName)
         val future = CompletableFuture<AggregateEventAppendResult>()
         val batch: MutableList<Tuple> = ArrayList<Tuple>()
         for (domainEventStream in eventStreamList) {
@@ -123,7 +124,7 @@ class PgEventStore(
                     // 不同的数据库在冲突时的错误信息不同，可以通过解析错误信息的方式将冲突的commandId找出来，这里要求id不能命中正则的规则（不包含-字符）
                     val appendResult = AggregateEventAppendResult()
                     appendResult.eventAppendStatus = EventAppendStatus.DuplicateCommand
-                    val commandId = this.getDuplicatedId(throwable.message ?: "")
+                    val commandId = this.getDuplicatedId(throwable.detail ?: "")
                     if (!Strings.isNullOrEmpty(commandId)) {
                         appendResult.duplicateCommandIds = Lists.newArrayList(commandId)
                     }
@@ -276,12 +277,27 @@ class PgEventStore(
 
     }
 
+    private fun parseDate(value: Any): Date {
+        if (value is Date) {
+            return value
+        }
+        if (value is LocalDateTime) {
+            return Date.from(value.atZone(ZoneId.systemDefault()).toInstant());
+        }
+        if (value is LocalDate) {
+            return Date.from(value.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+        }
+        return Date()
+    }
+
     private fun convertFrom(record: JsonObject): DomainEventStream {
+        val gmtCreate = record.getValue("gmt_create")
+        val date = parseDate(gmtCreate)
         return DomainEventStream(
             record.getString("command_id"),
             record.getString("aggregate_root_id"),
             record.getString("aggregate_root_type_name"),
-            Date.from(LocalDateTime.parse(record.getString("gmt_create")).atZone(ZoneId.systemDefault()).toInstant()),
+            date,
             eventSerializer.deserialize(
                 serializeService.deserialize(
                     record.getString("events"),
@@ -306,13 +322,13 @@ class PgEventStore(
     companion object {
         private val logger = LoggerFactory.getLogger(PgEventStore::class.java)
         private const val INSERT_EVENT_SQL =
-            "INSERT INTO %s (aggregate_root_id, aggregate_root_type_name, command_id, version, gmt_create, events) VALUES (?, ?, ?, ?, ?, ?)"
+            "INSERT INTO %s (aggregate_root_id, aggregate_root_type_name, command_id, version, gmt_create, events) VALUES ($1, $2, $3, $4, $5, $6)"
         private const val SELECT_MANY_BY_VERSION_SQL =
-            "SELECT * FROM %s WHERE aggregate_root_id = ? AND version >= ? AND Version <= ? ORDER BY version"
-        private const val SELECT_ONE_BY_VERSION_SQL = "SELECT * FROM %s WHERE aggregate_root_id = ? AND version = ?"
+            "SELECT * FROM %s WHERE aggregate_root_id = $1 AND version >= $2 AND Version <= $3 ORDER BY version"
+        private const val SELECT_ONE_BY_VERSION_SQL = "SELECT * FROM %s WHERE aggregate_root_id = $1 AND version = $2"
         private const val SELECT_ONE_BY_COMMAND_ID_SQL =
-            "SELECT * FROM %s WHERE aggregate_root_id = ? AND command_id = ?"
-        private val PATTERN_POSTGRESQL = Pattern.compile("=\\(.*, (.*)\\) already exists.$")
+            "SELECT * FROM %s WHERE aggregate_root_id = $1 AND command_id = $2"
+        private val PATTERN_POSTGRESQL = Pattern.compile("=\\(.*, (.*)\\) already exists.")
     }
 
     init {

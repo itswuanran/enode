@@ -4,14 +4,13 @@ import io.vertx.pgclient.PgException
 import io.vertx.pgclient.PgPool
 import io.vertx.sqlclient.Row
 import io.vertx.sqlclient.Tuple
-import org.enodeframework.configurations.EventStoreConfiguration
 import org.enodeframework.common.exception.IORuntimeException
 import org.enodeframework.common.exception.PublishedVersionStoreException
 import org.enodeframework.common.io.IOHelper
+import org.enodeframework.configurations.EventStoreConfiguration
 import org.enodeframework.eventing.IPublishedVersionStore
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
-import java.util.*
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -158,11 +157,12 @@ class PgPublishedVersionStore(private val client: PgPool, private val configurat
 
     companion object {
         private val logger = LoggerFactory.getLogger(PgPublishedVersionStore::class.java)
+
         private const val INSERT_SQL =
-            "INSERT INTO %s (processor_name, aggregate_root_type_name, aggregate_root_id, version, gmt_create) VALUES (?, ?, ?, ?, ?)"
+            "INSERT INTO %s (processor_name, aggregate_root_type_name, aggregate_root_id, version, gmt_create) VALUES ($1, $2, $3, $4, $5)"
         private const val UPDATE_SQL =
-            "UPDATE %s SET version = ?, gmt_create = ? WHERE processor_name = ? AND aggregate_root_id = ? AND version = ?"
-        private const val SELECT_SQL = "SELECT version FROM %s WHERE processor_name = ? AND aggregate_root_id = ?"
+            "UPDATE %s SET version = $1, gmt_create = $2 WHERE processor_name = $3 AND aggregate_root_id = $4 AND version = $5"
+        private const val SELECT_SQL = "SELECT version FROM %s WHERE processor_name = $1 AND aggregate_root_id = $2"
     }
 
 }

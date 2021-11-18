@@ -6,11 +6,11 @@ import io.vertx.core.json.JsonArray
 import io.vertx.ext.jdbc.JDBCClient
 import io.vertx.ext.sql.SQLClient
 import io.vertx.ext.sql.UpdateResult
-import org.enodeframework.configurations.DbType
-import org.enodeframework.configurations.EventStoreConfiguration
 import org.enodeframework.common.exception.IORuntimeException
 import org.enodeframework.common.exception.PublishedVersionStoreException
 import org.enodeframework.common.io.IOHelper
+import org.enodeframework.configurations.DbType
+import org.enodeframework.configurations.EventStoreConfiguration
 import org.enodeframework.eventing.IPublishedVersionStore
 import org.slf4j.LoggerFactory
 import java.sql.SQLException

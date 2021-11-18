@@ -25,11 +25,21 @@ public class EnodeTestDataSourceConfig {
     @Value("${spring.enode.datasource.jdbcurl:}")
     private String jdbcUrl;
 
+
     @Value("${spring.enode.datasource.username:}")
     private String username;
 
     @Value("${spring.enode.datasource.password:}")
     private String password;
+
+    @Value("${spring.enode.datasource.pg.jdbcurl:}")
+    private String pgJdbcUrl;
+
+    @Value("${spring.enode.datasource.pg.username:}")
+    private String pgUsername;
+
+    @Value("${spring.enode.datasource.pg.password:}")
+    private String pgPassword;
 
     @Autowired
     private DefaultCommandResultProcessor commandResultProcessor;
@@ -66,10 +76,7 @@ public class EnodeTestDataSourceConfig {
     @Bean("enodeMySQLPool")
     @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "mysql")
     public MySQLPool enodeMySQLPool() {
-        MySQLConnectOptions connectOptions = new MySQLConnectOptions()
-            .setPort(3306)
-            .setHost("127.0.0.1")
-            .setDatabase("enode")
+        MySQLConnectOptions connectOptions = MySQLConnectOptions.fromUri(jdbcUrl.replaceAll("jdbc:", ""))
             .setUser(username)
             .setPassword(password);
         PoolOptions poolOptions = new PoolOptions()
@@ -80,12 +87,9 @@ public class EnodeTestDataSourceConfig {
     @Bean("enodePgPool")
     @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "pg")
     public PgPool pgPool() {
-        PgConnectOptions connectOptions = new PgConnectOptions()
-            .setPort(3306)
-            .setHost("127.0.0.1")
-            .setDatabase("enode")
-            .setUser(username)
-            .setPassword(password);
+        PgConnectOptions connectOptions = PgConnectOptions.fromUri(pgJdbcUrl.replaceAll("jdbc:", ""))
+            .setUser(pgUsername)
+            .setPassword(pgPassword);
         PoolOptions poolOptions = new PoolOptions()
             .setMaxSize(5);
         return PgPool.pool(connectOptions, poolOptions);
@@ -106,9 +110,9 @@ public class EnodeTestDataSourceConfig {
     @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "jdbc-pg")
     public DataSource enodePgDataSource() {
         HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl(jdbcUrl);
-        dataSource.setUsername(username);
-        dataSource.setPassword(password);
+        dataSource.setJdbcUrl(pgJdbcUrl);
+        dataSource.setUsername(pgUsername);
+        dataSource.setPassword(pgPassword);
         dataSource.setDriverClassName(org.postgresql.Driver.class.getName());
         return dataSource;
     }
