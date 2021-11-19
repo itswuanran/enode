@@ -1,6 +1,5 @@
 package org.enodeframework.mongo
 
-import FindDomainEventHandler
 import com.google.common.collect.Lists
 import com.mongodb.client.model.Filters
 import io.vertx.core.json.JsonObject
@@ -11,6 +10,8 @@ import org.enodeframework.common.io.IOHelper.tryIOFuncAsync
 import org.enodeframework.common.serializing.ISerializeService
 import org.enodeframework.configurations.EventStoreConfiguration
 import org.enodeframework.eventing.*
+import org.enodeframework.mongo.handler.MongoAddDomainEventsHandler
+import org.enodeframework.mongo.handler.MongoFindDomainEventsHandler
 import java.util.concurrent.CompletableFuture
 import java.util.stream.Collectors
 
@@ -24,9 +25,7 @@ class MongoEventStore(
     private val serializeService: ISerializeService
 ) : IEventStore {
     constructor(
-        mongoClient: MongoClient,
-        eventSerializer: IEventSerializer,
-        serializeService: ISerializeService
+        mongoClient: MongoClient, eventSerializer: IEventSerializer, serializeService: ISerializeService
     ) : this(mongoClient, EventStoreConfiguration.mongo(), eventSerializer, serializeService)
 
     override fun batchAppendAsync(eventStreams: List<DomainEventStream>): CompletableFuture<EventAppendResult> {
@@ -56,21 +55,18 @@ class MongoEventStore(
             { batchAppendAggregateEventsAsync(aggregateRootId, eventStreamList) },
             { result: AggregateEventAppendResult? ->
                 batchAggregateEventAppendResult.addCompleteAggregate(
-                    aggregateRootId,
-                    result
+                    aggregateRootId, result
                 )
             },
             { String.format("[aggregateRootId: %s, eventStreamCount: %s]", aggregateRootId, eventStreamList.size) },
             null,
-            retryTimes, true
+            retryTimes,
+            true
         )
     }
 
     private fun tryFindEventByCommandIdAsync(
-        aggregateRootId: String,
-        commandId: String,
-        duplicateCommandIds: MutableList<String>,
-        retryTimes: Int
+        aggregateRootId: String, commandId: String, duplicateCommandIds: MutableList<String>, retryTimes: Int
     ): CompletableFuture<DomainEventStream?> {
         val future = CompletableFuture<DomainEventStream?>()
         tryAsyncActionRecursively(
@@ -84,16 +80,16 @@ class MongoEventStore(
             },
             { String.format("[aggregateRootId:%s, commandId:%s]", aggregateRootId, commandId) },
             null,
-            retryTimes, true
+            retryTimes,
+            true
         )
         return future
     }
 
     private fun batchAppendAggregateEventsAsync(
-        aggregateRootId: String,
-        eventStreamList: List<DomainEventStream>
+        aggregateRootId: String, eventStreamList: List<DomainEventStream>
     ): CompletableFuture<AggregateEventAppendResult> {
-        val promise = AddDomainEventsHandler(configuration)
+        val handler = MongoAddDomainEventsHandler(configuration)
         val bulks: MutableList<BulkOperation> = Lists.newArrayList()
         for (domainEventStream in eventStreamList) {
             val document = JsonObject()
@@ -106,15 +102,12 @@ class MongoEventStore(
             val bulk = BulkOperation.createInsert(document)
             bulks.add(bulk)
         }
-        mongoClient.bulkWrite(configuration.eventTableName, bulks).onComplete(promise)
-        return promise.future
+        mongoClient.bulkWrite(configuration.eventTableName, bulks).onComplete(handler)
+        return handler.future
     }
 
     override fun queryAggregateEventsAsync(
-        aggregateRootId: String,
-        aggregateRootTypeName: String,
-        minVersion: Int,
-        maxVersion: Int
+        aggregateRootId: String, aggregateRootTypeName: String, minVersion: Int, maxVersion: Int
     ): CompletableFuture<List<DomainEventStream>> {
         return tryIOFuncAsync({
             val filter = Filters.and(
@@ -124,7 +117,7 @@ class MongoEventStore(
             )
             val jsonObject = JsonObject(filter.toBsonDocument().toJson())
             val msg = String.format("%s#%s#%s#%s", aggregateRootId, aggregateRootTypeName, minVersion, maxVersion)
-            val manyEventHandler = FindDomainEventsHandler(eventSerializer, serializeService, msg)
+            val manyEventHandler = MongoFindDomainEventsHandler(eventSerializer, serializeService, msg)
             mongoClient.find(configuration.eventTableName, jsonObject, manyEventHandler)
             manyEventHandler.future
         }, "QueryAggregateEventsAsync")
@@ -132,26 +125,33 @@ class MongoEventStore(
 
     override fun findAsync(aggregateRootId: String, version: Int): CompletableFuture<DomainEventStream?> {
         return tryIOFuncAsync({
-            val queryBson = Filters.and(Filters.eq("aggregateRootId", aggregateRootId), Filters.eq("version", version))
-            val query = JsonObject(queryBson.toBsonDocument().toJson())
-            val msg = String.format("%s#%s", aggregateRootId, version)
-            val findEventHandler = FindDomainEventHandler(eventSerializer, serializeService, msg)
-            mongoClient.findOne(configuration.eventTableName, query, null, findEventHandler)
-            findEventHandler.future
+            val map1 = HashMap<String, String>()
+            val map2 = HashMap<String, Int>()
+            map1["aggregateRootId"] = aggregateRootId
+            map2["version"] = version
+            val queryJson = JsonObject()
+            val queryFilter = Lists.newArrayList(map1, map2)
+            queryJson.put("\$and", queryFilter)
+            val findEventHandler =
+                MongoFindDomainEventsHandler(eventSerializer, serializeService, "$aggregateRootId#$version")
+            mongoClient.find(configuration.eventTableName, queryJson, findEventHandler)
+            findEventHandler.future.thenApply { x -> x.firstOrNull() }
         }, "FindEventByVersionAsync")
     }
 
     override fun findAsync(aggregateRootId: String, commandId: String): CompletableFuture<DomainEventStream?> {
         return tryIOFuncAsync({
-            val query = Filters.and(
-                Filters.eq("aggregateRootId", aggregateRootId),
-                Filters.eq("commandId", commandId)
-            )
-            val queryJson = JsonObject(query.toBsonDocument().toJson())
-            val msg = String.format("%s#%s", aggregateRootId, commandId)
-            val findEventHandler = FindDomainEventHandler(eventSerializer, serializeService, msg)
-            mongoClient.findOne(configuration.eventTableName, queryJson, null, findEventHandler)
-            findEventHandler.future
+            val map1 = HashMap<String, String>()
+            val map2 = HashMap<String, String>()
+            map1["aggregateRootId"] = aggregateRootId
+            map2["commandId"] = commandId
+            val queryJson = JsonObject()
+            val queryFilter = Lists.newArrayList(map1, map2)
+            queryJson.put("\$and", queryFilter)
+            val findEventHandler =
+                MongoFindDomainEventsHandler(eventSerializer, serializeService, "$aggregateRootId#$commandId")
+            mongoClient.find(configuration.eventTableName, queryJson, findEventHandler)
+            findEventHandler.future.thenApply { x -> x.firstOrNull() }
         }, "FindEventByCommandIdAsync")
     }
 }

@@ -1,5 +1,8 @@
 package org.enodeframework.commanding
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import org.enodeframework.common.extensions.SystemClock
 import org.enodeframework.common.io.Task
 import org.slf4j.LoggerFactory
@@ -81,7 +84,7 @@ class ProcessingCommandMailbox(
                     consumingSequence.get()
                 )
             }
-            processMessages()
+            CoroutineScope(Dispatchers.IO).async { processMessages() }
         }
     }
 

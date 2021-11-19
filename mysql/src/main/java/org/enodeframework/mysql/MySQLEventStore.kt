@@ -1,46 +1,33 @@
-package org.enodeframework.jdbc
+package org.enodeframework.mysql
 
-import io.vertx.core.AbstractVerticle
-import io.vertx.jdbcclient.JDBCPool
+import io.vertx.mysqlclient.MySQLPool
 import io.vertx.sqlclient.Tuple
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.common.serializing.ISerializeService
 import org.enodeframework.configurations.EventStoreConfiguration
 import org.enodeframework.eventing.*
-import org.enodeframework.jdbc.handler.JDBCAddDomainEventsHandler
-import org.enodeframework.jdbc.handler.JDBCFindDomainEventsHandler
+import org.enodeframework.mysql.handler.MySQLAddDomainEventsHandler
+import org.enodeframework.mysql.handler.MySQLFindDomainEventsHandler
 import java.time.ZoneId
 import java.util.concurrent.CompletableFuture
 import java.util.stream.Collectors
-import javax.sql.DataSource
 
 
 /**
  * @author anruence@gmail.com
  */
 
-class JDBCEventStore(
-    dataSource: DataSource,
+class MySQLEventStore(
+    sqlClient: MySQLPool,
     configuration: EventStoreConfiguration,
     eventSerializer: IEventSerializer,
     serializeService: ISerializeService
-) : AbstractVerticle(), IEventStore {
+) : IEventStore {
 
     private val eventSerializer: IEventSerializer
     private val serializeService: ISerializeService
     private val configuration: EventStoreConfiguration
-    private val dataSource: DataSource
-    private lateinit var sqlClient: JDBCPool
-
-    override fun start() {
-        super.start()
-        this.sqlClient = JDBCPool.pool(vertx, dataSource)
-    }
-
-    override fun stop() {
-        super.stop()
-        this.sqlClient.close()
-    }
+    private val sqlClient: MySQLPool
 
     override fun batchAppendAsync(eventStreams: List<DomainEventStream>): CompletableFuture<EventAppendResult> {
         val future = CompletableFuture<EventAppendResult>()
@@ -85,7 +72,7 @@ class JDBCEventStore(
         aggregateRootId: String, eventStreamList: List<DomainEventStream>
     ): CompletableFuture<AggregateEventAppendResult> {
         val sql = String.format(INSERT_EVENT_SQL, configuration.eventTableName)
-        val handler = JDBCAddDomainEventsHandler(configuration)
+        val handler = MySQLAddDomainEventsHandler(configuration)
         val tuples: MutableList<Tuple> = ArrayList()
         for (domainEventStream in eventStreamList) {
             tuples.add(
@@ -117,7 +104,7 @@ class JDBCEventStore(
         aggregateRootId: String, aggregateRootTypeName: String, minVersion: Int, maxVersion: Int
     ): CompletableFuture<List<DomainEventStream>> {
         val handler =
-            JDBCFindDomainEventsHandler(eventSerializer, serializeService, "$aggregateRootId#$minVersion#$maxVersion")
+            MySQLFindDomainEventsHandler(eventSerializer, serializeService, "$aggregateRootId#$minVersion#$maxVersion")
         val sql = String.format(SELECT_MANY_BY_VERSION_SQL, configuration.eventTableName)
         val resultSet = sqlClient.preparedQuery(sql).execute(Tuple.of(aggregateRootId, minVersion, maxVersion))
         resultSet.onComplete(handler)
@@ -131,7 +118,7 @@ class JDBCEventStore(
     }
 
     private fun findByVersion(aggregateRootId: String, version: Int): CompletableFuture<DomainEventStream?> {
-        val handler = JDBCFindDomainEventsHandler(eventSerializer, serializeService, "$aggregateRootId#$version")
+        val handler = MySQLFindDomainEventsHandler(eventSerializer, serializeService, "$aggregateRootId#$version")
         val sql = String.format(SELECT_ONE_BY_VERSION_SQL, configuration.eventTableName)
         sqlClient.preparedQuery(sql).execute(Tuple.of(aggregateRootId, version)).onComplete(handler)
         return handler.future.thenApply { x -> x.firstOrNull() }
@@ -144,7 +131,7 @@ class JDBCEventStore(
     }
 
     private fun findByCommandId(aggregateRootId: String, commandId: String): CompletableFuture<DomainEventStream?> {
-        val handler = JDBCFindDomainEventsHandler(eventSerializer, serializeService, "$aggregateRootId#$commandId")
+        val handler = MySQLFindDomainEventsHandler(eventSerializer, serializeService, "$aggregateRootId#$commandId")
         val sql = String.format(SELECT_ONE_BY_COMMAND_ID_SQL, configuration.eventTableName)
         sqlClient.preparedQuery(sql).execute(Tuple.of(aggregateRootId, commandId)).onComplete(handler)
         return handler.future.thenApply { x -> x.firstOrNull() }
@@ -161,7 +148,7 @@ class JDBCEventStore(
     }
 
     init {
-        this.dataSource = dataSource
+        this.sqlClient = sqlClient
         this.eventSerializer = eventSerializer
         this.serializeService = serializeService
         this.configuration = configuration

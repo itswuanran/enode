@@ -1,5 +1,7 @@
 package org.enodeframework.configurations;
 
+import io.vertx.core.json.JsonObject;
+
 /**
  * 可以将EventStore的元数据全部配置化
  *
@@ -34,6 +36,16 @@ public class EventStoreConfiguration {
      * 聚合根已发布事件表的聚合根已发布版本唯一索引的默认名称；默认为：uk_processor_name_aggregate_root_id_version
      */
     private String publishedUkName;
+
+    /**
+     * 事件表的元数据
+     */
+    private JsonObject eventMeta;
+
+    /**
+     * 发布版本表的元数据
+     */
+    private JsonObject publishedVersionMeta;
 
     public static EventStoreConfiguration jdbc() {
         EventStoreConfiguration configuration = new EventStoreConfiguration();
@@ -137,5 +149,21 @@ public class EventStoreConfiguration {
 
     public void setPublishedUkName(String publishedUkName) {
         this.publishedUkName = publishedUkName;
+    }
+
+    public JsonObject getEventMeta() {
+        return eventMeta;
+    }
+
+    public void setEventMeta(JsonObject eventMeta) {
+        this.eventMeta = eventMeta;
+    }
+
+    public JsonObject getPublishedVersionMeta() {
+        return publishedVersionMeta;
+    }
+
+    public void setPublishedVersionMeta(JsonObject publishedVersionMeta) {
+        this.publishedVersionMeta = publishedVersionMeta;
     }
 }

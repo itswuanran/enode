@@ -1,5 +1,9 @@
 package org.enodeframework.eventing
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import org.enodeframework.common.exception.DuplicateEventStreamException
 import org.enodeframework.common.extensions.SystemClock
 import org.enodeframework.common.function.Action1
@@ -68,7 +72,7 @@ class EventCommittingContextMailBox(
             if (logger.isDebugEnabled) {
                 logger.debug("{} start run, mailboxNumber: {}", javaClass.name, number)
             }
-            processMessages()
+            CoroutineScope(Dispatchers.IO).async { processMessages() }
         }
     }
 

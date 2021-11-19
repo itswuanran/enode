@@ -1,37 +1,21 @@
-package org.enodeframework.jdbc
+package org.enodeframework.mysql
 
-import io.vertx.core.AbstractVerticle
-import io.vertx.jdbcclient.JDBCPool
+import io.vertx.mysqlclient.MySQLPool
 import io.vertx.sqlclient.Tuple
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.configurations.EventStoreConfiguration
 import org.enodeframework.eventing.IPublishedVersionStore
-import org.enodeframework.jdbc.handler.JDBCFindPublishedVersionHandler
-import org.enodeframework.jdbc.handler.JDBCUpsertPublishedVersionHandler
+import org.enodeframework.mysql.handler.MySQLFindPublishedVersionHandler
+import org.enodeframework.mysql.handler.MySQLUpsertPublishedVersionHandler
 import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
-import javax.sql.DataSource
 
 /**
  * @author anruence@gmail.com
  */
-class JDBCPublishedVersionStore(
-    dataSource: DataSource, private val configuration: EventStoreConfiguration
-) : AbstractVerticle(), IPublishedVersionStore {
-
-    private lateinit var sqlClient: JDBCPool
-
-    private val dataSource: DataSource
-
-    override fun start() {
-        super.start()
-        this.sqlClient = JDBCPool.pool(vertx, dataSource)
-    }
-
-    override fun stop() {
-        super.stop()
-        this.sqlClient.close()
-    }
+class MySQLPublishedVersionStore(
+    private val client: MySQLPool, private val configuration: EventStoreConfiguration
+) : IPublishedVersionStore {
 
     override fun updatePublishedVersionAsync(
         processorName: String, aggregateRootTypeName: String, aggregateRootId: String, publishedVersion: Int
@@ -54,26 +38,26 @@ class JDBCPublishedVersionStore(
     private fun updateVersionAsync(
         processorName: String, aggregateRootTypeName: String, aggregateRootId: String, publishedVersion: Int
     ): CompletableFuture<Int> {
-        val handler = JDBCUpsertPublishedVersionHandler(
-            configuration, "$processorName#$aggregateRootTypeName#$aggregateRootId#$publishedVersion"
+        val handler = MySQLUpsertPublishedVersionHandler(
+            configuration.publishedUkName, "$processorName#$aggregateRootTypeName#$aggregateRootId#$publishedVersion"
         )
         val sql = String.format(UPDATE_SQL, configuration.publishedTableName)
         val tuple = Tuple.of(
             publishedVersion, LocalDateTime.now(), processorName, aggregateRootId, publishedVersion - 1
         )
-        sqlClient.preparedQuery(sql).execute(tuple).onComplete(handler)
+        client.preparedQuery(sql).execute(tuple).onComplete(handler)
         return handler.future
     }
 
     private fun insertVersionAsync(
         processorName: String, aggregateRootTypeName: String, aggregateRootId: String, publishedVersion: Int
     ): CompletableFuture<Int> {
-        val handler = JDBCUpsertPublishedVersionHandler(
-            configuration, "$processorName#$aggregateRootTypeName#$aggregateRootId#$publishedVersion"
+        val handler = MySQLUpsertPublishedVersionHandler(
+            configuration.publishedUkName, "$processorName#$aggregateRootTypeName#$aggregateRootId#$publishedVersion"
         )
         val sql = String.format(INSERT_SQL, configuration.publishedTableName)
         val tuple = Tuple.of(processorName, aggregateRootTypeName, aggregateRootId, 1, LocalDateTime.now())
-        sqlClient.preparedQuery(sql).execute(tuple).onComplete(handler)
+        client.preparedQuery(sql).execute(tuple).onComplete(handler)
         return handler.future
     }
 
@@ -88,9 +72,9 @@ class JDBCPublishedVersionStore(
     private fun getPublishedVersion(
         processorName: String, aggregateRootTypeName: String, aggregateRootId: String
     ): CompletableFuture<Int> {
-        val handler = JDBCFindPublishedVersionHandler("$aggregateRootId#$processorName#$aggregateRootTypeName")
+        val handler = MySQLFindPublishedVersionHandler("$aggregateRootId#$processorName#$aggregateRootTypeName")
         val sql = String.format(SELECT_SQL, configuration.publishedTableName)
-        sqlClient.preparedQuery(sql).execute(Tuple.of(processorName, aggregateRootId)).onComplete(handler)
+        client.preparedQuery(sql).execute(Tuple.of(processorName, aggregateRootId)).onComplete(handler)
         return handler.future
     }
 
@@ -102,7 +86,4 @@ class JDBCPublishedVersionStore(
         private const val SELECT_SQL = "SELECT version FROM %s WHERE processor_name = ? AND aggregate_root_id = ?"
     }
 
-    init {
-        this.dataSource = dataSource
-    }
 }

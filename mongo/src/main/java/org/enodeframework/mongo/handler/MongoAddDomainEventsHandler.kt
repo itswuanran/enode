@@ -1,4 +1,4 @@
-package org.enodeframework.mongo
+package org.enodeframework.mongo.handler
 
 import com.google.common.base.Strings
 import com.google.common.collect.Lists
@@ -11,11 +11,12 @@ import org.enodeframework.common.exception.EventStoreException
 import org.enodeframework.configurations.EventStoreConfiguration
 import org.enodeframework.eventing.AggregateEventAppendResult
 import org.enodeframework.eventing.EventAppendStatus
+import org.enodeframework.mongo.MongoEventStore
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 import java.util.regex.Pattern
 
-class AddDomainEventsHandler(private val configuration: EventStoreConfiguration) :
+class MongoAddDomainEventsHandler(private val configuration: EventStoreConfiguration) :
     Handler<AsyncResult<MongoClientBulkWriteResult>> {
 
     private val code = 11000
