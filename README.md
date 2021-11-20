@@ -27,8 +27,11 @@
 
 ![](enode-architecture.svg)
 
+## 发版记录
+[CHANGELOG](CHANGELOG.md)
+
 ## 最佳实践
-- 可参考samples模块中的例子
+- 可参考[samples](samples)模块中的例子
 
 > 目前基于enode开发的项目 [conference](https://github.com/anruence/conference)
 
@@ -285,8 +288,11 @@ db.published_version.createIndex({processorName:1,aggregateRootId:1},{unique:tru
 启动时会扫描包路径下的注解，注册成`Spring Bean`，和`@Component`作用相同。
 
 ### 消息
-目前enode函数调用的实现是放在`kotlin coroutine`中来执行的，这里涉及到实际执行的任务类型，针对计算密集型和IO密集型的任务，目前没有做可定制化的配置，后续的版本会考虑加上，
+- 目前enode函数调用的实现是放在`kotlin coroutine`中来执行的，这里涉及到实际执行的任务类型，针对计算密集型和IO密集型的任务，目前没有做可定制化的配置，后续的版本会考虑加上，
 **使用也很简单，`@Subscribe` 方法体加上`suspend`标记即可**。
+
+- **针对`Java`异步编程做了深度优化，支持`CommandHandler`和`EventHandler`中定义`CompletableFuture`返回值，阻塞调用封装在协程中，避免使用`#join() #get()`等阻塞代码，同时也支持kotlin suspend**
+
 ```kotlin
 @Command
 class ChangeNoteTitleCommandHandler {
@@ -297,15 +303,27 @@ class ChangeNoteTitleCommandHandler {
     }
 }
 ```
+
+```java
+@Subscribe
+public CompletableFuture<BankAccount> handleAsync(ICommandContext context, AddTransactionPreparationCommand command) {
+    CompletableFuture<BankAccount> future = context.getAsync(command.getAggregateRootId(), BankAccount.class);
+    future.thenAccept(bankAccount -> {
+    bankAccount.addTransactionPreparation(command.transactionId, command.transactionType, command.preparationType, command.amount);
+    });
+    return future;
+}
+```
 发送命令消息：
 
 ```java
 CompletableFuture<CommandResult> future = commandService.executeAsync(createNoteCommand, CommandReturnType.EventHandled);
 ```
 
-消费命令消息：
+命令处理：
 
 ```java
+
 /**
  * 银行账户相关命令处理
  * ICommandHandler<CreateAccountCommand>,                       //开户
@@ -327,10 +345,12 @@ public class BankAccountCommandHandler {
      * 添加预操作
      */
     @Subscribe
-    public void handleAsync(ICommandContext context, AddTransactionPreparationCommand command) {
+    public CompletableFuture<BankAccount> handleAsync(ICommandContext context, AddTransactionPreparationCommand command) {
         CompletableFuture<BankAccount> future = context.getAsync(command.getAggregateRootId(), BankAccount.class);
-        BankAccount account = Task.await(future);
-        account.addTransactionPreparation(command.transactionId, command.transactionType, command.preparationType, command.amount);
+        future.thenAccept(bankAccount -> {
+            bankAccount.addTransactionPreparation(command.transactionId, command.transactionType, command.preparationType, command.amount);
+        });
+        return future;
     }
 
     /**
@@ -350,17 +370,21 @@ public class BankAccountCommandHandler {
      * 提交预操作
      */
     @Subscribe
-    public void handleAsync(ICommandContext context, CommitTransactionPreparationCommand command) {
+    public CompletableFuture<BankAccount> handleAsync(ICommandContext context, CommitTransactionPreparationCommand command) {
         CompletableFuture<BankAccount> future = context.getAsync(command.getAggregateRootId(), BankAccount.class);
-        BankAccount account = Task.await(future);
-        account.commitTransactionPreparation(command.transactionId);
+        future.thenAccept(bankAccount -> {
+            bankAccount.commitTransactionPreparation(command.transactionId);
+        });
+        return future;
     }
 }
+
 ```
 
-领域事件消费：
+领域事件和`Sagas`处理逻辑：
 
 ```java
+
 /**
  * 银行存款交易流程管理器，用于协调银行存款交易流程中各个参与者聚合根之间的消息交互
  * IMessageHandler<DepositTransactionStartedEvent>,                    //存款交易已开始
@@ -371,54 +395,53 @@ public class BankAccountCommandHandler {
 @Event
 public class DepositTransactionProcessManager {
 
-    @Autowired
+    @Resource
     private ICommandService commandService;
 
     @Subscribe
-    public void handleAsync(DepositTransactionStartedEvent evnt) {
-        AddTransactionPreparationCommand command = new AddTransactionPreparationCommand(
-                evnt.accountId,
-                evnt.getAggregateRootId(),
-                TransactionType.DEPOSIT_TRANSACTION,
-                PreparationType.CREDIT_PREPARATION,
-                evnt.amount);
+    public CompletableFuture<Boolean> handleAsync(DepositTransactionStartedEvent evnt) {
+        AddTransactionPreparationCommand command = new AddTransactionPreparationCommand(evnt.accountId, evnt.getAggregateRootId(), TransactionType.DEPOSIT_TRANSACTION, PreparationType.CREDIT_PREPARATION, evnt.amount);
         command.setId(evnt.getId());
-        Task.await(commandService.sendAsync(command));
+        return commandService.sendAsync(command);
     }
 
     @Subscribe
-    public void handleAsync(TransactionPreparationAddedEvent evnt) {
-        if (evnt.transactionPreparation.transactionType == TransactionType.DEPOSIT_TRANSACTION
-                && evnt.transactionPreparation.preparationType == PreparationType.CREDIT_PREPARATION) {
-            ConfirmDepositPreparationCommand command = new ConfirmDepositPreparationCommand(evnt.transactionPreparation.TransactionId);
+    public CompletableFuture<Boolean> handleAsync(TransactionPreparationAddedEvent evnt) {
+        if (evnt.transactionPreparation.transactionType == TransactionType.DEPOSIT_TRANSACTION && evnt.transactionPreparation.preparationType == PreparationType.CREDIT_PREPARATION) {
+            ConfirmDepositPreparationCommand command = new ConfirmDepositPreparationCommand(evnt.transactionPreparation.transactionId);
             command.setId(evnt.getId());
-            Task.await(commandService.sendAsync(command));
+            return commandService.sendAsync(command);
         }
+        return Task.completedTask;
     }
 
     @Subscribe
-    public void handleAsync(DepositTransactionPreparationCompletedEvent evnt) {
+    public CompletableFuture<Boolean> handleAsync(DepositTransactionPreparationCompletedEvent evnt) {
         CommitTransactionPreparationCommand command = new CommitTransactionPreparationCommand(evnt.accountId, evnt.getAggregateRootId());
         command.setId(evnt.getId());
-        Task.await(commandService.sendAsync(command));
+        return (commandService.sendAsync(command));
     }
 
     @Subscribe
-    public void handleAsync(TransactionPreparationCommittedEvent evnt) {
-        if (evnt.transactionPreparation.transactionType == TransactionType.DEPOSIT_TRANSACTION &&
-                evnt.transactionPreparation.preparationType == PreparationType.CREDIT_PREPARATION) {
-            ConfirmDepositCommand command = new ConfirmDepositCommand(evnt.transactionPreparation.TransactionId);
+    public CompletableFuture<Boolean> handleAsync(TransactionPreparationCommittedEvent evnt) {
+        if (evnt.transactionPreparation.transactionType == TransactionType.DEPOSIT_TRANSACTION && evnt.transactionPreparation.preparationType == PreparationType.CREDIT_PREPARATION) {
+            ConfirmDepositCommand command = new ConfirmDepositCommand(evnt.transactionPreparation.transactionId);
             command.setId(evnt.getId());
-            Task.await(commandService.sendAsync(command));
+            return (commandService.sendAsync(command));
         }
+        return Task.completedTask;
     }
 }
+
 ```
-
 ### `MQ`配置启动
+目前支持三种
 
-多选
+#### `Pulsar`
+```bash 
+bin/pulsar standalone
 
+```
 #### `Kafka`
 
 https://kafka.apache.org/quickstart
@@ -474,7 +497,7 @@ nohup sh bin/mqbroker -n 127.0.0.1:9876 &
 
 ### 聚合根的定义
 
-聚合根需要定义一个无参构造函数，因为聚合根初始化时使用了。
+聚合根需要定义一个无参构造函数，因为聚合根初始化时使用了：
 
 ```java
 aggregateRootType.getDeclaredConstructor().newInstance();
@@ -486,17 +509,17 @@ aggregateRootType.getDeclaredConstructor().newInstance();
 在我们的这个场景里面，`command-web`只需要很少的机器就能满足前端大量的请求，`command-consumer`和`event-consumer`的机器相对较多些。
 如果采用常规的“单请求单连接”的方式，服务提供者很容易就被压跨，通过单一连接，保证单一消费者不会压死提供者，长连接，减少连接握手验证等，并使用异步`IO`，复用线程池，防止`C10K`问题。
 
-### `ICommandHandler`和`ICommandAsyncHandler`区别 (现在合并成一个了，但处理思路没变)
+### `ICommandHandler`和`ICommandAsyncHandler`区别 (现在统一成一个了)
 
-`ICommandHandler`是为了操作内存中的聚合根的，所以不会有异步操作，但后来`ICommandHandler`的`Handle`方法也设计为了`handleAsync`了，目的是为了异步到底，否则异步链路中断的话，异步就没效果了
-而`ICommandAsyncHandler`是为了让开发者调用外部系统的接口的，也就是访问外部`IO`，所以用了`Async
-ICommandHandler`，`ICommandAsyncHandler`这两个接口是用于不同的业务场景，`ICommandHandler.handleAsync`方法执行完成后，框架要从`context`中获取当前修改的聚合根的领域事件，然后去提交。而`ICommandAsyncHandler.handleAsync`方法执行完成后，不会有这个逻辑，而是看一下`handleAsync`方法执行的异步消息结果是什么，也就是`IApplicationMessage`。
-目前已经删除了`ICommandAsyncHandler`，统一使用`ICommandHandler`来处理，异步结果会放在`context`中
+- `ICommandHandler`是为了操作内存中的聚合根的，所以不会有异步操作，但后来`ICommandHandler`的`Handle`方法也设计为了`handleAsync`了，目的是为了异步到底，否则异步链路中断的话，异步就没效果了
+- `ICommandAsyncHandler`是为了让开发者调用外部系统的接口的，也就是访问外部`IO`，所以用了`Async
+> `ICommandHandler`，`ICommandAsyncHandler`这两个接口是用于不同的业务场景，`ICommandHandler.handleAsync`方法执行完成后，框架要从`context`中获取当前修改的聚合根的领域事件，然后去提交。而`ICommandAsyncHandler.handleAsync`方法执行完成后，不会有这个逻辑，而是看一下`handleAsync`方法执行的异步消息结果是什么，也就是`IApplicationMessage`。
+目前已经删除了`ICommandAsyncHandler`，统一使用`ICommandHandler`来处理，异步结果会放在`context`中，通过访问 `#setResult`设置
 
 ### `ICommandService` `sendAsync` 和 `executeAsync`的区别
 
 `sendAsync`只关注发送消息的结果
-`executeAsync`发送消息的同时，关注命令的返回结果，返回的时机如下：
+`executeAsync`发送消息的同时，关注命令的执行结果，返回的时机如下：
 
 - `CommandReturnType.CommandExecuted`：`Command`执行完成，`Event`发布成功后返回结果
 - `CommandReturnType.EventHandled`：`Event`处理完成后才返回结果
@@ -504,7 +527,6 @@ ICommandHandler`，`ICommandAsyncHandler`这两个接口是用于不同的业务
 ### `event`使用哪个订阅者发送处理结果
 
 `event`的订阅者可能有很多个，所以`enode`只要求有一个订阅者处理完事件后发送结果给发送命令的人即可，通过`defaultDomainEventMessageHandler`中`sendEventHandledMessage`参数来设置是否发送，最终来决定由哪个订阅者来发送命令处理结果。
-
 
 ## 参考项目
 
