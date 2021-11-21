@@ -25,7 +25,7 @@ public class PulsarSendMessageService implements ISendMessageService {
 
     public PulsarSendMessageService(List<Producer<byte[]>> producers) {
         this.producers = Optional.ofNullable(producers).orElse(new ArrayList<>())
-                .stream().collect(Collectors.toMap(Producer::getTopic, y -> y));
+            .stream().collect(Collectors.toMap(Producer::getTopic, y -> y));
         if (this.producers.isEmpty()) {
             throw new IllegalArgumentException("producers can not empty.");
         }
@@ -39,19 +39,19 @@ public class PulsarSendMessageService implements ISendMessageService {
             return CompletableFuture.completedFuture(false);
         }
         return producer.newMessage()
-                .key(queueMessage.getRouteKey())
-                .value(queueMessage.getBody().getBytes())
-                .orderingKey(queueMessage.getKey().getBytes())
-                .sendAsync()
-                .exceptionally(throwable -> {
-                    logger.error("Enode message async send has exception, message: {}, routingKey: {}", queueMessage.getBody(), queueMessage.getRouteKey(), throwable);
-                    throw new IORuntimeException(throwable);
-                })
-                .thenApply(x -> {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Enode message async send success, sendResult: {}, message: {}", x, queueMessage.getBody());
-                    }
-                    return true;
-                });
+            .key(queueMessage.getRouteKey())
+            .value(queueMessage.getBody().getBytes())
+            .orderingKey(queueMessage.getKey().getBytes())
+            .sendAsync()
+            .exceptionally(throwable -> {
+                logger.error("Enode message async send has exception, message: {}, routingKey: {}", queueMessage.getBody(), queueMessage.getRouteKey(), throwable);
+                throw new IORuntimeException(throwable);
+            })
+            .thenApply(x -> {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Enode message async send success, sendResult: {}, message: {}", x, queueMessage.getBody());
+                }
+                return true;
+            });
     }
 }

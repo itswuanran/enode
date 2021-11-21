@@ -10,7 +10,6 @@ import org.enodeframework.mysql.handler.MySQLAddDomainEventsHandler
 import org.enodeframework.mysql.handler.MySQLFindDomainEventsHandler
 import java.time.ZoneId
 import java.util.concurrent.CompletableFuture
-import java.util.stream.Collectors
 
 
 /**
@@ -36,8 +35,7 @@ class MySQLEventStore(
             future.complete(appendResult)
             return future
         }
-        val eventStreamMap = eventStreams.stream().distinct()
-            .collect(Collectors.groupingBy { obj: DomainEventStream -> obj.aggregateRootId })
+        val eventStreamMap = eventStreams.distinct().groupBy { obj: DomainEventStream -> obj.aggregateRootId }
         val batchAggregateEventAppendResult = BatchAggregateEventAppendResult(eventStreamMap.keys.size)
         for ((key, value) in eventStreamMap) {
             batchAppendAggregateEventsAsync(key, value, batchAggregateEventAppendResult, 0)
@@ -73,17 +71,14 @@ class MySQLEventStore(
     ): CompletableFuture<AggregateEventAppendResult> {
         val sql = String.format(INSERT_EVENT_SQL, configuration.eventTableName)
         val handler = MySQLAddDomainEventsHandler(configuration)
-        val tuples: MutableList<Tuple> = ArrayList()
-        for (domainEventStream in eventStreamList) {
-            tuples.add(
-                Tuple.of(
-                    domainEventStream.aggregateRootId,
-                    domainEventStream.aggregateRootTypeName,
-                    domainEventStream.commandId,
-                    domainEventStream.version,
-                    domainEventStream.timestamp.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(),
-                    serializeService.serialize(eventSerializer.serialize(domainEventStream.events()))
-                )
+        val tuples = eventStreamList.map { domainEventStream ->
+            Tuple.of(
+                domainEventStream.aggregateRootId,
+                domainEventStream.aggregateRootTypeName,
+                domainEventStream.commandId,
+                domainEventStream.version,
+                domainEventStream.timestamp.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(),
+                serializeService.serialize(eventSerializer.serialize(domainEventStream.events()))
             )
         }
         sqlClient.withTransaction { client ->

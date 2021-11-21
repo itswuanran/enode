@@ -23,6 +23,14 @@ public class EventAppConfig {
 
     @Value("${spring.enode.datasource.password:}")
     private String password;
+    @Autowired
+    private DefaultCommandResultProcessor commandResultProcessor;
+    @Autowired
+    private DefaultSendReplyService sendReplyService;
+    @Autowired
+    private JDBCEventStore jdbcEventStore;
+    @Autowired
+    private JDBCPublishedVersionStore jdbcPublishedVersionStore;
 
     @Bean("enodeMySQLDataSource")
     @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "jdbc-mysql")
@@ -34,18 +42,6 @@ public class EventAppConfig {
         dataSource.setDriverClassName(com.mysql.cj.jdbc.Driver.class.getName());
         return dataSource;
     }
-
-    @Autowired
-    private DefaultCommandResultProcessor commandResultProcessor;
-
-    @Autowired
-    private DefaultSendReplyService sendReplyService;
-
-    @Autowired
-    private JDBCEventStore jdbcEventStore;
-
-    @Autowired
-    private JDBCPublishedVersionStore jdbcPublishedVersionStore;
 
     @Bean
     public Vertx vertx() {

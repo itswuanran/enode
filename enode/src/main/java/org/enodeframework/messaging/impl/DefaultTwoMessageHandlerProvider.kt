@@ -8,13 +8,13 @@ import org.enodeframework.messaging.IMessageHandlerProxy2
 import org.enodeframework.messaging.ITwoMessageHandlerProvider
 import org.enodeframework.messaging.MessageHandlerData
 import java.lang.reflect.Method
-import java.util.*
 import kotlin.coroutines.Continuation
 
 /**
  * @author anruence@gmail.com
  */
-class DefaultTwoMessageHandlerProvider : AbstractHandlerProvider<ManyType, IMessageHandlerProxy2, List<Class<*>>>(), ITwoMessageHandlerProvider {
+class DefaultTwoMessageHandlerProvider : AbstractHandlerProvider<ManyType, IMessageHandlerProxy2, List<Class<*>>>(),
+    ITwoMessageHandlerProvider {
     override fun getKey(method: Method): ManyType {
         return ManyType(listOf(*method.parameterTypes))
     }
@@ -25,7 +25,7 @@ class DefaultTwoMessageHandlerProvider : AbstractHandlerProvider<ManyType, IMess
 
     override fun isHandlerSourceMatchKey(handlerSource: List<Class<*>>, key: ManyType): Boolean {
         for (type in key.types) {
-            if (!handlerSource.stream().anyMatch { x: Class<*> -> x == type }) {
+            if (!handlerSource.any { x: Class<*> -> x == type }) {
                 return false
             }
         }
@@ -37,6 +37,10 @@ class DefaultTwoMessageHandlerProvider : AbstractHandlerProvider<ManyType, IMess
             return methodMatchSuspend(method)
         }
         return methodMatch(method)
+    }
+
+    override fun isHandleRegisterOnce(): Boolean {
+        return false
     }
 
     private fun methodMatch(method: Method): Boolean {

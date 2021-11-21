@@ -63,12 +63,12 @@ public class EnodeBootstrapRegistrar implements ImportBeanDefinitionRegistrar, R
         String[] scanBasePackagesArray = enodeScan.getStringArray("scanBasePackages");
         for (String pkg : basePackagesArray) {
             String[] tokenized = StringUtils.tokenizeToStringArray(this.environment.resolvePlaceholders(pkg),
-                    ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS);
+                ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS);
             Collections.addAll(basePackages, tokenized);
         }
         for (String pkg : scanBasePackagesArray) {
             String[] tokenized = StringUtils.tokenizeToStringArray(this.environment.resolvePlaceholders(pkg),
-                    ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS);
+                ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS);
             Collections.addAll(basePackages, tokenized);
         }
         for (Class<?> clazz : enodeScan.getClassArray("basePackageClasses")) {

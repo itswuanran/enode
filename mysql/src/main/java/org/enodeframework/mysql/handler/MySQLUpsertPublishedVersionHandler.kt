@@ -8,7 +8,6 @@ import io.vertx.sqlclient.RowSet
 import org.enodeframework.common.exception.IORuntimeException
 import org.enodeframework.common.exception.PublishedVersionStoreException
 import org.slf4j.LoggerFactory
-import java.sql.SQLException
 import java.util.concurrent.CompletableFuture
 
 class MySQLUpsertPublishedVersionHandler(private val publishedUkName: String, private val msg: String) :

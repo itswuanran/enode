@@ -18,19 +18,19 @@ public class EnodeConfigurationSelector implements DeferredImportSelector {
     @Override
     public String[] selectImports(AnnotationMetadata importingClassMetadata) {
         return new String[]{
-                EnodeBootstrapRegistrar.class.getName(),
-                EnodeBeanContainerAutoConfig.class.getName(),
-                EnodeAutoConfiguration.class.getName(),
-                EnodeMemoryEventStoreAutoConfig.class.getName(),
-                EnodeJDBCMySQLEventStoreAutoConfig.class.getName(),
-                EnodeJDBCPgEventStoreAutoConfig.class.getName(),
-                EnodePgEventStoreAutoConfig.class.getName(),
-                EnodeMySQLEventStoreAutoConfig.class.getName(),
-                EnodeMongoEventStoreAutoConfig.class.getName(),
-                EnodeKafkaAutoConfiguration.class.getName(),
-                EnodeOnsAutoConfig.class.getName(),
-                EnodePulsarAutoConfig.class.getName(),
-                EnodeRocketMQAutoConfig.class.getName(),
+            EnodeBootstrapRegistrar.class.getName(),
+            EnodeBeanContainerAutoConfig.class.getName(),
+            EnodeAutoConfiguration.class.getName(),
+            EnodeMemoryEventStoreAutoConfig.class.getName(),
+            EnodeJDBCMySQLEventStoreAutoConfig.class.getName(),
+            EnodeJDBCPgEventStoreAutoConfig.class.getName(),
+            EnodePgEventStoreAutoConfig.class.getName(),
+            EnodeMySQLEventStoreAutoConfig.class.getName(),
+            EnodeMongoEventStoreAutoConfig.class.getName(),
+            EnodeKafkaAutoConfiguration.class.getName(),
+            EnodeOnsAutoConfig.class.getName(),
+            EnodePulsarAutoConfig.class.getName(),
+            EnodeRocketMQAutoConfig.class.getName(),
         };
     }
 }

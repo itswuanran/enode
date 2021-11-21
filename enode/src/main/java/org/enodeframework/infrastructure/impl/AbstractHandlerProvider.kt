@@ -4,8 +4,8 @@ import org.enodeframework.annotation.Command
 import org.enodeframework.annotation.Event
 import org.enodeframework.annotation.Priority
 import org.enodeframework.annotation.Subscribe
-import org.enodeframework.common.container.IObjectContainer
 import org.enodeframework.common.container.ObjectContainer
+import org.enodeframework.common.exception.HandlerRegisterException
 import org.enodeframework.infrastructure.IAssemblyInitializer
 import org.enodeframework.infrastructure.IObjectProxy
 import org.enodeframework.infrastructure.MethodInvocation
@@ -15,9 +15,7 @@ import java.lang.invoke.MethodHandles
 import java.lang.invoke.MethodType
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
-import java.util.*
 import java.util.function.Consumer
-import java.util.stream.Collectors
 import kotlin.reflect.jvm.kotlinFunction
 
 abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface, THandlerSource> :
@@ -36,6 +34,11 @@ abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface, THandlerSou
     protected abstract fun isHandleMethodMatch(method: Method): Boolean
 
     /**
+     * 在启动时校验一个消息是否可以注册多个处理器
+     */
+    protected abstract fun isHandleRegisterOnce(): Boolean
+
+    /**
      * 是否是一个可挂起的方法
      */
     protected open fun isSuspendMethod(method: Method): Boolean {
@@ -43,17 +46,14 @@ abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface, THandlerSou
     }
 
     override fun initialize(componentTypes: Set<Class<*>>) {
-        componentTypes.stream().filter { type: Class<*> -> isHandlerType(type) }
+        componentTypes.filter { type: Class<*> -> isHandlerType(type) }
             .forEach { handlerType: Class<*> -> registerHandler(handlerType) }
         initializeHandlerPriority()
     }
 
     fun getHandlersInternal(source: THandlerSource): List<MessageHandlerData<THandlerProxyInterface>> {
-        val handlerDataList: MutableList<MessageHandlerData<THandlerProxyInterface>> = ArrayList()
-        messageHandlerDict.keys.stream()
-            .filter { key: TKey -> isHandlerSourceMatchKey(source, key) }
-            .forEach { key: TKey -> handlerDataList.add(messageHandlerDict[key]!!) }
-        return handlerDataList
+        return messageHandlerDict.keys.filter { key: TKey -> isHandlerSourceMatchKey(source, key) }
+            .map { key: TKey -> messageHandlerDict.getValue(key) }
     }
 
     private fun initializeHandlerPriority() {
@@ -71,9 +71,8 @@ abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface, THandlerSou
             })
             handlerData.allHandlers = handlers
             handlerData.listHandlers = listHandlers
-            handlerData.queuedHandlers = queueHandlerDict.entries.stream()
-                .sorted(Comparator.comparingInt { v -> v.value })
-                .map { x -> x.key }.collect(Collectors.toList())
+            handlerData.queuedHandlers =
+                queueHandlerDict.entries.sortedWith(Comparator.comparingInt { v -> v.value }).map { x -> x.key }
             messageHandlerDict[key] = handlerData
         }
     }
@@ -116,17 +115,19 @@ abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface, THandlerSou
         handleMethods.forEach { method: Method ->
             // 反射Method转换为MethodHandle，提高效率
             val handleMethod = lookup.findVirtual(
-                handlerType,
-                method.name,
-                MethodType.methodType(method.returnType, method.parameterTypes)
+                handlerType, method.name, MethodType.methodType(method.returnType, method.parameterTypes)
             )
             val key = this.getKey(method)
-            val handlers = handlerDict.computeIfAbsent(key, { ArrayList() })
+            // 针对command，只允许一个处理器
+            val handlers = handlerDict.computeIfAbsent(key) { ArrayList() }
             val handlerProxy = this.getHandlerProxyImplementationType().getDeclaredConstructor().newInstance()
             handlerProxy.setInnerObject(ObjectContainer.resolve(handlerType))
             handlerProxy.setMethod(method)
             handlerProxy.setMethodHandle(handleMethod)
             handlers.add(handlerProxy)
+            if (isHandleRegisterOnce() && handlers.size > 1) {
+                throw HandlerRegisterException("${method.name}#${method.parameterTypes.joinToString("#")}")
+            }
         }
     }
 }

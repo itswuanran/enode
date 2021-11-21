@@ -3,7 +3,6 @@ package org.enodeframework.eventing
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import org.enodeframework.common.exception.DuplicateEventStreamException
 import org.enodeframework.common.extensions.SystemClock
 import org.enodeframework.common.function.Action1
@@ -12,7 +11,6 @@ import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.stream.Collectors
 
 class EventCommittingContextMailBox(
     val number: Int, private val batchSize: Int, handleEventAction: Action1<List<EventCommittingContext>>
@@ -49,8 +47,7 @@ class EventCommittingContextMailBox(
                         message.processingCommand.message.id,
                         message.eventStream.version,
                         message.eventStream.id,
-                        message.eventStream.events.stream().map { obj: IDomainEvent<*> -> obj.id }
-                            .collect(Collectors.joining("|")))
+                        message.eventStream.events.joinToString("|") { obj: IDomainEvent<*> -> obj.id })
                 }
                 lastActiveTime = Date()
                 tryRun()

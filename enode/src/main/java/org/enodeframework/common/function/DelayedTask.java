@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class DelayedTask {
     private static final ScheduledExecutorService EXECUTOR = new ScheduledThreadPoolExecutor(
-            1, new ThreadFactoryBuilder().setDaemon(true).setNameFormat("DelayedThread-%d").build());
+        1, new ThreadFactoryBuilder().setDaemon(true).setNameFormat("DelayedThread-%d").build());
 
     public static void startDelayedTask(Duration duration, Action action) {
         DelayedTask.EXECUTOR.schedule(action::apply, duration.toMillis(), TimeUnit.MILLISECONDS);

@@ -12,7 +12,6 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 import java.util.function.Consumer
-import java.util.stream.Collectors
 
 /**
  * @author anruence@gmail.com
@@ -78,9 +77,8 @@ class DefaultCommandProcessor(
     }
 
     private fun cleanInactiveMailbox() {
-        val inactiveList: List<Map.Entry<String, ProcessingCommandMailbox>> = mailboxDict.entries.stream()
-            .filter { entry: Map.Entry<String, ProcessingCommandMailbox> -> isMailBoxAllowRemove(entry.value) }
-            .collect(Collectors.toList())
+        val inactiveList: List<Map.Entry<String, ProcessingCommandMailbox>> = mailboxDict.entries
+            .filter { entry -> isMailBoxAllowRemove(entry.value) }
         inactiveList.forEach(Consumer { entry: Map.Entry<String, ProcessingCommandMailbox> ->
             if (isMailBoxAllowRemove(entry.value)) {
                 val removed = mailboxDict.remove(entry.key)

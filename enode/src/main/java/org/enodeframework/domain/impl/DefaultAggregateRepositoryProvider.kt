@@ -21,7 +21,7 @@ class DefaultAggregateRepositoryProvider : IAggregateRepositoryProvider, IAssemb
     }
 
     override fun initialize(componentTypes: Set<Class<*>>) {
-        componentTypes.stream().filter { type: Class<*> -> TypeUtils.isAggregateRepositoryType(type) }
+        componentTypes.filter { type: Class<*> -> TypeUtils.isAggregateRepositoryType(type) }
             .forEach { aggregateRepositoryType: Class<*> -> registerAggregateRepository(aggregateRepositoryType) }
     }
 

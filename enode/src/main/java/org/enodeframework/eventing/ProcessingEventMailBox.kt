@@ -12,7 +12,6 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.stream.Collectors
 
 class ProcessingEventMailBox(
     val aggregateRootTypeName: String,
@@ -29,7 +28,7 @@ class ProcessingEventMailBox(
     private var nextExpectingEventVersion: Int? = null
 
     private fun tryRemovedInvalidWaitingMessages(version: Int) {
-        waitingProcessingEventDict.keys.stream().filter { x: Int -> x < version }.forEach { key: Int ->
+        waitingProcessingEventDict.keys.filter { x: Int -> x < version }.forEach { key: Int ->
             if (waitingProcessingEventDict.containsKey(key)) {
                 val processingEvent = waitingProcessingEventDict.remove(key)
                 processingEvent!!.complete()
@@ -41,10 +40,8 @@ class ProcessingEventMailBox(
                     processingEvent.message.commandId,
                     processingEvent.message.getVersion(),
                     processingEvent.message.id,
-                    processingEvent.message.events.stream().map { x: IDomainEvent<*> -> x.javaClass.name }
-                        .collect(Collectors.joining("|")),
-                    processingEvent.message.events.stream().map { obj: IDomainEvent<*> -> obj.id }
-                        .collect(Collectors.joining("|")),
+                    processingEvent.message.events.joinToString("|") { x: IDomainEvent<*> -> x.javaClass.name },
+                    processingEvent.message.events.joinToString("|") { obj: IDomainEvent<*> -> obj.id },
                     version
                 )
             }
@@ -117,19 +114,15 @@ class ProcessingEventMailBox(
             processingEventQueue.add(processingEvent)
             nextExpectingEventVersion = processingEvent.message.getVersion() + 1
             if (logger.isDebugEnabled) {
-                logger.debug(
-                    "{} enqueued new message, aggregateRootType: {}, aggregateRootId: {}, commandId: {}, eventVersion: {}, eventStreamId: {}, eventTypes: {}, eventIds: {}",
+                logger.debug("{} enqueued new message, aggregateRootType: {}, aggregateRootId: {}, commandId: {}, eventVersion: {}, eventStreamId: {}, eventTypes: {}, eventIds: {}",
                     javaClass.name,
                     processingEvent.message.getAggregateRootTypeName(),
                     processingEvent.message.getAggregateRootId(),
                     processingEvent.message.commandId,
                     processingEvent.message.getVersion(),
                     processingEvent.message.id,
-                    processingEvent.message.events.stream().map { x: IDomainEvent<*> -> x.javaClass.name }
-                        .collect(Collectors.joining("|")),
-                    processingEvent.message.events.stream().map { x: IDomainEvent<*> -> x.id }
-                        .collect(Collectors.joining("|"))
-                )
+                    processingEvent.message.events.joinToString("|") { x: IDomainEvent<*> -> x.javaClass.name },
+                    processingEvent.message.events.joinToString("|") { x: IDomainEvent<*> -> x.id })
             }
         }
     }
@@ -156,10 +149,8 @@ class ProcessingEventMailBox(
                         eventStream.commandId,
                         eventStream.getVersion(),
                         eventStream.id,
-                        eventStream.events.stream().map { x: IDomainEvent<*> -> x.javaClass.name }
-                            .collect(Collectors.joining("|")),
-                        eventStream.events.stream().map { obj: IDomainEvent<*> -> obj.id }
-                            .collect(Collectors.joining("|")),
+                        processingEvent.message.events.joinToString("|") { x: IDomainEvent<*> -> x.javaClass.name },
+                        processingEvent.message.events.joinToString("|") { x: IDomainEvent<*> -> x.id },
                         nextExpectingEventVersion
                     )
                 }
@@ -216,7 +207,9 @@ class ProcessingEventMailBox(
             try {
                 handleProcessingEventAction.apply(message)
             } catch (ex: Exception) {
-                logger.error("{} run has unknown exception, aggregateRootId: {}", javaClass.name, aggregateRootId, ex)
+                logger.error(
+                    "{} run has unknown exception, aggregateRootId: {}", javaClass.name, aggregateRootId, ex
+                )
                 Task.sleep(1)
                 completeRun()
             }

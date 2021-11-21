@@ -190,7 +190,7 @@ public class ClassPathScanHandler {
      * @param classes     set of the found classes.
      */
     private void doScanPackageClassesByFile(
-            Set<Class<?>> classes, String packageName, String packagePath, final boolean recursive) {
+        Set<Class<?>> classes, String packageName, String packagePath, final boolean recursive) {
         File dir = new File(packagePath);
         if (!dir.exists() || !dir.isDirectory()) {
             return;
@@ -204,7 +204,7 @@ public class ClassPathScanHandler {
                 doScanPackageClassesByFile(classes, packageName + "." + file.getName(), file.getAbsolutePath(), recursive);
             } else {
                 String className = file.getName().substring(0,
-                        file.getName().length() - CLASS_EXTENSION_NAME.length());
+                    file.getName().length() - CLASS_EXTENSION_NAME.length());
                 try {
                     classes.add(Thread.currentThread().getContextClassLoader().loadClass(packageName + '.' + className));
                 } catch (ClassNotFoundException e) {

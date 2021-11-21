@@ -24,9 +24,9 @@ public class CacheMap {
             }
         };
         Cache<String, String> cache = CacheBuilder.newBuilder()
-                .expireAfterWrite(300, TimeUnit.MILLISECONDS)
-                .removalListener(listener)
-                .build();
+            .expireAfterWrite(300, TimeUnit.MILLISECONDS)
+            .removalListener(listener)
+            .build();
         cache.put("s1", "a");
         cache.put("s2", "b");
         cache.put("s3", "c");

@@ -13,7 +13,6 @@ import org.enodeframework.eventing.*
 import org.enodeframework.mongo.handler.MongoAddDomainEventsHandler
 import org.enodeframework.mongo.handler.MongoFindDomainEventsHandler
 import java.util.concurrent.CompletableFuture
-import java.util.stream.Collectors
 
 /**
  * @author anruence@gmail.com
@@ -35,8 +34,7 @@ class MongoEventStore(
             future.complete(appendResult)
             return future
         }
-        val eventStreamMap = eventStreams.stream().distinct()
-            .collect(Collectors.groupingBy { obj: DomainEventStream -> obj.aggregateRootId })
+        val eventStreamMap = eventStreams.distinct().groupBy { obj: DomainEventStream -> obj.aggregateRootId }
         val batchAggregateEventAppendResult = BatchAggregateEventAppendResult(eventStreamMap.keys.size)
         for ((key, value) in eventStreamMap) {
             batchAppendAggregateEventsAsync(key, value, batchAggregateEventAppendResult, 0)

@@ -20,41 +20,74 @@ object IOHelper {
 
     @JvmStatic
     fun <TAsyncResult> tryAsyncActionRecursively(
-            asyncActionName: String,
-            asyncAction: Func<CompletableFuture<TAsyncResult>>,
-            successAction: Action1<TAsyncResult>,
-            getContextInfoFunc: Func<String?>,
-            failedAction: Action2<Throwable, String>?,
-            retryTimes: Int,
-            retryWhenFailed: Boolean) {
-        tryAsyncActionRecursively(asyncActionName, asyncAction, successAction, getContextInfoFunc, failedAction, retryTimes, retryWhenFailed, 3, 1000)
+        asyncActionName: String,
+        asyncAction: Func<CompletableFuture<TAsyncResult>>,
+        successAction: Action1<TAsyncResult>,
+        getContextInfoFunc: Func<String?>,
+        failedAction: Action2<Throwable, String>?,
+        retryTimes: Int,
+        retryWhenFailed: Boolean
+    ) {
+        tryAsyncActionRecursively(
+            asyncActionName,
+            asyncAction,
+            successAction,
+            getContextInfoFunc,
+            failedAction,
+            retryTimes,
+            retryWhenFailed,
+            3,
+            1000
+        )
     }
 
     @JvmStatic
     fun <TAsyncResult> tryAsyncActionRecursively(
-            asyncActionName: String,
-            asyncAction: Func<CompletableFuture<TAsyncResult>>,
-            successAction: Action1<TAsyncResult>,
-            getContextInfoFunc: Func<String?>,
-            failedAction: Action2<Throwable, String>?,
-            retryTimes: Int,
-            retryWhenFailed: Boolean,
-            maxRetryTimes: Int,
-            retryInterval: Int) {
-        val asyncTaskExecutionContext = AsyncTaskExecutionContext(asyncActionName, asyncAction, successAction, getContextInfoFunc, failedAction, retryTimes, retryWhenFailed, maxRetryTimes, retryInterval)
+        asyncActionName: String,
+        asyncAction: Func<CompletableFuture<TAsyncResult>>,
+        successAction: Action1<TAsyncResult>,
+        getContextInfoFunc: Func<String?>,
+        failedAction: Action2<Throwable, String>?,
+        retryTimes: Int,
+        retryWhenFailed: Boolean,
+        maxRetryTimes: Int,
+        retryInterval: Int
+    ) {
+        val asyncTaskExecutionContext = AsyncTaskExecutionContext(
+            asyncActionName,
+            asyncAction,
+            successAction,
+            getContextInfoFunc,
+            failedAction,
+            retryTimes,
+            retryWhenFailed,
+            maxRetryTimes,
+            retryInterval
+        )
         asyncTaskExecutionContext.execute()
     }
 
     @JvmStatic
     fun <TAsyncResult> tryAsyncActionRecursivelyWithoutResult(
-            asyncActionName: String,
-            asyncAction: Func<CompletableFuture<TAsyncResult>>,
-            successAction: Action1<TAsyncResult>,
-            getContextInfoFunc: Func<String?>,
-            failedAction: Action2<Throwable, String>?,
-            retryTimes: Int,
-            retryWhenFailed: Boolean) {
-        val asyncTaskExecutionContext = AsyncTaskExecutionContext(asyncActionName, asyncAction, successAction, getContextInfoFunc, failedAction, retryTimes, retryWhenFailed, 3, 1000)
+        asyncActionName: String,
+        asyncAction: Func<CompletableFuture<TAsyncResult>>,
+        successAction: Action1<TAsyncResult>,
+        getContextInfoFunc: Func<String?>,
+        failedAction: Action2<Throwable, String>?,
+        retryTimes: Int,
+        retryWhenFailed: Boolean
+    ) {
+        val asyncTaskExecutionContext = AsyncTaskExecutionContext(
+            asyncActionName,
+            asyncAction,
+            successAction,
+            getContextInfoFunc,
+            failedAction,
+            retryTimes,
+            retryWhenFailed,
+            3,
+            1000
+        )
         asyncTaskExecutionContext.execute()
     }
 
@@ -69,7 +102,17 @@ object IOHelper {
         }
     }
 
-    internal class AsyncTaskExecutionContext<TAsyncResult>(private val actionName: String, asyncAction: Func<CompletableFuture<TAsyncResult>>, successAction: Action1<TAsyncResult>, contextInfoFunc: Func<String?>, failedAction: Action2<Throwable, String>?, retryTimes: Int, retryWhenFailed: Boolean, maxRetryTimes: Int, retryInterval: Int) {
+    internal class AsyncTaskExecutionContext<TAsyncResult>(
+        private val actionName: String,
+        asyncAction: Func<CompletableFuture<TAsyncResult>>,
+        successAction: Action1<TAsyncResult>,
+        contextInfoFunc: Func<String?>,
+        failedAction: Action2<Throwable, String>?,
+        retryTimes: Int,
+        retryWhenFailed: Boolean,
+        maxRetryTimes: Int,
+        retryInterval: Int
+    ) {
         private val asyncAction: Func<CompletableFuture<TAsyncResult>>
         private val successAction: Action1<TAsyncResult>
         private val contextInfoFunc: Func<String?>
@@ -87,23 +130,25 @@ object IOHelper {
             }
             if (asyncResult.isCancelled) {
                 asyncResult.exceptionally { ex: Throwable ->
-                    logger.error("Task '{}' was cancelled, contextInfo: {}, current retryTimes: {}.",
-                            actionName,
-                            getContextInfo(contextInfoFunc),
-                            currentRetryTimes, ex)
+                    logger.error(
+                        "Task '{}' was cancelled, contextInfo: {}, current retryTimes: {}.",
+                        actionName,
+                        getContextInfo(contextInfoFunc),
+                        currentRetryTimes, ex
+                    )
                     executeFailedAction(ex, String.format("Task '%s' was cancelled.", actionName))
                     null
                 }
                 return
             }
             asyncResult
-                    .thenAccept { result: TAsyncResult ->
-                        executeSuccessAction(result)
-                    }
-                    .exceptionally { ex: Throwable ->
-                        processTaskException(ex)
-                        null
-                    }
+                .thenAccept { result: TAsyncResult ->
+                    executeSuccessAction(result)
+                }
+                .exceptionally { ex: Throwable ->
+                    processTaskException(ex)
+                    null
+                }
         }
 
         private fun executeRetryAction() {
@@ -114,7 +159,12 @@ object IOHelper {
                     doRetry()
                 }
             } catch (ex: Exception) {
-                logger.error("Failed to execute the retryAction, actionName:{}, contextInfo:{}", actionName, getContextInfo(contextInfoFunc), ex)
+                logger.error(
+                    "Failed to execute the retryAction, actionName:{}, contextInfo:{}",
+                    actionName,
+                    getContextInfo(contextInfoFunc),
+                    ex
+                )
             }
         }
 
@@ -127,7 +177,12 @@ object IOHelper {
             try {
                 successAction.apply(result)
             } catch (ex: Exception) {
-                logger.error("Failed to execute the successAction, actionName:{}, contextInfo:{}", actionName, getContextInfo(contextInfoFunc), ex)
+                logger.error(
+                    "Failed to execute the successAction, actionName:{}, contextInfo:{}",
+                    actionName,
+                    getContextInfo(contextInfoFunc),
+                    ex
+                )
             }
         }
 
@@ -135,7 +190,12 @@ object IOHelper {
             try {
                 failedAction?.apply(e, errorMessage)
             } catch (ex: Exception) {
-                logger.error("Failed to execute the failedAction of action:{}, contextInfo:{}", actionName, getContextInfo(contextInfoFunc), ex)
+                logger.error(
+                    "Failed to execute the failedAction of action:{}, contextInfo:{}",
+                    actionName,
+                    getContextInfo(contextInfoFunc),
+                    ex
+                )
             }
         }
 
@@ -150,13 +210,31 @@ object IOHelper {
 
         private fun processTaskException(exception: Throwable) {
             if (exception is IORuntimeException) {
-                logger.error("Async task '{}' has io exception, contextInfo:{}, current retryTimes:{}, try to run the async task again.", actionName, getContextInfo(contextInfoFunc), currentRetryTimes, exception)
+                logger.error(
+                    "Async task '{}' has io exception, contextInfo:{}, current retryTimes:{}, try to run the async task again.",
+                    actionName,
+                    getContextInfo(contextInfoFunc),
+                    currentRetryTimes,
+                    exception
+                )
                 executeRetryAction()
             } else if (exception is CompletionException && exception.cause is IORuntimeException) {
-                logger.error("Async task '{}' has io exception, contextInfo:{}, current retryTimes:{}, try to run the async task again.", actionName, getContextInfo(contextInfoFunc), currentRetryTimes, exception)
+                logger.error(
+                    "Async task '{}' has io exception, contextInfo:{}, current retryTimes:{}, try to run the async task again.",
+                    actionName,
+                    getContextInfo(contextInfoFunc),
+                    currentRetryTimes,
+                    exception
+                )
                 executeRetryAction()
             } else {
-                logger.error("Task '{}' has unknown exception, contextInfo:{}, current retryTimes:{}", actionName, getContextInfo(contextInfoFunc), currentRetryTimes, exception)
+                logger.error(
+                    "Task '{}' has unknown exception, contextInfo:{}, current retryTimes:{}",
+                    actionName,
+                    getContextInfo(contextInfoFunc),
+                    currentRetryTimes,
+                    exception
+                )
                 if (retryWhenFailed) {
                     executeRetryAction()
                 } else {

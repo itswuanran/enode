@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
-import java.util.stream.Collectors
 
 /**
  * @author anruence@gmail.com
@@ -45,8 +44,7 @@ class DefaultProcessingEventProcessor(
     override fun process(processingEvent: ProcessingEvent) {
         val aggregateRootId = processingEvent.message.getAggregateRootId()
         require(!Strings.isNullOrEmpty(aggregateRootId)) { "aggregateRootId of domain event stream cannot be null or empty, domainEventStreamId:" + processingEvent.message.id }
-        var mailbox =
-            mailboxDict.computeIfAbsent(aggregateRootId) { buildProcessingEventMailBox(processingEvent) }
+        var mailbox = mailboxDict.computeIfAbsent(aggregateRootId) { buildProcessingEventMailBox(processingEvent) }
         var mailboxTryUsingCount = 0L
         while (!mailbox.tryUsing()) {
             sleep(1)
@@ -87,8 +85,7 @@ class DefaultProcessingEventProcessor(
 
     private fun buildProcessingEventMailBox(processingMessage: ProcessingEvent): ProcessingEventMailBox {
         return ProcessingEventMailBox(
-            processingMessage.message.getAggregateRootTypeName(),
-            processingMessage.message.getAggregateRootId()
+            processingMessage.message.getAggregateRootTypeName(), processingMessage.message.getAggregateRootId()
         ) { y: ProcessingEvent -> dispatchProcessingMessageAsync(y, 0) }
     }
 
@@ -99,32 +96,22 @@ class DefaultProcessingEventProcessor(
     }
 
     private fun getAggregateRootLatestPublishedEventVersion(
-        processingEventMailBox: ProcessingEventMailBox,
-        retryTimes: Int
+        processingEventMailBox: ProcessingEventMailBox, retryTimes: Int
     ) {
-        tryAsyncActionRecursively(
-            "GetAggregateRootLatestPublishedEventVersion",
-            {
-                publishedVersionStore.getPublishedVersionAsync(
-                    name,
-                    processingEventMailBox.aggregateRootTypeName,
-                    processingEventMailBox.aggregateRootId
-                )
-            },
-            { result: Int ->
-                processingEventMailBox.setNextExpectingEventVersion(result + 1)
-                refreshingAggregateRootDict.remove(processingEventMailBox.aggregateRootId)
-            },
-            {
-                String.format(
-                    "publishedVersionStore.GetPublishedVersionAsync has unknown exception, aggregateRootTypeName: %s, aggregateRootId: %s",
-                    processingEventMailBox.aggregateRootTypeName,
-                    processingEventMailBox.aggregateRootId
-                )
-            },
-            null,
-            retryTimes,
-            true
+        tryAsyncActionRecursively("GetAggregateRootLatestPublishedEventVersion", {
+            publishedVersionStore.getPublishedVersionAsync(
+                name, processingEventMailBox.aggregateRootTypeName, processingEventMailBox.aggregateRootId
+            )
+        }, { result: Int ->
+            processingEventMailBox.setNextExpectingEventVersion(result + 1)
+            refreshingAggregateRootDict.remove(processingEventMailBox.aggregateRootId)
+        }, {
+            String.format(
+                "publishedVersionStore.GetPublishedVersionAsync has unknown exception, aggregateRootTypeName: %s, aggregateRootId: %s",
+                processingEventMailBox.aggregateRootTypeName,
+                processingEventMailBox.aggregateRootId
+            )
+        }, null, retryTimes, true
         )
     }
 
@@ -155,8 +142,7 @@ class DefaultProcessingEventProcessor(
             {
                 if (logger.isDebugEnabled) {
                     logger.debug(
-                        "dispatch messages success, msg: {}",
-                        serializeService.serialize(processingEvent.message)
+                        "dispatch messages success, msg: {}", serializeService.serialize(processingEvent.message)
                     )
                 }
                 updatePublishedVersionAsync(processingEvent, 0)
@@ -171,41 +157,33 @@ class DefaultProcessingEventProcessor(
                 )
             },
             null,
-            retryTimes, true
+            retryTimes,
+            true
         )
     }
 
     private fun updatePublishedVersionAsync(processingEvent: ProcessingEvent, retryTimes: Int) {
         val message = processingEvent.message
-        tryAsyncActionRecursivelyWithoutResult(
-            "UpdatePublishedVersionAsync",
-            {
-                publishedVersionStore.updatePublishedVersionAsync(
-                    name,
-                    message.getAggregateRootTypeName(),
-                    message.getAggregateRootId(),
-                    message.getVersion()
+        tryAsyncActionRecursivelyWithoutResult("UpdatePublishedVersionAsync", {
+            publishedVersionStore.updatePublishedVersionAsync(
+                name, message.getAggregateRootTypeName(), message.getAggregateRootId(), message.getVersion()
+            )
+        }, {
+            if (logger.isDebugEnabled) {
+                logger.debug(
+                    "update published version success, message ack: {}", serializeService.serialize(message)
                 )
-            },
-            {
-                if (logger.isDebugEnabled) {
-                    logger.debug(
-                        "update published version success, message ack: {}",
-                        serializeService.serialize(message)
-                    )
-                }
-                processingEvent.complete()
-            },
-            {
-                String.format(
-                    "DomainEventStreamMessage [messageId:%s, messageType:%s, aggregateRootId:%s, aggregateRootVersion:%s]",
-                    message.id,
-                    message.javaClass.name,
-                    message.getAggregateRootId(),
-                    message.getVersion()
-                )
-            },
-            null, retryTimes, true
+            }
+            processingEvent.complete()
+        }, {
+            String.format(
+                "DomainEventStreamMessage [messageId:%s, messageType:%s, aggregateRootId:%s, aggregateRootVersion:%s]",
+                message.id,
+                message.javaClass.name,
+                message.getAggregateRootId(),
+                message.getVersion()
+            )
+        }, null, retryTimes, true
         )
     }
 
@@ -235,13 +213,7 @@ class DefaultProcessingEventProcessor(
     }
 
     private fun cleanInactiveMailbox() {
-        val inactiveList = mailboxDict.entries.stream()
-            .filter { (_, value): Map.Entry<String, ProcessingEventMailBox> ->
-                isMailBoxAllowRemove(
-                    value
-                )
-            }
-            .collect(Collectors.toList())
+        val inactiveList = mailboxDict.entries.filter { entry -> isMailBoxAllowRemove(entry.value) }
         inactiveList.forEach(Consumer { (key, value): Map.Entry<String, ProcessingEventMailBox> ->
             if (value.tryUsing()) {
                 if (isMailBoxAllowRemove(value)) {
@@ -260,9 +232,7 @@ class DefaultProcessingEventProcessor(
     }
 
     private fun isMailBoxAllowRemove(mailbox: ProcessingEventMailBox): Boolean {
-        return (mailbox.isInactive(timeoutSeconds)
-                && !mailbox.isRunning()
-                && mailbox.getTotalUnHandledMessageCount() == 0 && mailbox.getWaitingMessageCount() == 0)
+        return (mailbox.isInactive(timeoutSeconds) && !mailbox.isRunning() && mailbox.getTotalUnHandledMessageCount() == 0 && mailbox.getWaitingMessageCount() == 0)
     }
 
     companion object {

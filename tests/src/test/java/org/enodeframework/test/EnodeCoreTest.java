@@ -314,7 +314,7 @@ public class EnodeCoreTest extends AbstractTest {
         Assert.assertEquals(CommandStatus.Failed, commandResult.getStatus());
     }
 
-    @Test
+    // 运行时检测
     public void two_handlers_command_test() {
         TwoHandlersCommand command = new TwoHandlersCommand();
         command.aggregateRootId = (IdGenerator.nextId());

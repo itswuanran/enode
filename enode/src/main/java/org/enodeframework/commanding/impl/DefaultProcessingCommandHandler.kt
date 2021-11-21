@@ -121,10 +121,7 @@ class DefaultProcessingCommandHandler(
             }
             if (commandContext.applicationMessage != null) {
                 commitChangesAsync(
-                    processingCommand,
-                    true,
-                    commandContext.applicationMessage,
-                    ""
+                    processingCommand, true, commandContext.applicationMessage, ""
                 ).whenComplete { _, _ -> taskSource.complete(true) }
             } else {
                 try {
@@ -185,11 +182,7 @@ class DefaultProcessingCommandHandler(
             )
         }, { ex: Throwable, errorMessage: String ->
             handleExceptionAsync(
-                processingCommand,
-                commandHandler,
-                ex,
-                errorMessage,
-                0
+                processingCommand, commandHandler, ex, errorMessage, 0
             ).whenComplete { _, _ -> taskSource.complete(true) }
         }, retryTimes, false)
         return taskSource
@@ -299,9 +292,7 @@ class DefaultProcessingCommandHandler(
                 val realException = getRealException(exception)
                 if (realException is IDomainException) {
                     publishExceptionAsync(
-                        processingCommand,
-                        realException as IDomainException,
-                        0
+                        processingCommand, realException as IDomainException, 0
                     ).whenComplete { _, _ -> future.complete(true) }
                 } else {
                     completeCommand(
@@ -403,13 +394,14 @@ class DefaultProcessingCommandHandler(
         } else if (handlerDataList.size > 1) {
             return HandlerFindResult.TooManyHandlerData
         }
-        val handlerData = handlerDataList.stream().findFirst().orElse(MessageHandlerData())
+        val handlerData = handlerDataList.firstOrNull() ?: (MessageHandlerData())
         if (handlerData.listHandlers.isEmpty()) {
             return HandlerFindResult.NotFound
-        } else if (handlerData.listHandlers.size > 1) {
+        }
+        if (handlerData.listHandlers.size > 1) {
             return HandlerFindResult.TooManyHandler
         }
-        return HandlerFindResult(HandlerFindStatus.Found, handlerData.listHandlers[0])
+        return HandlerFindResult(HandlerFindStatus.Found, handlerData.listHandlers.first())
     }
 
     private fun completeCommand(

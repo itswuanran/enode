@@ -3,7 +3,6 @@ package org.enodeframework.eventing.impl
 import org.enodeframework.commanding.CommandResult
 import org.enodeframework.commanding.CommandStatus
 import org.enodeframework.commanding.ProcessingCommand
-import org.enodeframework.common.exception.MailBoxInvalidException
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.common.serializing.ISerializeService
 import org.enodeframework.domain.IMemoryCache
@@ -11,7 +10,6 @@ import org.enodeframework.eventing.*
 import org.enodeframework.messaging.IMessagePublisher
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
-import java.util.stream.Collectors
 import kotlin.math.abs
 
 /**
@@ -74,14 +72,10 @@ class DefaultEventCommittingService(
         }
         IOHelper.tryAsyncActionRecursively("BatchPersistEventAsync", {
             eventStore.batchAppendAsync(
-                committingContexts.stream().map { obj: EventCommittingContext -> obj.eventStream }
-                    .collect(Collectors.toList())
+                committingContexts.map { obj: EventCommittingContext -> obj.eventStream }
             )
         }, { result: EventAppendResult? ->
-            val eventMailBox = committingContexts.stream()
-                .findFirst()
-                .orElseThrow { MailBoxInvalidException("EventMailBox can not be null") }
-                .mailBox
+            val eventMailBox = committingContexts.first().mailBox
             if (result == null) {
                 logger.error(
                     "Batch persist events success, but the persist result is null, the current event committing mailbox should be pending, mailboxNumber: {}",
@@ -93,7 +87,7 @@ class DefaultEventCommittingService(
             //针对持久化成功的聚合根，正常发布这些聚合根的事件到Q端
             if (result.successAggregateRootIdList.size > 0) {
                 for (aggregateRootId in result.successAggregateRootIdList) {
-                    committingContexts.stream()
+                    committingContexts
                         .filter { x: EventCommittingContext -> x.eventStream.aggregateRootId == aggregateRootId }
                         .forEach { eventCommittingContext ->
                             val context = EventAppendContext()
@@ -114,9 +108,9 @@ class DefaultEventCommittingService(
             //针对持久化出现重复的命令ID，在命令MailBox中标记为已重复，在事件MailBox中清除对应聚合根产生的事件，且重新发布这些命令对应的领域事件到Q端
             if (result.duplicateCommandAggregateRootIdList.isNotEmpty()) {
                 for ((key, value) in result.duplicateCommandAggregateRootIdList) {
-                    committingContexts.stream()
-                        .filter { x: EventCommittingContext -> key == x.eventStream.aggregateRootId }.findFirst()
-                        .ifPresent { eventCommittingContext: EventCommittingContext ->
+                    committingContexts
+                        .filter { x: EventCommittingContext -> key == x.eventStream.aggregateRootId }
+                        .firstOrNull { eventCommittingContext: EventCommittingContext ->
                             val context = EventAppendContext()
                             context.duplicateCommandIdList = value
                             context.committingContext = eventCommittingContext
@@ -132,9 +126,9 @@ class DefaultEventCommittingService(
             //针对持久化出现版本冲突的聚合根，则自动处理每个聚合根的冲突
             if (result.duplicateEventAggregateRootIdList.size > 0) {
                 for (aggregateRootId in result.duplicateEventAggregateRootIdList) {
-                    committingContexts.stream()
+                    committingContexts
                         .filter { x: EventCommittingContext -> x.eventStream.aggregateRootId == aggregateRootId }
-                        .findFirst().ifPresent { eventCommittingContext ->
+                        .firstOrNull { eventCommittingContext ->
                             val context = EventAppendContext()
                             context.duplicateCommandIdList = ArrayList()
                             context.committingContext = eventCommittingContext

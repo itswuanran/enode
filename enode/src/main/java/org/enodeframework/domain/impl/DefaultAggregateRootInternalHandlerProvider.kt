@@ -1,8 +1,8 @@
 package org.enodeframework.domain.impl
 
-import org.enodeframework.configurations.SysProperties
 import org.enodeframework.common.exception.HandlerNotFoundException
 import org.enodeframework.common.function.Action2
+import org.enodeframework.configurations.SysProperties
 import org.enodeframework.domain.IAggregateRoot
 import org.enodeframework.domain.IAggregateRootInternalHandlerProvider
 import org.enodeframework.eventing.IDomainEvent
@@ -22,7 +22,7 @@ class DefaultAggregateRootInternalHandlerProvider : IAggregateRootInternalHandle
         HashMap()
 
     override fun initialize(componentTypes: Set<Class<*>>) {
-        componentTypes.stream().filter { type: Class<*> -> TypeUtils.isAggregateRoot(type) }
+        componentTypes.filter { type: Class<*> -> TypeUtils.isAggregateRoot(type) }
             .forEach { aggregateRootType: Class<*> -> recurseRegisterInternalHandler(aggregateRootType) }
     }
 

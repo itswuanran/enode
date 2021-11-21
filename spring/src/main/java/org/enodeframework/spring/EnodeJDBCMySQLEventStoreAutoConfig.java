@@ -1,7 +1,7 @@
 package org.enodeframework.spring;
 
-import org.enodeframework.configurations.EventStoreConfiguration;
 import org.enodeframework.common.serializing.ISerializeService;
+import org.enodeframework.configurations.EventStoreConfiguration;
 import org.enodeframework.eventing.IEventSerializer;
 import org.enodeframework.jdbc.JDBCEventStore;
 import org.enodeframework.jdbc.JDBCPublishedVersionStore;

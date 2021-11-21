@@ -32,14 +32,14 @@ public class DefaultAggregateSnapshotter implements IAggregateSnapshotter {
             return taskSource;
         }
         IOHelper.tryAsyncActionRecursively("TryGetAggregateAsync",
-                () -> aggregateRepository.getAsync(aggregateRootId),
-                result -> {
-                    taskSource.complete((T) result);
-                },
-                () -> String.format("aggregateRepository.getAsync has unknown exception, aggregateRepository: %s, aggregateRootTypeName: %s, aggregateRootId: %s", aggregateRepository.getClass().getName(), aggregateRootType.getName(), aggregateRootId),
-                null,
-                retryTimes,
-                true);
+            () -> aggregateRepository.getAsync(aggregateRootId),
+            result -> {
+                taskSource.complete((T) result);
+            },
+            () -> String.format("aggregateRepository.getAsync has unknown exception, aggregateRepository: %s, aggregateRootTypeName: %s, aggregateRootId: %s", aggregateRepository.getClass().getName(), aggregateRootType.getName(), aggregateRootId),
+            null,
+            retryTimes,
+            true);
         return taskSource;
     }
 }

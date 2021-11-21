@@ -12,7 +12,8 @@ import kotlin.coroutines.Continuation
 /**
  * @author anruence@gmail.com
  */
-class DefaultMessageHandlerProvider : AbstractHandlerProvider<Class<*>, IMessageHandlerProxy1, Class<*>>(), IMessageHandlerProvider {
+class DefaultMessageHandlerProvider : AbstractHandlerProvider<Class<*>, IMessageHandlerProxy1, Class<*>>(),
+    IMessageHandlerProvider {
     override fun getKey(method: Method): Class<*> {
         return method.parameterTypes[0]
     }
@@ -63,5 +64,9 @@ class DefaultMessageHandlerProvider : AbstractHandlerProvider<Class<*>, IMessage
 
     override fun getHandlers(messageType: Class<*>): List<MessageHandlerData<IMessageHandlerProxy1>> {
         return getHandlersInternal(messageType)
+    }
+
+    override fun isHandleRegisterOnce(): Boolean {
+        return false
     }
 }

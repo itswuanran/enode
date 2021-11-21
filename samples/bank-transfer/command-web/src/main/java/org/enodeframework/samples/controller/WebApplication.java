@@ -14,15 +14,14 @@ import org.springframework.web.reactive.config.EnableWebFlux;
 @EnableEnode(scanBasePackages = {"org.enodeframework"})
 @EnableWebFlux
 public class WebApplication {
+    @Autowired
+    private DefaultCommandResultProcessor commandResultProcessor;
+    @Autowired
+    private DefaultSendReplyService sendReplyService;
+
     public static void main(String[] args) {
         SpringApplication.run(WebApplication.class, args);
     }
-
-    @Autowired
-    private DefaultCommandResultProcessor commandResultProcessor;
-
-    @Autowired
-    private DefaultSendReplyService sendReplyService;
 
     @Bean
     public Vertx vertx() {

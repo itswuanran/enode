@@ -23,9 +23,9 @@ public abstract class AggregateRoot<TAggregateRootId> implements IAggregateRoot 
      * dynamic inject through ApplicationContext instance
      */
     private final IAggregateRootInternalHandlerProvider aggregateRootInternalHandlerProvider;
+    private final List<IDomainEvent<?>> emptyEvents = new ArrayList<>();
     protected TAggregateRootId id;
     protected int version;
-    private final List<IDomainEvent<?>> emptyEvents = new ArrayList<>();
     private Queue<IDomainEvent<?>> uncommittedEvents = new ConcurrentLinkedQueue<>();
 
     protected AggregateRoot() {

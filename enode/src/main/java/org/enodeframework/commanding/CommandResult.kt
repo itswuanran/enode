@@ -39,7 +39,13 @@ class CommandResult {
     /**
      * Parameterized constructor.
      */
-    constructor(status: CommandStatus, commandId: String, aggregateRootId: String, result: String?, resultType: String) {
+    constructor(
+        status: CommandStatus,
+        commandId: String,
+        aggregateRootId: String,
+        result: String?,
+        resultType: String
+    ) {
         this.status = status
         this.commandId = commandId
         this.aggregateRootId = aggregateRootId

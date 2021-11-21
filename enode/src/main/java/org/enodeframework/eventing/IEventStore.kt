@@ -21,5 +21,10 @@ interface IEventStore {
     /**
      * Query a range of event streams of a single aggregate from event store async.
      */
-    fun queryAggregateEventsAsync(aggregateRootId: String, aggregateRootTypeName: String, minVersion: Int, maxVersion: Int): CompletableFuture<List<DomainEventStream>>
+    fun queryAggregateEventsAsync(
+        aggregateRootId: String,
+        aggregateRootTypeName: String,
+        minVersion: Int,
+        maxVersion: Int
+    ): CompletableFuture<List<DomainEventStream>>
 }

@@ -1,8 +1,8 @@
 package org.enodeframework.spring;
 
 import io.vertx.mysqlclient.MySQLPool;
-import org.enodeframework.configurations.EventStoreConfiguration;
 import org.enodeframework.common.serializing.ISerializeService;
+import org.enodeframework.configurations.EventStoreConfiguration;
 import org.enodeframework.eventing.IEventSerializer;
 import org.enodeframework.mysql.MySQLEventStore;
 import org.enodeframework.mysql.MySQLPublishedVersionStore;

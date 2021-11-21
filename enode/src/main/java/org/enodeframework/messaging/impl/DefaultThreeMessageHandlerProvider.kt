@@ -8,16 +8,20 @@ import org.enodeframework.messaging.IMessageHandlerProxy3
 import org.enodeframework.messaging.IThreeMessageHandlerProvider
 import org.enodeframework.messaging.MessageHandlerData
 import java.lang.reflect.Method
-import java.util.*
 import kotlin.coroutines.Continuation
 
 /**
  * @author anruence@gmail.com
  */
-class DefaultThreeMessageHandlerProvider : AbstractHandlerProvider<ManyType, IMessageHandlerProxy3, List<Class<*>>>(), IThreeMessageHandlerProvider {
+class DefaultThreeMessageHandlerProvider : AbstractHandlerProvider<ManyType, IMessageHandlerProxy3, List<Class<*>>>(),
+    IThreeMessageHandlerProvider {
 
     override fun getKey(method: Method): ManyType {
         return ManyType(listOf(*method.parameterTypes))
+    }
+
+    override fun isHandleRegisterOnce(): Boolean {
+        return false
     }
 
     override fun getHandlerProxyImplementationType(): Class<out IMessageHandlerProxy3> {
@@ -26,7 +30,7 @@ class DefaultThreeMessageHandlerProvider : AbstractHandlerProvider<ManyType, IMe
 
     override fun isHandlerSourceMatchKey(handlerSource: List<Class<*>>, key: ManyType): Boolean {
         for (type in key.types) {
-            if (!handlerSource.stream().anyMatch { x: Class<*> -> x == type }) {
+            if (!handlerSource.any { x: Class<*> -> x == type }) {
                 return false
             }
         }

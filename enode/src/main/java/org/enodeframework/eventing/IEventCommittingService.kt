@@ -12,5 +12,8 @@ interface IEventCommittingService {
     /**
      * Publish the given domain event stream async.
      */
-    fun publishDomainEventAsync(processingCommand: ProcessingCommand, eventStream: DomainEventStream): CompletableFuture<Boolean>
+    fun publishDomainEventAsync(
+        processingCommand: ProcessingCommand,
+        eventStream: DomainEventStream
+    ): CompletableFuture<Boolean>
 }

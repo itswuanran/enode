@@ -2,7 +2,6 @@ package org.enodeframework.rocketmq.message;
 
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageExt;
-import org.enodeframework.common.io.Task;
 import org.enodeframework.queue.IMessageHandler;
 import org.enodeframework.queue.QueueMessage;
 

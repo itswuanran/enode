@@ -15,17 +15,16 @@ import org.enodeframework.messaging.*
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
-import java.util.stream.Collectors
 
 /**
  * @author anruence@gmail.com
  */
 class DefaultMessageDispatcher(
-        private val typeNameProvider: ITypeNameProvider,
-        private val messageHandlerProvider: IMessageHandlerProvider,
-        private val twoMessageHandlerProvider: ITwoMessageHandlerProvider,
-        private val threeMessageHandlerProvider: IThreeMessageHandlerProvider,
-        private val serializeService: ISerializeService
+    private val typeNameProvider: ITypeNameProvider,
+    private val messageHandlerProvider: IMessageHandlerProvider,
+    private val twoMessageHandlerProvider: ITwoMessageHandlerProvider,
+    private val threeMessageHandlerProvider: IThreeMessageHandlerProvider,
+    private val serializeService: ISerializeService
 ) : IMessageDispatcher {
     override fun dispatchMessageAsync(message: IMessage): CompletableFuture<Boolean> {
         return dispatchMessages(Lists.newArrayList(message))
@@ -46,16 +45,30 @@ class DefaultMessageDispatcher(
         dispatchSingleMessage(queueMessageDispatching.dequeueMessage(), queueMessageDispatching)
         //如果有至少两个事件，则尝试调用针对两个事件的Handler
         if (messageCount >= 2) {
-            val twoMessageHandlers = twoMessageHandlerProvider.getHandlers(messages.stream().map { x: IMessage -> x.javaClass }.collect(Collectors.toList()) as List<Class<*>>)
+            val twoMessageHandlers =
+                twoMessageHandlerProvider.getHandlers(messages.map { x: IMessage -> x.javaClass }.toList())
             if (twoMessageHandlers.isNotEmpty()) {
-                dispatchMultiMessage(messages, twoMessageHandlers, rootDispatching) { multiMessageDispatching: MultiMessageDispatching, handlerProxy: IMessageHandlerProxy2, queueHandler: QueuedHandler<IMessageHandlerProxy2>?, retryTimes: Int -> dispatchTwoMessageToHandlerAsync(multiMessageDispatching, handlerProxy, queueHandler, retryTimes) }
+                dispatchMultiMessage(
+                    messages, twoMessageHandlers, rootDispatching
+                ) { multiMessageDispatching: MultiMessageDispatching, handlerProxy: IMessageHandlerProxy2, queueHandler: QueuedHandler<IMessageHandlerProxy2>?, retryTimes: Int ->
+                    dispatchTwoMessageToHandlerAsync(
+                        multiMessageDispatching, handlerProxy, queueHandler, retryTimes
+                    )
+                }
             }
         }
         //如果有至少三个事件，则尝试调用针对三个事件的Handler
         if (messageCount >= 3) {
-            val threeMessageHandlers = threeMessageHandlerProvider.getHandlers(messages.stream().map { x: IMessage -> x.javaClass }.collect(Collectors.toList()) as List<Class<*>>)
+            val threeMessageHandlers =
+                threeMessageHandlerProvider.getHandlers(messages.map { x: IMessage -> x.javaClass }.toList())
             if (threeMessageHandlers.isNotEmpty()) {
-                dispatchMultiMessage(messages, threeMessageHandlers, rootDispatching) { multiMessageDispatching: MultiMessageDispatching, handlerProxy: IMessageHandlerProxy3, queueHandler: QueuedHandler<IMessageHandlerProxy3>?, retryTimes: Int -> dispatchThreeMessageToHandlerAsync(multiMessageDispatching, handlerProxy, queueHandler, retryTimes) }
+                dispatchMultiMessage(
+                    messages, threeMessageHandlers, rootDispatching
+                ) { multiMessageDispatching: MultiMessageDispatching, handlerProxy: IMessageHandlerProxy3, queueHandler: QueuedHandler<IMessageHandlerProxy3>?, retryTimes: Int ->
+                    dispatchThreeMessageToHandlerAsync(
+                        multiMessageDispatching, handlerProxy, queueHandler, retryTimes
+                    )
+                }
             }
         }
         return rootDispatching.taskCompletionSource
@@ -68,51 +81,103 @@ class DefaultMessageDispatcher(
             return
         }
         messageHandlerDataList.forEach(Consumer { messageHandlerData: MessageHandlerData<IMessageHandlerProxy1> ->
-            val singleMessageDispatching = SingleMessageDispatching(message, queueMessageDispatching, messageHandlerData.allHandlers, typeNameProvider)
+            val singleMessageDispatching = SingleMessageDispatching(
+                message, queueMessageDispatching, messageHandlerData.allHandlers, typeNameProvider
+            )
             if (messageHandlerData.listHandlers.isNotEmpty()) {
-                messageHandlerData.listHandlers.forEach { handler: IMessageHandlerProxy1 -> dispatchSingleMessageToHandlerAsync(singleMessageDispatching, handler, null, 0) }
+                messageHandlerData.listHandlers.forEach { handler: IMessageHandlerProxy1 ->
+                    dispatchSingleMessageToHandlerAsync(
+                        singleMessageDispatching, handler, null, 0
+                    )
+                }
             }
             if (messageHandlerData.queuedHandlers.isNotEmpty()) {
-                val queueHandler = QueuedHandler(messageHandlerData.queuedHandlers) { queuedHandler: QueuedHandler<IMessageHandlerProxy1>?, nextHandler: IMessageHandlerProxy1 -> dispatchSingleMessageToHandlerAsync(singleMessageDispatching, nextHandler, queuedHandler, 0) }
-                dispatchSingleMessageToHandlerAsync(singleMessageDispatching, queueHandler.dequeueHandler(), queueHandler, 0)
+                val queueHandler =
+                    QueuedHandler(messageHandlerData.queuedHandlers) { queuedHandler: QueuedHandler<IMessageHandlerProxy1>?, nextHandler: IMessageHandlerProxy1 ->
+                        dispatchSingleMessageToHandlerAsync(
+                            singleMessageDispatching, nextHandler, queuedHandler, 0
+                        )
+                    }
+                dispatchSingleMessageToHandlerAsync(
+                    singleMessageDispatching, queueHandler.dequeueHandler(), queueHandler, 0
+                )
             }
         })
     }
 
-    private fun <T : IObjectProxy> dispatchMultiMessage(messages: List<IMessage>, messageHandlerDataList: List<MessageHandlerData<T>>, rootDispatching: RootDispatching, dispatchAction: Action4<MultiMessageDispatching, T, QueuedHandler<T>?, Int>) {
+    private fun <T : IObjectProxy> dispatchMultiMessage(
+        messages: List<IMessage>,
+        messageHandlerDataList: List<MessageHandlerData<T>>,
+        rootDispatching: RootDispatching,
+        dispatchAction: Action4<MultiMessageDispatching, T, QueuedHandler<T>?, Int>
+    ) {
         messageHandlerDataList.forEach(Consumer { messageHandlerData: MessageHandlerData<T> ->
-            val multiMessageDispatching = MultiMessageDispatching(messages, messageHandlerData.allHandlers, rootDispatching, typeNameProvider)
+            val multiMessageDispatching =
+                MultiMessageDispatching(messages, messageHandlerData.allHandlers, rootDispatching, typeNameProvider)
             if (messageHandlerData.listHandlers.isNotEmpty()) {
-                messageHandlerData.listHandlers.forEach(Consumer { handler: T -> dispatchAction.apply(multiMessageDispatching, handler, null, 0) })
+                messageHandlerData.listHandlers.forEach(Consumer { handler: T ->
+                    dispatchAction.apply(
+                        multiMessageDispatching, handler, null, 0
+                    )
+                })
             }
             if (messageHandlerData.queuedHandlers.isNotEmpty()) {
-                val queuedHandler = QueuedHandler(messageHandlerData.queuedHandlers) { currentQueuedHandler: QueuedHandler<T>?, nextHandler: T -> dispatchAction.apply(multiMessageDispatching, nextHandler, currentQueuedHandler, 0) }
+                val queuedHandler =
+                    QueuedHandler(messageHandlerData.queuedHandlers) { currentQueuedHandler: QueuedHandler<T>?, nextHandler: T ->
+                        dispatchAction.apply(
+                            multiMessageDispatching, nextHandler, currentQueuedHandler, 0
+                        )
+                    }
                 dispatchAction.apply(multiMessageDispatching, queuedHandler.dequeueHandler(), queuedHandler, 0)
             }
         })
     }
 
-    private fun dispatchSingleMessageToHandlerAsync(singleMessageDispatching: SingleMessageDispatching, handlerProxy: IMessageHandlerProxy1, queueHandler: QueuedHandler<IMessageHandlerProxy1>?, retryTimes: Int) {
+    private fun dispatchSingleMessageToHandlerAsync(
+        singleMessageDispatching: SingleMessageDispatching,
+        handlerProxy: IMessageHandlerProxy1,
+        queueHandler: QueuedHandler<IMessageHandlerProxy1>?,
+        retryTimes: Int
+    ) {
         val message = singleMessageDispatching.message
         val messageTypeName = typeNameProvider.getTypeName(message.javaClass)
         val handlerType: Class<*> = handlerProxy.getInnerObject().javaClass
         val handlerTypeName = typeNameProvider.getTypeName(handlerType)
-        handleSingleMessageAsync(singleMessageDispatching, handlerProxy, handlerTypeName, messageTypeName, queueHandler, retryTimes)
+        handleSingleMessageAsync(
+            singleMessageDispatching, handlerProxy, handlerTypeName, messageTypeName, queueHandler, retryTimes
+        )
     }
 
-    private fun dispatchTwoMessageToHandlerAsync(multiMessageDispatching: MultiMessageDispatching, handlerProxy: IMessageHandlerProxy2, queueHandler: QueuedHandler<IMessageHandlerProxy2>?, retryTimes: Int) {
+    private fun dispatchTwoMessageToHandlerAsync(
+        multiMessageDispatching: MultiMessageDispatching,
+        handlerProxy: IMessageHandlerProxy2,
+        queueHandler: QueuedHandler<IMessageHandlerProxy2>?,
+        retryTimes: Int
+    ) {
         val handlerType: Class<*> = handlerProxy.getInnerObject().javaClass
         val handlerTypeName = typeNameProvider.getTypeName(handlerType)
         handleTwoMessageAsync(multiMessageDispatching, handlerProxy, handlerTypeName, queueHandler, 0)
     }
 
-    private fun dispatchThreeMessageToHandlerAsync(multiMessageDispatching: MultiMessageDispatching, handlerProxy: IMessageHandlerProxy3, queueHandler: QueuedHandler<IMessageHandlerProxy3>?, retryTimes: Int) {
+    private fun dispatchThreeMessageToHandlerAsync(
+        multiMessageDispatching: MultiMessageDispatching,
+        handlerProxy: IMessageHandlerProxy3,
+        queueHandler: QueuedHandler<IMessageHandlerProxy3>?,
+        retryTimes: Int
+    ) {
         val handlerType: Class<*> = handlerProxy.getInnerObject().javaClass
         val handlerTypeName = typeNameProvider.getTypeName(handlerType)
         handleThreeMessageAsync(multiMessageDispatching, handlerProxy, handlerTypeName, queueHandler, 0)
     }
 
-    private fun handleSingleMessageAsync(singleMessageDispatching: SingleMessageDispatching, handlerProxy: IMessageHandlerProxy1, handlerTypeName: String, messageTypeName: String, queueHandler: QueuedHandler<IMessageHandlerProxy1>?, retryTimes: Int) {
+    private fun handleSingleMessageAsync(
+        singleMessageDispatching: SingleMessageDispatching,
+        handlerProxy: IMessageHandlerProxy1,
+        handlerTypeName: String,
+        messageTypeName: String,
+        queueHandler: QueuedHandler<IMessageHandlerProxy1>?,
+        retryTimes: Int
+    ) {
         val message = singleMessageDispatching.message
         IOHelper.tryAsyncActionRecursivelyWithoutResult("HandleSingleMessageAsync", {
             CoroutineScope(Dispatchers.IO).async {
@@ -125,11 +190,21 @@ class DefaultMessageDispatcher(
                 logger.debug("message handled success, messages: {}", serializeService.serialize(message))
             }
         }, {
-            String.format("[message: %s, handlerType: %s]", serializeService.serialize(message), handlerProxy.getInnerObject().javaClass.name)
+            String.format(
+                "[message: %s, handlerType: %s]",
+                serializeService.serialize(message),
+                handlerProxy.getInnerObject().javaClass.name
+            )
         }, null, retryTimes, true)
     }
 
-    private fun handleTwoMessageAsync(multiMessageDispatching: MultiMessageDispatching, handlerProxy: IMessageHandlerProxy2, handlerTypeName: String, queueHandler: QueuedHandler<IMessageHandlerProxy2>?, retryTimes: Int) {
+    private fun handleTwoMessageAsync(
+        multiMessageDispatching: MultiMessageDispatching,
+        handlerProxy: IMessageHandlerProxy2,
+        handlerTypeName: String,
+        queueHandler: QueuedHandler<IMessageHandlerProxy2>?,
+        retryTimes: Int
+    ) {
         val messages = multiMessageDispatching.messages
         val message1 = messages[0]
         val message2 = messages[1]
@@ -144,13 +219,21 @@ class DefaultMessageDispatcher(
                 logger.debug("TwoMessage handled success, messages: {}", serializeService.serialize(messages))
             }
         }, {
-            String.format("[messages: %s, handlerType: %s]", serializeService.serialize(messages), handlerProxy.getInnerObject().javaClass.name)
+            String.format(
+                "[messages: %s, handlerType: %s]",
+                serializeService.serialize(messages),
+                handlerProxy.getInnerObject().javaClass.name
+            )
         }, null, retryTimes, true)
     }
 
     private fun handleThreeMessageAsync(
-            multiMessageDispatching: MultiMessageDispatching, handlerProxy: IMessageHandlerProxy3, handlerTypeName: String,
-            queueHandler: QueuedHandler<IMessageHandlerProxy3>?, retryTimes: Int) {
+        multiMessageDispatching: MultiMessageDispatching,
+        handlerProxy: IMessageHandlerProxy3,
+        handlerTypeName: String,
+        queueHandler: QueuedHandler<IMessageHandlerProxy3>?,
+        retryTimes: Int
+    ) {
         val messages = multiMessageDispatching.messages
         val message1 = messages[0]
         val message2 = messages[1]
@@ -166,7 +249,11 @@ class DefaultMessageDispatcher(
                 logger.debug("ThreeMessage handled success, messages: {}", serializeService.serialize(messages))
             }
         }, {
-            String.format("[messages: %s, handlerType: %s]", serializeService.serialize(messages), handlerProxy.getInnerObject().javaClass.name)
+            String.format(
+                "[messages: %s, handlerType: %s]",
+                serializeService.serialize(messages),
+                handlerProxy.getInnerObject().javaClass.name
+            )
         }, null, retryTimes, true)
     }
 

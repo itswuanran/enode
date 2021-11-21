@@ -1,7 +1,5 @@
 package org.enodeframework.infrastructure.impl
 
-import java.util.stream.Collectors
-
 /**
  * @author anruence@gmail.com
  */
@@ -9,7 +7,7 @@ class ManyType(types: List<Class<*>>) {
     val types: List<Class<*>>
 
     override fun hashCode(): Int {
-        return types.stream().map { obj: Class<*> -> obj.hashCode() }.reduce { x: Int, y: Int -> x xor y }.orElse(1)
+        return types.map { obj: Class<*> -> obj.hashCode() }.reduce { x: Int, y: Int -> x xor y }
     }
 
     override fun equals(other: Any?): Boolean {
@@ -24,15 +22,14 @@ class ManyType(types: List<Class<*>>) {
         }
         return if (types.size != other.types.size) {
             false
-        } else types.stream().allMatch { type: Class<*> -> other.types.stream().anyMatch { x: Class<*> -> x == type } }
-                && other.types.stream()
-            .allMatch { type: Class<*> -> types.stream().anyMatch { x: Class<*> -> x == type } }
+        } else types.any { type: Class<*> ->
+            other.types.any { x: Class<*> -> x == type }
+        } && other.types.all { type: Class<*> -> types.any { x: Class<*> -> x == type } }
     }
 
     init {
         require(HashSet(types).size == types.size) {
-            String.format("Invalid ManyType: %s", types.stream().map { obj: Class<*> -> obj.name }
-                .collect(Collectors.joining("|")))
+            String.format("Invalid ManyType: %s", types.joinToString("|") { obj: Class<*> -> obj.name })
         }
         this.types = types
     }

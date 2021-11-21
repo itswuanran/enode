@@ -1,4 +1,3 @@
-
 package org.enodeframework.metrics;
 
 import com.codahale.metrics.Gauge;

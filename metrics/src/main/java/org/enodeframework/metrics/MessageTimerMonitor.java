@@ -27,18 +27,6 @@ public class MessageTimerMonitor implements MessageMonitor<IMessage>, MetricSet 
     private final Timer ignoredTimer;
 
     /**
-     * Instantiate a Builder to be able to create a {@link MessageTimerMonitor}.
-     * <p>
-     * The {@link Clock} is defaulted to a {@link Clock#defaultClock()} and the {@code reservoirFactory} defaults to
-     * creating a {@link ExponentiallyDecayingReservoir}.
-     *
-     * @return a Builder to be able to create a {@link MessageTimerMonitor}
-     */
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    /**
      * Instantiate a {@link MessageTimerMonitor} based on the fields contained in the {@link Builder}.
      *
      * @param builder the {@link Builder} used to instantiate a {@link MessageTimerMonitor} instance
@@ -53,6 +41,18 @@ public class MessageTimerMonitor implements MessageMonitor<IMessage>, MetricSet 
         successTimer = new Timer(reservoirFactory.get(), clock);
         failureTimer = new Timer(reservoirFactory.get(), clock);
         ignoredTimer = new Timer(reservoirFactory.get(), clock);
+    }
+
+    /**
+     * Instantiate a Builder to be able to create a {@link MessageTimerMonitor}.
+     * <p>
+     * The {@link Clock} is defaulted to a {@link Clock#defaultClock()} and the {@code reservoirFactory} defaults to
+     * creating a {@link ExponentiallyDecayingReservoir}.
+     *
+     * @return a Builder to be able to create a {@link MessageTimerMonitor}
+     */
+    public static Builder builder() {
+        return new Builder();
     }
 
     @Override

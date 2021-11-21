@@ -123,10 +123,6 @@ public class TestCommandHandler {
     }
 
     @Subscribe
-    public void handleAsync2(ICommandContext context, TwoHandlersCommand command) {
-    }
-
-    @Subscribe
     public void handleAsync(ICommandContext context, BaseCommand command) {
         context.setResult("ResultFromBaseCommand");
     }

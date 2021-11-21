@@ -34,10 +34,10 @@ public class DomainEventStream extends Message {
         for (IDomainEvent<?> event : events) {
             if (event.getVersion() != this.getVersion()) {
                 throw new DomainEventInvalidException(String.format("Invalid domain event version, aggregateRootTypeName: %s aggregateRootId: %s expected version: %d, but was: %d",
-                        aggregateRootTypeName,
-                        aggregateRootId,
-                        version,
-                        event.getVersion()));
+                    aggregateRootTypeName,
+                    aggregateRootId,
+                    version,
+                    event.getVersion()));
             }
             event.setCommandId(commandId);
             event.setAggregateRootTypeName(aggregateRootTypeName);

@@ -26,12 +26,18 @@ interface IMemoryCache {
     /**
      * Refresh the aggregate memory cache by replaying events of event store, and return the refreshed aggregate root.
      */
-    fun refreshAggregateFromEventStoreAsync(aggregateRootTypeName: String, aggregateRootId: String): CompletableFuture<IAggregateRoot>
+    fun refreshAggregateFromEventStoreAsync(
+        aggregateRootTypeName: String,
+        aggregateRootId: String
+    ): CompletableFuture<IAggregateRoot>
 
     /**
      * Refresh the aggregate memory cache by replaying events of event store, and return the refreshed aggregate root.
      */
-    fun <T : IAggregateRoot> refreshAggregateFromEventStoreAsync(aggregateRootType: Class<T>, aggregateRootId: String): CompletableFuture<T>
+    fun <T : IAggregateRoot> refreshAggregateFromEventStoreAsync(
+        aggregateRootType: Class<T>,
+        aggregateRootId: String
+    ): CompletableFuture<T>
 
     /**
      * Start background tasks.

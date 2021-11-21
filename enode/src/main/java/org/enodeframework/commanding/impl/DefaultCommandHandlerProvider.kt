@@ -12,7 +12,8 @@ import kotlin.coroutines.Continuation
 /**
  * @author anruence@gmail.com
  */
-class DefaultCommandHandlerProvider : AbstractHandlerProvider<Class<*>, ICommandHandlerProxy, Class<*>>(), ICommandHandlerProvider {
+class DefaultCommandHandlerProvider : AbstractHandlerProvider<Class<*>, ICommandHandlerProxy, Class<*>>(),
+    ICommandHandlerProvider {
     override fun getKey(method: Method): Class<*> {
         return method.parameterTypes[1]
     }
@@ -24,7 +25,6 @@ class DefaultCommandHandlerProvider : AbstractHandlerProvider<Class<*>, ICommand
     override fun isHandlerSourceMatchKey(handlerSource: Class<*>, key: Class<*>): Boolean {
         return key == handlerSource
     }
-
 
     override fun isHandleMethodMatch(method: Method): Boolean {
         if (isSuspendMethod(method)) {
@@ -70,5 +70,9 @@ class DefaultCommandHandlerProvider : AbstractHandlerProvider<Class<*>, ICommand
 
     override fun getHandlers(commandType: Class<*>): List<MessageHandlerData<ICommandHandlerProxy>> {
         return getHandlersInternal(commandType)
+    }
+
+    override fun isHandleRegisterOnce(): Boolean {
+        return true
     }
 }

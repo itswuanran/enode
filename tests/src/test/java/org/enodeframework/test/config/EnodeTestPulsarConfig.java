@@ -31,48 +31,48 @@ public class EnodeTestPulsarConfig {
     @Bean
     public PulsarClient pulsarClient() throws PulsarClientException {
         return PulsarClient.builder()
-                .serviceUrl("pulsar://localhost:6650")
-                .build();
+            .serviceUrl("pulsar://localhost:6650")
+            .build();
     }
 
     @Bean
     public Consumer<byte[]> commandConsumer(PulsarClient pulsarClient, @Qualifier("pulsarCommandListener")
-            PulsarMessageListener pulsarCommandListener) throws PulsarClientException {
+        PulsarMessageListener pulsarCommandListener) throws PulsarClientException {
         return pulsarClient.newConsumer().messageListener(pulsarCommandListener)
-                .topic(commandTopic)
-                .subscriptionType(SubscriptionType.Key_Shared)
-                .subscriptionName(Constants.DEFAULT_CONSUMER_GROUP0)
-                .subscribe();
+            .topic(commandTopic)
+            .subscriptionType(SubscriptionType.Key_Shared)
+            .subscriptionName(Constants.DEFAULT_CONSUMER_GROUP0)
+            .subscribe();
     }
 
     @Bean
     public Consumer<byte[]> eventConsumer(PulsarClient pulsarClient, @Qualifier("pulsarDomainEventListener")
-            PulsarMessageListener pulsarDomainEventListener) throws PulsarClientException {
+        PulsarMessageListener pulsarDomainEventListener) throws PulsarClientException {
         return pulsarClient.newConsumer().messageListener(pulsarDomainEventListener)
-                .topic(eventTopic)
-                .subscriptionType(SubscriptionType.Key_Shared)
-                .subscriptionName(Constants.DEFAULT_CONSUMER_GROUP1)
-                .subscribe();
+            .topic(eventTopic)
+            .subscriptionType(SubscriptionType.Key_Shared)
+            .subscriptionName(Constants.DEFAULT_CONSUMER_GROUP1)
+            .subscribe();
     }
 
     @Bean
     public Consumer<byte[]> applicationConsumer(PulsarClient pulsarClient, @Qualifier("pulsarApplicationMessageListener")
-            PulsarMessageListener pulsarApplicationMessageListener) throws PulsarClientException {
+        PulsarMessageListener pulsarApplicationMessageListener) throws PulsarClientException {
         return pulsarClient.newConsumer().messageListener(pulsarApplicationMessageListener)
-                .topic(applicationTopic)
-                .subscriptionType(SubscriptionType.Key_Shared)
-                .subscriptionName(Constants.DEFAULT_CONSUMER_GROUP2)
-                .subscribe();
+            .topic(applicationTopic)
+            .subscriptionType(SubscriptionType.Key_Shared)
+            .subscriptionName(Constants.DEFAULT_CONSUMER_GROUP2)
+            .subscribe();
     }
 
     @Bean
     public Consumer<byte[]> exceptionConsumer(PulsarClient pulsarClient, @Qualifier("pulsarPublishableExceptionListener")
-            PulsarMessageListener pulsarPublishableExceptionListener) throws PulsarClientException {
+        PulsarMessageListener pulsarPublishableExceptionListener) throws PulsarClientException {
         return pulsarClient.newConsumer().messageListener(pulsarPublishableExceptionListener)
-                .topic(exceptionTopic)
-                .subscriptionType(SubscriptionType.Key_Shared)
-                .subscriptionName(Constants.DEFAULT_CONSUMER_GROUP3)
-                .subscribe();
+            .topic(exceptionTopic)
+            .subscriptionType(SubscriptionType.Key_Shared)
+            .subscriptionName(Constants.DEFAULT_CONSUMER_GROUP3)
+            .subscribe();
     }
 
     @Bean(name = "enodePulsarCommandProducer")

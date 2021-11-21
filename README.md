@@ -161,53 +161,59 @@ public KafkaMessageListenerContainer<String, String> publishableExceptionListene
 }
 ```
 
-### `eventstore`数据源配置，目前支持(`MySQL`, `MongoDB`, `PostgreSQL` ...）
+### `eventstore`数据源配置，目前支持(`MySQL` `MongoDB` `PostgreSQL` ...）
 
 ```java
-@Bean("enodeMongoClient")
-@ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "mongo")
-public MongoClient mongoClient() {
-    return MongoClients.create();
-}
+public class DbConfig {
+    @Bean("enodeMongoClient")
+    @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "mongo")
+    public MongoClient mongoClient(Vertx vertx) {
+        return MongoClient.create(vertx, new JsonObject().put("db_name", "test"));
+    }
 
-@Bean("enodeSQLClient")
-@ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "jdbc-mysql")
-public JDBCClient enodeMySQLClient(Vertx enodeVertx) {
+    @Bean("enodeMySQLPool")
+    @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "mysql")
+    public MySQLPool enodeMySQLPool() {
+        MySQLConnectOptions connectOptions = MySQLConnectOptions.fromUri(jdbcUrl.replaceAll("jdbc:", ""))
+            .setUser(username)
+            .setPassword(password);
+        PoolOptions poolOptions = new PoolOptions()
+            .setMaxSize(5);
+        return MySQLPool.pool(connectOptions, poolOptions);
+    }
+
+    @Bean("enodePgPool")
+    @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "pg")
+    public PgPool pgPool() {
+        PgConnectOptions connectOptions = PgConnectOptions.fromUri(pgJdbcUrl.replaceAll("jdbc:", ""))
+            .setUser(pgUsername)
+            .setPassword(pgPassword);
+        PoolOptions poolOptions = new PoolOptions()
+            .setMaxSize(5);
+        return PgPool.pool(connectOptions, poolOptions);
+    }
+
+    @Bean("enodeMySQLDataSource")
+    @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "jdbc-mysql")
+    public DataSource enodeMySQLDataSource() {
         HikariDataSource dataSource = new HikariDataSource();
         dataSource.setJdbcUrl(jdbcUrl);
         dataSource.setUsername(username);
         dataSource.setPassword(password);
         dataSource.setDriverClassName(com.mysql.cj.jdbc.Driver.class.getName());
-        JDBCClient client = JDBCClient.create(enodeVertx, dataSource);
-        return client;
-}
+        return dataSource;
+    }
 
-@Bean("enodeMySQLPool")
-@ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "mysql")
-public MySQLPool enodeMySQLPool() {
-        MySQLConnectOptions connectOptions = new MySQLConnectOptions()
-        .setPort(3306)
-        .setHost("127.0.0.1")
-        .setDatabase("enode")
-        .setUser(username)
-        .setPassword(password);
-        PoolOptions poolOptions = new PoolOptions()
-        .setMaxSize(5);
-        return MySQLPool.pool(connectOptions, poolOptions);
-}
-
-@Bean("enodePgPool")
-@ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "pg")
-public PgPool pgPool() {
-        PgConnectOptions connectOptions = new PgConnectOptions()
-        .setPort(3306)
-        .setHost("127.0.0.1")
-        .setDatabase("enode")
-        .setUser(username)
-        .setPassword(password);
-        PoolOptions poolOptions = new PoolOptions()
-        .setMaxSize(5);
-        return PgPool.pool(connectOptions, poolOptions);
+    @Bean("enodePgDataSource")
+    @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "jdbc-pg")
+    public DataSource enodePgDataSource() {
+        HikariDataSource dataSource = new HikariDataSource();
+        dataSource.setJdbcUrl(pgJdbcUrl);
+        dataSource.setUsername(pgUsername);
+        dataSource.setPassword(pgPassword);
+        dataSource.setDriverClassName(org.postgresql.Driver.class.getName());
+        return dataSource;
+    }
 }
 ```
 
