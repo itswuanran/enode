@@ -2,7 +2,7 @@ package org.enodeframework.test.commandhandler;
 
 import org.enodeframework.annotation.Command;
 import org.enodeframework.annotation.Subscribe;
-import org.enodeframework.commanding.ICommandContext;
+import org.enodeframework.commanding.CommandContext;
 import org.enodeframework.common.exception.IORuntimeException;
 import org.enodeframework.test.command.AsyncHandlerCommand;
 import org.enodeframework.test.command.TwoAsyncHandlersCommand;
@@ -17,7 +17,7 @@ public class AsyncHandlerCommandHandler {
     private int count;
 
     @Subscribe
-    public void handleAsync(ICommandContext context, AsyncHandlerCommand command) throws Exception {
+    public void handleAsync(CommandContext context, AsyncHandlerCommand command) throws Exception {
         testComponent.sayHello();
         if (command.shouldGenerateApplicationMessage) {
             context.setApplicationMessage(new TestApplicationMessage(command.getAggregateRootId()));

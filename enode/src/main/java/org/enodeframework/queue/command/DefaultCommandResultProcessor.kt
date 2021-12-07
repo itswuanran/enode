@@ -11,15 +11,15 @@ import io.vertx.core.json.JsonObject
 import io.vertx.ext.bridge.BridgeOptions
 import io.vertx.ext.bridge.PermittedOptions
 import io.vertx.ext.eventbus.bridge.tcp.TcpEventBusBridge
+import org.enodeframework.commanding.CommandMessage
 import org.enodeframework.commanding.CommandResult
 import org.enodeframework.commanding.CommandReturnType
 import org.enodeframework.commanding.CommandStatus
-import org.enodeframework.commanding.ICommand
 import org.enodeframework.common.exception.DuplicateCommandRegisterException
 import org.enodeframework.common.extensions.SystemClock
-import org.enodeframework.common.scheduling.IScheduleService
+import org.enodeframework.common.scheduling.ScheduleService
 import org.enodeframework.common.scheduling.Worker
-import org.enodeframework.common.serializing.ISerializeService
+import org.enodeframework.common.serializing.SerializeService
 import org.enodeframework.common.utils.ReplyUtil
 import org.enodeframework.queue.domainevent.DomainEventHandledMessage
 import org.slf4j.LoggerFactory
@@ -35,11 +35,11 @@ import java.util.concurrent.TimeUnit
  * @author anruence@gmail.com
  */
 class DefaultCommandResultProcessor constructor(
-    private val scheduleService: IScheduleService,
-    private val serializeService: ISerializeService,
+    private val scheduleService: ScheduleService,
+    private val serializeService: SerializeService,
     private val port: Int,
     private val completionSourceTimeout: Int
-) : AbstractVerticle(), ICommandResultProcessor {
+) : AbstractVerticle(), CommandResultProcessor {
     private val scanExpireCommandTaskName: String =
         "CleanTimeoutCommandTask_" + SystemClock.now() + Random().nextInt(10000)
     private val commandTaskDict: Cache<String, CommandTaskCompletionSource>
@@ -70,13 +70,13 @@ class DefaultCommandResultProcessor constructor(
     }
 
     override fun registerProcessingCommand(
-        command: ICommand,
+        command: CommandMessage<*>,
         commandReturnType: CommandReturnType,
         taskCompletionSource: CompletableFuture<CommandResult>
     ) {
         if (commandTaskDict.asMap().putIfAbsent(
                 command.id, CommandTaskCompletionSource(
-                    command.aggregateRootId,
+                    command.getAggregateRootIdAsString(),
                     commandReturnType,
                     taskCompletionSource
                 )
@@ -191,13 +191,13 @@ class DefaultCommandResultProcessor constructor(
         }
     }
 
-    override fun processFailedSendingCommand(command: ICommand) {
-        val commandTaskCompletionSource = commandTaskDict.asMap().remove(command.id)
+    override fun processFailedSendingCommand(commandMessage: CommandMessage<*>) {
+        val commandTaskCompletionSource = commandTaskDict.asMap().remove(commandMessage.id)
         if (commandTaskCompletionSource != null) {
             val commandResult = CommandResult(
                 CommandStatus.Failed,
-                command.id,
-                command.aggregateRootId,
+                commandMessage.id,
+                commandMessage.getAggregateRootIdAsString(),
                 "Failed to send the command.",
                 String::class.java.name
             )

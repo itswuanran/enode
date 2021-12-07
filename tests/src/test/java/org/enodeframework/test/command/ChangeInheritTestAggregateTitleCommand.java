@@ -1,8 +1,8 @@
 package org.enodeframework.test.command;
 
-import org.enodeframework.commanding.Command;
+import org.enodeframework.commanding.AbstractCommandMessage;
 
-public class ChangeInheritTestAggregateTitleCommand extends Command {
+public class ChangeInheritTestAggregateTitleCommand extends AbstractCommandMessage {
     public String Title;
 
     public String getTitle() {

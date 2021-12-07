@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture
 /**
  * @author anruence@gmail.com
  */
-class DefaultSendReplyService : AbstractVerticle(), ISendReplyService {
+class DefaultSendReplyService : AbstractVerticle(), SendReplyService {
     private var started = false
     private var stoped = false
     private lateinit var pointEventBus: PointToPointEventBus

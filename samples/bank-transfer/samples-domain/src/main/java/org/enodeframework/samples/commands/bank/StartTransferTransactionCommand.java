@@ -1,12 +1,12 @@
 package org.enodeframework.samples.commands.bank;
 
-import org.enodeframework.commanding.Command;
+import org.enodeframework.commanding.AbstractCommandMessage;
 import org.enodeframework.samples.domain.bank.transfertransaction.TransferTransactionInfo;
 
 /**
  * 发起一笔转账交易
  */
-public class StartTransferTransactionCommand extends Command<String> {
+public class StartTransferTransactionCommand extends AbstractCommandMessage<String> {
     /**
      * 转账交易信息
      */

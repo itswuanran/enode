@@ -40,8 +40,8 @@ class ProcessingEventMailBox(
                     processingEvent.message.commandId,
                     processingEvent.message.getVersion(),
                     processingEvent.message.id,
-                    processingEvent.message.events.joinToString("|") { x: IDomainEvent<*> -> x.javaClass.name },
-                    processingEvent.message.events.joinToString("|") { obj: IDomainEvent<*> -> obj.id },
+                    processingEvent.message.events.joinToString("|") { x: DomainEventMessage<*> -> x.javaClass.name },
+                    processingEvent.message.events.joinToString("|") { obj: DomainEventMessage<*> -> obj.id },
                     version
                 )
             }
@@ -121,8 +121,8 @@ class ProcessingEventMailBox(
                     processingEvent.message.commandId,
                     processingEvent.message.getVersion(),
                     processingEvent.message.id,
-                    processingEvent.message.events.joinToString("|") { x: IDomainEvent<*> -> x.javaClass.name },
-                    processingEvent.message.events.joinToString("|") { x: IDomainEvent<*> -> x.id })
+                    processingEvent.message.events.joinToString("|") { x: DomainEventMessage<*> -> x.javaClass.name },
+                    processingEvent.message.events.joinToString("|") { x: DomainEventMessage<*> -> x.id })
             }
         }
     }
@@ -149,8 +149,8 @@ class ProcessingEventMailBox(
                         eventStream.commandId,
                         eventStream.getVersion(),
                         eventStream.id,
-                        processingEvent.message.events.joinToString("|") { x: IDomainEvent<*> -> x.javaClass.name },
-                        processingEvent.message.events.joinToString("|") { x: IDomainEvent<*> -> x.id },
+                        processingEvent.message.events.joinToString("|") { x: DomainEventMessage<*> -> x.javaClass.name },
+                        processingEvent.message.events.joinToString("|") { x: DomainEventMessage<*> -> x.id },
                         nextExpectingEventVersion
                     )
                 }

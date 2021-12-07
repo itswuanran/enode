@@ -2,7 +2,7 @@ package org.enodeframework.samples.eventhandlers.bank.processmanagers;
 
 import org.enodeframework.annotation.Event;
 import org.enodeframework.annotation.Subscribe;
-import org.enodeframework.commanding.ICommandService;
+import org.enodeframework.commanding.CommandBus;
 import org.enodeframework.common.io.Task;
 import org.enodeframework.samples.applicationmessages.AccountValidateFailedMessage;
 import org.enodeframework.samples.applicationmessages.AccountValidatePassedMessage;
@@ -43,7 +43,7 @@ import java.util.concurrent.CompletableFuture;
 public class TransferTransactionProcessManager {
 
     @Resource
-    private ICommandService commandService;
+    private CommandBus commandService;
 
     @Subscribe
     public CompletableFuture<Void> handleAsync(TransferTransactionStartedEvent evnt) {

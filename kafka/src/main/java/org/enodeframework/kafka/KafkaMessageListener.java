@@ -1,7 +1,7 @@
 package org.enodeframework.kafka;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.enodeframework.queue.IMessageHandler;
+import org.enodeframework.queue.MessageHandler;
 import org.enodeframework.queue.QueueMessage;
 import org.springframework.kafka.listener.AcknowledgingMessageListener;
 import org.springframework.kafka.support.Acknowledgment;
@@ -11,9 +11,9 @@ import org.springframework.kafka.support.Acknowledgment;
  */
 public class KafkaMessageListener implements AcknowledgingMessageListener<String, String> {
 
-    private final IMessageHandler messageHandler;
+    private final MessageHandler messageHandler;
 
-    public KafkaMessageListener(IMessageHandler messageHandler) {
+    public KafkaMessageListener(MessageHandler messageHandler) {
         this.messageHandler = messageHandler;
     }
 

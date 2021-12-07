@@ -8,8 +8,8 @@ import org.apache.rocketmq.client.producer.selector.SelectMessageQueueByHash;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.enodeframework.common.exception.IORuntimeException;
-import org.enodeframework.queue.ISendMessageService;
 import org.enodeframework.queue.QueueMessage;
+import org.enodeframework.queue.SendMessageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +19,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * @author anruence@gmail.com
  */
-public class RocketMQSendMessageService implements ISendMessageService {
+public class RocketMQSendMessageService implements SendMessageService {
 
     private static final Logger logger = LoggerFactory.getLogger(RocketMQSendMessageService.class);
 

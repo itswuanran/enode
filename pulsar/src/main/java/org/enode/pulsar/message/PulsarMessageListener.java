@@ -5,7 +5,7 @@ import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageListener;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.enodeframework.common.exception.IORuntimeException;
-import org.enodeframework.queue.IMessageHandler;
+import org.enodeframework.queue.MessageHandler;
 import org.enodeframework.queue.QueueMessage;
 
 import java.nio.charset.StandardCharsets;
@@ -15,9 +15,9 @@ import java.nio.charset.StandardCharsets;
  */
 public class PulsarMessageListener implements MessageListener<byte[]> {
 
-    private final IMessageHandler messageHandler;
+    private final MessageHandler messageHandler;
 
-    public PulsarMessageListener(IMessageHandler messageHandler) {
+    public PulsarMessageListener(MessageHandler messageHandler) {
         this.messageHandler = messageHandler;
     }
 

@@ -1,14 +1,14 @@
 package org.enodeframework.test;
 
-import org.enodeframework.commanding.ICommandService;
-import org.enodeframework.domain.IDomainException;
-import org.enodeframework.domain.IMemoryCache;
-import org.enodeframework.eventing.DomainEventStreamMessage;
-import org.enodeframework.eventing.IEventStore;
-import org.enodeframework.eventing.IProcessingEventProcessor;
-import org.enodeframework.eventing.IPublishedVersionStore;
-import org.enodeframework.messaging.IApplicationMessage;
-import org.enodeframework.messaging.IMessagePublisher;
+import org.enodeframework.commanding.CommandBus;
+import org.enodeframework.domain.DomainExceptionMessage;
+import org.enodeframework.domain.MemoryCache;
+import org.enodeframework.eventing.DomainEventStream;
+import org.enodeframework.eventing.EventStore;
+import org.enodeframework.eventing.ProcessingEventProcessor;
+import org.enodeframework.eventing.PublishedVersionStore;
+import org.enodeframework.messaging.ApplicationMessage;
+import org.enodeframework.messaging.MessagePublisher;
 import org.enodeframework.test.config.EnodeTestDataSourceConfig;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,22 +22,22 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @SpringBootTest(classes = App.class)
 public abstract class AbstractTest {
     @Autowired
-    protected ICommandService commandService;
+    protected CommandBus commandService;
     @Autowired
-    protected IMemoryCache memoryCache;
+    protected MemoryCache memoryCache;
     @Autowired
-    protected IEventStore eventStore;
+    protected EventStore eventStore;
     @Autowired
-    protected IPublishedVersionStore publishedVersionStore;
+    protected PublishedVersionStore publishedVersionStore;
     @Autowired
     @Qualifier(value = "defaultDomainEventPublisher")
-    protected IMessagePublisher<DomainEventStreamMessage> domainEventPublisher;
+    protected MessagePublisher<DomainEventStream> domainEventPublisher;
     @Autowired
     @Qualifier(value = "defaultApplicationMessagePublisher")
-    protected IMessagePublisher<IApplicationMessage> applicationMessagePublisher;
+    protected MessagePublisher<ApplicationMessage> applicationMessagePublisher;
     @Autowired
     @Qualifier(value = "defaultPublishableExceptionPublisher")
-    protected IMessagePublisher<IDomainException> publishableExceptionPublisher;
+    protected MessagePublisher<DomainExceptionMessage> publishableExceptionPublisher;
     @Autowired
-    protected IProcessingEventProcessor processor;
+    protected ProcessingEventProcessor processor;
 }

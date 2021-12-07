@@ -1,11 +1,11 @@
 package org.enodeframework.samples.commands.bank;
 
-import org.enodeframework.commanding.Command;
+import org.enodeframework.commanding.AbstractCommandMessage;
 
 /**
  * 提交预操作
  */
-public class CommitTransactionPreparationCommand extends Command<String> {
+public class CommitTransactionPreparationCommand extends AbstractCommandMessage<String> {
     public String transactionId;
 
     public CommitTransactionPreparationCommand() {

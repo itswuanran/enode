@@ -5,16 +5,16 @@ import com.aliyun.openservices.ons.api.order.ConsumeOrderContext;
 import com.aliyun.openservices.ons.api.order.MessageOrderListener;
 import com.aliyun.openservices.ons.api.order.OrderAction;
 import com.google.common.collect.Lists;
-import org.enodeframework.queue.IMessageHandler;
+import org.enodeframework.queue.MessageHandler;
 
 /**
  * @author anruence@gmail.com
  */
 public class OnsMessageOrderListener implements MessageOrderListener {
 
-    private final IMessageHandler messageHandler;
+    private final MessageHandler messageHandler;
 
-    public OnsMessageOrderListener(IMessageHandler messageHandler) {
+    public OnsMessageOrderListener(MessageHandler messageHandler) {
         this.messageHandler = messageHandler;
     }
 

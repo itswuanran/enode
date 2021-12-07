@@ -1,6 +1,6 @@
 package org.enodeframework.test.domain;
 
-import org.enodeframework.eventing.DomainEvent;
+import org.enodeframework.eventing.AbstractDomainEventMessage;
 
-public class Event1 extends DomainEvent<String> {
+public class Event1 extends AbstractDomainEventMessage<String> {
 }

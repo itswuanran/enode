@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author anruence@gmail.com
  */
-public class DefaultScheduleService implements IScheduleService {
+public class DefaultScheduleService implements ScheduleService {
     private static final Logger logger = LoggerFactory.getLogger(DefaultScheduleService.class);
     private final Object lockObject = new Object();
     private final Map<String, TimerBasedTask> taskDict = new HashMap<>();

@@ -3,7 +3,7 @@ package org.enodeframework.pg
 import io.vertx.pgclient.PgPool
 import io.vertx.sqlclient.Tuple
 import org.enodeframework.common.io.IOHelper
-import org.enodeframework.common.serializing.ISerializeService
+import org.enodeframework.common.serializing.SerializeService
 import org.enodeframework.configurations.EventStoreConfiguration
 import org.enodeframework.eventing.*
 import org.enodeframework.pg.handler.PgAddDomainEventsHandler
@@ -17,12 +17,12 @@ import java.util.concurrent.CompletableFuture
 class PgEventStore(
     pgPool: PgPool,
     configuration: EventStoreConfiguration,
-    eventSerializer: IEventSerializer,
-    serializeService: ISerializeService
-) : IEventStore {
+    eventSerializer: EventSerializer,
+    serializeService: SerializeService
+) : EventStore {
 
-    private val eventSerializer: IEventSerializer
-    private val serializeService: ISerializeService
+    private val eventSerializer: EventSerializer
+    private val serializeService: SerializeService
     private val configuration: EventStoreConfiguration
     private val pgPool: PgPool
 

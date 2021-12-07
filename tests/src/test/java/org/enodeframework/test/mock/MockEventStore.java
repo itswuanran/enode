@@ -1,16 +1,16 @@
 package org.enodeframework.test.mock;
 
-import org.enodeframework.common.exception.EnodeRuntimeException;
+import org.enodeframework.common.exception.EnodeException;
 import org.enodeframework.common.exception.IORuntimeException;
 import org.enodeframework.eventing.DomainEventStream;
 import org.enodeframework.eventing.EventAppendResult;
-import org.enodeframework.eventing.IEventStore;
+import org.enodeframework.eventing.EventStore;
 import org.enodeframework.eventing.impl.InMemoryEventStore;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public class MockEventStore implements IEventStore {
+public class MockEventStore implements EventStore {
     private final InMemoryEventStore memoryEventStore = new InMemoryEventStore();
     public boolean supportBatchAppendEvent;
     private int expectFailedCount = 0;
@@ -42,7 +42,7 @@ public class MockEventStore implements IEventStore {
         if (currentFailedCount < expectFailedCount) {
             currentFailedCount++;
             if (failedType == FailedType.UnKnownException) {
-                throw new EnodeRuntimeException("BatchAppendAsyncUnKnownException" + currentFailedCount);
+                throw new EnodeException("BatchAppendAsyncUnKnownException" + currentFailedCount);
             } else if (failedType == FailedType.IOException) {
                 throw new IORuntimeException("BatchAppendAsyncIOException" + currentFailedCount);
             } else if (failedType == FailedType.TaskIOException) {
@@ -56,7 +56,7 @@ public class MockEventStore implements IEventStore {
         if (currentFailedCount < expectFailedCount) {
             currentFailedCount++;
             if (failedType == FailedType.UnKnownException) {
-                throw new EnodeRuntimeException("AppendAsyncUnKnownException" + currentFailedCount);
+                throw new EnodeException("AppendAsyncUnKnownException" + currentFailedCount);
             } else if (failedType == FailedType.IOException) {
                 throw new IORuntimeException("AppendAsyncIOException" + currentFailedCount);
             } else if (failedType == FailedType.TaskIOException) {

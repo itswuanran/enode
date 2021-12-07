@@ -5,7 +5,7 @@ import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerOrderly;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.enodeframework.common.io.Task;
-import org.enodeframework.queue.IMessageHandler;
+import org.enodeframework.queue.MessageHandler;
 import org.enodeframework.queue.QueueMessage;
 
 import java.nio.charset.StandardCharsets;
@@ -17,9 +17,9 @@ import java.util.concurrent.CountDownLatch;
  */
 public class RocketMQMessageOrderListener implements MessageListenerOrderly {
 
-    private final IMessageHandler messageHandler;
+    private final MessageHandler messageHandler;
 
-    public RocketMQMessageOrderListener(IMessageHandler messageHandler) {
+    public RocketMQMessageOrderListener(MessageHandler messageHandler) {
         this.messageHandler = messageHandler;
     }
 

@@ -3,7 +3,7 @@ package org.enodeframework.common.exception;
 /**
  * @author anruence@gmail.com
  */
-public class IdGenerateException extends EnodeRuntimeException {
+public class IdGenerateException extends EnodeException {
 
     private static final long serialVersionUID = -8951926710590746149L;
 

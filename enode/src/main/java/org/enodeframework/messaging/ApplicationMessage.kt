@@ -1,6 +1,6 @@
 package org.enodeframework.messaging
 
 /**
- * Represents an abstract application message.
+ * Represents an application message.
  */
-abstract class ApplicationMessage : Message(), IApplicationMessage
+interface ApplicationMessage : Message

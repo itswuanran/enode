@@ -2,10 +2,10 @@ package org.enodeframework.test.commandhandler;
 
 import org.enodeframework.annotation.Command;
 import org.enodeframework.annotation.Subscribe;
-import org.enodeframework.commanding.ICommandContext;
-import org.enodeframework.common.container.ObjectContainer;
+import org.enodeframework.commanding.CommandContext;
+import org.enodeframework.common.container.DefaultObjectContainer;
 import org.enodeframework.common.io.Task;
-import org.enodeframework.domain.IMemoryCache;
+import org.enodeframework.domain.MemoryCache;
 import org.enodeframework.test.command.AggregateThrowExceptionCommand;
 import org.enodeframework.test.command.AsyncHandlerBaseCommand;
 import org.enodeframework.test.command.AsyncHandlerChildCommand;
@@ -37,10 +37,10 @@ public class TestCommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(TestCommandHandler.class);
 
     @Subscribe
-    public CompletableFuture<TestAggregate> handleAsync(ICommandContext context, ChangeTestAggregateTitleWhenDirtyCommand command) {
+    public CompletableFuture<TestAggregate> handleAsync(CommandContext context, ChangeTestAggregateTitleWhenDirtyCommand command) {
         CompletableFuture<TestAggregate> future = context.getAsync(command.getAggregateRootId(), TestAggregate.class);
         if (command.isFirstExecute()) {
-            ObjectContainer.resolve(IMemoryCache.class).refreshAggregateFromEventStoreAsync(TestAggregate.class.getName(), command.getAggregateRootId());
+            DefaultObjectContainer.resolve(MemoryCache.class).refreshAggregateFromEventStoreAsync(TestAggregate.class.getName(), command.getAggregateRootId());
         }
         future.thenAccept(testAggregate -> {
             testAggregate.changeTitle(command.getTitle());
@@ -50,7 +50,7 @@ public class TestCommandHandler {
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, CreateTestAggregateCommand command) {
+    public void handleAsync(CommandContext context, CreateTestAggregateCommand command) {
         if (command.sleepMilliseconds > 0) {
             Task.sleep(command.sleepMilliseconds);
         }
@@ -58,37 +58,37 @@ public class TestCommandHandler {
     }
 
     @Subscribe
-    public CompletableFuture<Void> handleAsync(ICommandContext context, ChangeTestAggregateTitleCommand command) {
+    public CompletableFuture<Void> handleAsync(CommandContext context, ChangeTestAggregateTitleCommand command) {
         return context.getAsync(command.aggregateRootId, TestAggregate.class).thenAccept(testAggregate -> {
             testAggregate.changeTitle(command.title);
         });
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, CreateInheritTestAggregateCommand command) {
+    public void handleAsync(CommandContext context, CreateInheritTestAggregateCommand command) {
         context.addAsync(new InheritTestAggregate(command.getAggregateRootId(), command.Title));
     }
 
     @Subscribe
-    public CompletableFuture<Void> handleAsync(ICommandContext context, ChangeInheritTestAggregateTitleCommand command) {
+    public CompletableFuture<Void> handleAsync(CommandContext context, ChangeInheritTestAggregateTitleCommand command) {
         return context.getAsync(command.getAggregateRootId(), InheritTestAggregate.class).thenAccept(inheritTestAggregate -> {
             inheritTestAggregate.changeMyTitle(command.Title);
         });
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, ChangeNothingCommand command) {
+    public void handleAsync(CommandContext context, ChangeNothingCommand command) {
         logger.info("nothing changed exec, {}", command);
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, SetResultCommand command) {
+    public void handleAsync(CommandContext context, SetResultCommand command) {
         context.addAsync(new TestAggregate(command.getAggregateRootId(), ""));
         context.setResult(command.Result);
     }
 
     @Subscribe
-    public CompletableFuture<Boolean> handleAsync(ICommandContext context, ChangeMultipleAggregatesCommand command) {
+    public CompletableFuture<Boolean> handleAsync(CommandContext context, ChangeMultipleAggregatesCommand command) {
         context.getAsync(command.getAggregateRootId1(), TestAggregate.class).thenAccept(testAggregate1 -> {
             testAggregate1.testEvents();
         });
@@ -99,12 +99,12 @@ public class TestCommandHandler {
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, ThrowExceptionCommand command) throws Exception {
+    public void handleAsync(CommandContext context, ThrowExceptionCommand command) throws Exception {
         throw new Exception("CommandException");
     }
 
     @Subscribe
-    public CompletableFuture<TestAggregate> handleAsync(ICommandContext context, AggregateThrowExceptionCommand command) throws Exception {
+    public CompletableFuture<TestAggregate> handleAsync(CommandContext context, AggregateThrowExceptionCommand command) throws Exception {
         return context.getAsync(command.getAggregateRootId(), TestAggregate.class).thenApply(testAggregate -> {
             testAggregate.throwException(command.publishableException);
             return testAggregate;
@@ -112,43 +112,43 @@ public class TestCommandHandler {
     }
 
     @Subscribe
-    public CompletableFuture<Void> handleAsync(ICommandContext context, TestEventPriorityCommand command) {
+    public CompletableFuture<Void> handleAsync(CommandContext context, TestEventPriorityCommand command) {
         return context.getAsync(command.getAggregateRootId(), TestAggregate.class).thenAccept(testAggregate -> {
             testAggregate.testEvents();
         });
     }
 
     @Subscribe
-    public void handleAsync1(ICommandContext context, TwoHandlersCommand command) {
+    public void handleAsync1(CommandContext context, TwoHandlersCommand command) {
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, BaseCommand command) {
+    public void handleAsync(CommandContext context, BaseCommand command) {
         context.setResult("ResultFromBaseCommand");
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, ChildCommand command) {
+    public void handleAsync(CommandContext context, ChildCommand command) {
         context.setResult("ResultFromChildCommand");
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, NotCheckAsyncHandlerExistCommand command) {
+    public void handleAsync(CommandContext context, NotCheckAsyncHandlerExistCommand command) {
 
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, NotCheckAsyncHandlerExistWithResultCommand command) {
+    public void handleAsync(CommandContext context, NotCheckAsyncHandlerExistWithResultCommand command) {
         context.setApplicationMessage(new TestApplicationMessage(command.getAggregateRootId()));
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, AsyncHandlerBaseCommand command) {
+    public void handleAsync(CommandContext context, AsyncHandlerBaseCommand command) {
 
     }
 
     @Subscribe
-    public void handleAsync(ICommandContext context, AsyncHandlerChildCommand command) {
+    public void handleAsync(CommandContext context, AsyncHandlerChildCommand command) {
 
     }
 }

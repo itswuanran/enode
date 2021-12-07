@@ -7,17 +7,17 @@ import io.vertx.core.Handler
 import io.vertx.core.json.JsonObject
 import org.enodeframework.common.exception.EventStoreException
 import org.enodeframework.common.exception.IORuntimeException
-import org.enodeframework.common.serializing.ISerializeService
+import org.enodeframework.common.serializing.SerializeService
 import org.enodeframework.common.utils.DateUtil
 import org.enodeframework.eventing.DomainEventStream
-import org.enodeframework.eventing.IEventSerializer
+import org.enodeframework.eventing.EventSerializer
 import org.enodeframework.mongo.MongoEventStore
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 
 class MongoFindDomainEventsHandler(
-    private val eventSerializer: IEventSerializer,
-    private val serializeService: ISerializeService,
+    private val eventSerializer: EventSerializer,
+    private val serializeService: SerializeService,
     private val msg: String
 ) : Handler<AsyncResult<List<JsonObject>>> {
 

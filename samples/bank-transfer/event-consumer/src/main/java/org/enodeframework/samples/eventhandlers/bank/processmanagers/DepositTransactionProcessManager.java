@@ -2,7 +2,7 @@ package org.enodeframework.samples.eventhandlers.bank.processmanagers;
 
 import org.enodeframework.annotation.Event;
 import org.enodeframework.annotation.Subscribe;
-import org.enodeframework.commanding.ICommandService;
+import org.enodeframework.commanding.CommandBus;
 import org.enodeframework.common.io.Task;
 import org.enodeframework.samples.commands.bank.AddTransactionPreparationCommand;
 import org.enodeframework.samples.commands.bank.CommitTransactionPreparationCommand;
@@ -29,7 +29,7 @@ import java.util.concurrent.CompletableFuture;
 public class DepositTransactionProcessManager {
 
     @Resource
-    private ICommandService commandService;
+    private CommandBus commandService;
 
     @Subscribe
     public CompletableFuture<Boolean> handleAsync(DepositTransactionStartedEvent evnt) {

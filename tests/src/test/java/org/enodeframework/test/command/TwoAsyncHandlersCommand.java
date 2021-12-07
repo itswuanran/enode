@@ -1,6 +1,6 @@
 package org.enodeframework.test.command;
 
-import org.enodeframework.commanding.Command;
+import org.enodeframework.commanding.AbstractCommandMessage;
 
-public class TwoAsyncHandlersCommand extends Command {
+public class TwoAsyncHandlersCommand extends AbstractCommandMessage {
 }

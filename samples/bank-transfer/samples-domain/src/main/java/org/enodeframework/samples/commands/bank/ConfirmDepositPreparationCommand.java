@@ -1,11 +1,11 @@
 package org.enodeframework.samples.commands.bank;
 
-import org.enodeframework.commanding.Command;
+import org.enodeframework.commanding.AbstractCommandMessage;
 
 /**
  * 确认预存款
  */
-public class ConfirmDepositPreparationCommand extends Command<String> {
+public class ConfirmDepositPreparationCommand extends AbstractCommandMessage<String> {
     public ConfirmDepositPreparationCommand() {
     }
 

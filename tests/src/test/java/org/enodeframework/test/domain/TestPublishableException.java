@@ -1,10 +1,10 @@
 package org.enodeframework.test.domain;
 
-import org.enodeframework.domain.DomainException;
+import org.enodeframework.domain.AbstractDomainExceptionMessage;
 
 import java.util.Map;
 
-public class TestPublishableException extends DomainException {
+public class TestPublishableException extends AbstractDomainExceptionMessage {
     public String aggregateRootId;
 
     public TestPublishableException(String aggregateRootId) {

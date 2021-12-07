@@ -8,7 +8,7 @@ import com.codahale.metrics.MetricSet;
 import com.codahale.metrics.SlidingTimeWindowReservoir;
 import com.codahale.metrics.Snapshot;
 import org.enodeframework.common.extensions.MessageMonitor;
-import org.enodeframework.messaging.IMessage;
+import org.enodeframework.messaging.Message;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
  * If the value for a single threaded message handler is 1 the component is active 100% of the time. This means
  * that messages will have to wait to be processed.
  */
-public class CapacityMonitor implements MessageMonitor<IMessage>, MetricSet {
+public class CapacityMonitor implements MessageMonitor<Message>, MetricSet {
 
     private final Histogram processedDurationHistogram;
     private final TimeUnit timeUnit;
@@ -68,7 +68,7 @@ public class CapacityMonitor implements MessageMonitor<IMessage>, MetricSet {
     }
 
     @Override
-    public MonitorCallback onMessageIngested(IMessage message) {
+    public MonitorCallback onMessageIngested(Message message) {
         final long start = clock.getTime();
         return new MonitorCallback() {
             @Override

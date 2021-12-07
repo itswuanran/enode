@@ -1,7 +1,7 @@
 package org.enodeframework.infrastructure
 
-import org.enodeframework.domain.IAggregateRepository
-import org.enodeframework.domain.IAggregateRoot
+import org.enodeframework.domain.AggregateRepository
+import org.enodeframework.domain.AggregateRoot
 import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
 
@@ -10,11 +10,11 @@ import java.lang.reflect.ParameterizedType
  */
 object TypeUtils {
     fun isAggregateRoot(type: Class<*>): Boolean {
-        return !Modifier.isAbstract(type.modifiers) && IAggregateRoot::class.java.isAssignableFrom(type)
+        return !Modifier.isAbstract(type.modifiers) && AggregateRoot::class.java.isAssignableFrom(type)
     }
 
     fun isAggregateRepositoryType(type: Class<*>): Boolean {
-        return !Modifier.isAbstract(type.modifiers) && IAggregateRepository::class.java.isAssignableFrom(type)
+        return !Modifier.isAbstract(type.modifiers) && AggregateRepository::class.java.isAssignableFrom(type)
     }
 
     fun getGenericType(clazz: Class<*>): Class<*> {

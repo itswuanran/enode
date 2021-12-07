@@ -2,7 +2,7 @@ package org.enodeframework.samples.commandhandles.bank;
 
 import org.enodeframework.annotation.Command;
 import org.enodeframework.annotation.Subscribe;
-import org.enodeframework.commanding.ICommandContext;
+import org.enodeframework.commanding.CommandContext;
 import org.enodeframework.samples.commands.bank.ConfirmDepositCommand;
 import org.enodeframework.samples.commands.bank.ConfirmDepositPreparationCommand;
 import org.enodeframework.samples.commands.bank.StartDepositTransactionCommand;
@@ -19,19 +19,19 @@ import java.util.concurrent.CompletableFuture;
 @Command
 public class DepositTransactionCommandHandle {
     @Subscribe
-    public void handleAsync(ICommandContext context, StartDepositTransactionCommand command) {
+    public void handleAsync(CommandContext context, StartDepositTransactionCommand command) {
         context.addAsync(new DepositTransaction(command.getAggregateRootId(), command.accountId, command.amount));
     }
 
     @Subscribe
-    public CompletableFuture<DepositTransaction> handleAsync(ICommandContext context, ConfirmDepositPreparationCommand command) {
+    public CompletableFuture<DepositTransaction> handleAsync(CommandContext context, ConfirmDepositPreparationCommand command) {
         CompletableFuture<DepositTransaction> future = context.getAsync(command.getAggregateRootId(), DepositTransaction.class);
         future.thenAccept(DepositTransaction::confirmDepositPreparation);
         return future;
     }
 
     @Subscribe
-    public CompletableFuture<DepositTransaction> handleAsync(ICommandContext context, ConfirmDepositCommand command) {
+    public CompletableFuture<DepositTransaction> handleAsync(CommandContext context, ConfirmDepositCommand command) {
         CompletableFuture<DepositTransaction> future = context.getAsync(command.getAggregateRootId(), DepositTransaction.class);
         future.thenAccept(DepositTransaction::confirmDeposit);
         return future;

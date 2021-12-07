@@ -3,7 +3,7 @@ package org.enodeframework.common.exception;
 /**
  * @author anruence@gmail.com
  */
-public class AggregateRootCreateException extends EnodeRuntimeException {
+public class AggregateRootCreateException extends EnodeException {
 
     public AggregateRootCreateException() {
         super();

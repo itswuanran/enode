@@ -6,8 +6,8 @@ import java.util.concurrent.CompletableFuture
  * @author anruence@gmail.com
  */
 class ProcessingCommand(
-    val message: ICommand,
-    val commandExecuteContext: ICommandExecuteContext,
+    val message: CommandMessage<*>,
+    val commandExecuteContext: CommandExecuteContext,
     val items: MutableMap<String, Any>
 ) {
     lateinit var mailBox: ProcessingCommandMailbox

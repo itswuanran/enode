@@ -1,6 +1,6 @@
 package org.enodeframework.samples.domain.bank.bankaccount;
 
-import org.enodeframework.domain.AggregateRoot;
+import org.enodeframework.domain.AbstractAggregateRoot;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 /**
  * 银行账户聚合根，封装银行账户余额变动的数据一致性
  */
-public class BankAccount extends AggregateRoot<String> {
+public class BankAccount extends AbstractAggregateRoot<String> {
     private Map<String, TransactionPreparation> transactionPreparations;
     private String owner;
     private double balance;

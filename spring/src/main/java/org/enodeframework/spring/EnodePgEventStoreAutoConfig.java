@@ -1,9 +1,9 @@
 package org.enodeframework.spring;
 
 import io.vertx.pgclient.PgPool;
-import org.enodeframework.common.serializing.ISerializeService;
+import org.enodeframework.common.serializing.SerializeService;
 import org.enodeframework.configurations.EventStoreConfiguration;
-import org.enodeframework.eventing.IEventSerializer;
+import org.enodeframework.eventing.EventSerializer;
 import org.enodeframework.pg.PgEventStore;
 import org.enodeframework.pg.PgPublishedVersionStore;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Bean;
 public class EnodePgEventStoreAutoConfig {
 
     @Bean
-    public PgEventStore pgEventStore(@Qualifier("enodePgPool") PgPool pgPool, IEventSerializer eventSerializer, ISerializeService serializeService) {
+    public PgEventStore pgEventStore(@Qualifier("enodePgPool") PgPool pgPool, EventSerializer eventSerializer, SerializeService serializeService) {
         PgEventStore eventStore = new PgEventStore(pgPool, EventStoreConfiguration.pg(), eventSerializer, serializeService);
         return eventStore;
     }

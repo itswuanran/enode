@@ -8,7 +8,7 @@ import com.codahale.metrics.Reservoir;
 import com.codahale.metrics.Timer;
 import org.enodeframework.common.extensions.MessageMonitor;
 import org.enodeframework.common.utils.Assert;
-import org.enodeframework.messaging.IMessage;
+import org.enodeframework.messaging.AbstractMessage;
 import org.enodeframework.messaging.Message;
 
 import java.util.HashMap;
@@ -17,9 +17,9 @@ import java.util.function.Supplier;
 
 /**
  * A {@link MessageMonitor} which creates {@link Timer} instances for the overall, success, failure and ignored time an
- * ingested {@link Message} takes.
+ * ingested {@link AbstractMessage} takes.
  */
-public class MessageTimerMonitor implements MessageMonitor<IMessage>, MetricSet {
+public class MessageTimerMonitor implements MessageMonitor<Message>, MetricSet {
 
     private final Timer allTimer;
     private final Timer successTimer;
@@ -56,7 +56,7 @@ public class MessageTimerMonitor implements MessageMonitor<IMessage>, MetricSet 
     }
 
     @Override
-    public MonitorCallback onMessageIngested(IMessage message) {
+    public MonitorCallback onMessageIngested(Message message) {
         final Timer.Context allTimerContext = this.allTimer.time();
         final Timer.Context successTimerContext = this.successTimer.time();
         final Timer.Context failureTimerContext = this.failureTimer.time();

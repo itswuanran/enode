@@ -2,14 +2,14 @@ package org.enodeframework.domain;
 
 public class AggregateRootReferenceChangedException extends RuntimeException {
 
-    private final IAggregateRoot aggregateRoot;
+    private final AggregateRoot aggregateRoot;
 
-    public AggregateRootReferenceChangedException(IAggregateRoot aggregateRoot) {
+    public AggregateRootReferenceChangedException(AggregateRoot aggregateRoot) {
         super(String.format("Aggregate root [type=%s,id=%s] reference already changed.", aggregateRoot.getClass().getName(), aggregateRoot.getUniqueId()));
         this.aggregateRoot = aggregateRoot;
     }
 
-    public IAggregateRoot getAggregateRoot() {
+    public AggregateRoot getAggregateRoot() {
         return aggregateRoot;
     }
 }

@@ -6,10 +6,10 @@ import org.enodeframework.common.extensions.SystemClock
 import org.enodeframework.common.io.IOHelper.tryAsyncActionRecursively
 import org.enodeframework.common.io.IOHelper.tryAsyncActionRecursivelyWithoutResult
 import org.enodeframework.common.io.Task.sleep
-import org.enodeframework.common.scheduling.IScheduleService
-import org.enodeframework.common.serializing.ISerializeService
+import org.enodeframework.common.scheduling.ScheduleService
+import org.enodeframework.common.serializing.SerializeService
 import org.enodeframework.eventing.*
-import org.enodeframework.messaging.IMessageDispatcher
+import org.enodeframework.messaging.MessageDispatcher
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -19,11 +19,11 @@ import java.util.function.Consumer
  * @author anruence@gmail.com
  */
 class DefaultProcessingEventProcessor(
-    private val scheduleService: IScheduleService,
-    private val serializeService: ISerializeService,
-    private val messageDispatcher: IMessageDispatcher,
-    private val publishedVersionStore: IPublishedVersionStore
-) : IProcessingEventProcessor {
+    private val scheduleService: ScheduleService,
+    private val serializeService: SerializeService,
+    private val messageDispatcher: MessageDispatcher,
+    private val publishedVersionStore: PublishedVersionStore
+) : ProcessingEventProcessor {
     private val scanInactiveMailBoxTaskName: String =
         "CleanInactiveProcessingEventMailBoxes_" + SystemClock.now() + Random().nextInt(10000)
     private val processTryToRefreshAggregateTaskName: String =

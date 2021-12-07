@@ -4,10 +4,10 @@ import org.enodeframework.commanding.CommandResult
 import org.enodeframework.commanding.CommandStatus
 import org.enodeframework.commanding.ProcessingCommand
 import org.enodeframework.common.io.IOHelper
-import org.enodeframework.common.serializing.ISerializeService
-import org.enodeframework.domain.IMemoryCache
+import org.enodeframework.common.serializing.SerializeService
+import org.enodeframework.domain.MemoryCache
 import org.enodeframework.eventing.*
-import org.enodeframework.messaging.IMessagePublisher
+import org.enodeframework.messaging.MessagePublisher
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 import kotlin.math.abs
@@ -16,19 +16,19 @@ import kotlin.math.abs
  * @author anruence@gmail.com
  */
 class DefaultEventCommittingService(
-    private val memoryCache: IMemoryCache,
-    private val eventStore: IEventStore,
-    private val serializeService: ISerializeService,
-    private val domainEventPublisher: IMessagePublisher<DomainEventStreamMessage>,
+    private val memoryCache: MemoryCache,
+    private val eventStore: EventStore,
+    private val serializeService: SerializeService,
+    private val domainEventPublisher: MessagePublisher<DomainEventStream>,
     private val eventMailBoxCount: Int
-) : IEventCommittingService {
+) : EventCommittingService {
     private val eventCommittingContextMailBoxList: MutableList<EventCommittingContextMailBox>
 
     constructor(
-        memoryCache: IMemoryCache,
-        eventStore: IEventStore,
-        serializeService: ISerializeService,
-        domainEventPublisher: IMessagePublisher<DomainEventStreamMessage>
+        memoryCache: MemoryCache,
+        eventStore: EventStore,
+        serializeService: SerializeService,
+        domainEventPublisher: MessagePublisher<DomainEventStream>
     ) : this(memoryCache, eventStore, serializeService, domainEventPublisher, 4)
 
     override fun commitDomainEventAsync(eventCommittingContext: EventCommittingContext) {
@@ -44,7 +44,7 @@ class DefaultEventCommittingService(
         if (eventStream.items == null || eventStream.items.isEmpty()) {
             eventStream.items = processingCommand.items
         }
-        val eventStreamMessage = DomainEventStreamMessage(
+        val eventStreamMessage = DomainEventStream(
             processingCommand.message.id,
             eventStream.aggregateRootId,
             eventStream.version,
@@ -303,7 +303,7 @@ class DefaultEventCommittingService(
 
     private fun publishDomainEventAsync(
         processingCommand: ProcessingCommand,
-        eventStream: DomainEventStreamMessage,
+        eventStream: DomainEventStream,
         retryTimes: Int
     ): CompletableFuture<Boolean> {
         val future = CompletableFuture<Boolean>()

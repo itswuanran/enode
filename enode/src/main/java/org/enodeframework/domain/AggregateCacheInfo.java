@@ -8,15 +8,15 @@ import java.util.Date;
  * @author anruence@gmail.com
  */
 public class AggregateCacheInfo {
-    private IAggregateRoot aggregateRoot;
+    private AggregateRoot aggregateRoot;
     private Date lastUpdateTime;
 
-    public AggregateCacheInfo(IAggregateRoot aggregateRoot) {
+    public AggregateCacheInfo(AggregateRoot aggregateRoot) {
         this.aggregateRoot = aggregateRoot;
         this.lastUpdateTime = new Date();
     }
 
-    public void updateAggregateRoot(IAggregateRoot aggregateRoot) {
+    public void updateAggregateRoot(AggregateRoot aggregateRoot) {
         this.aggregateRoot = aggregateRoot;
         this.lastUpdateTime = new Date();
     }
@@ -25,11 +25,11 @@ public class AggregateCacheInfo {
         return ((SystemClock.now() - lastUpdateTime.getTime())) / 1000 >= timeoutSeconds;
     }
 
-    public IAggregateRoot getAggregateRoot() {
+    public AggregateRoot getAggregateRoot() {
         return aggregateRoot;
     }
 
-    public void setAggregateRoot(IAggregateRoot aggregateRoot) {
+    public void setAggregateRoot(AggregateRoot aggregateRoot) {
         this.aggregateRoot = aggregateRoot;
     }
 

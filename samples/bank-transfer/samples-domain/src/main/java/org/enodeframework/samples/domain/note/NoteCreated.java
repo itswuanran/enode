@@ -1,8 +1,8 @@
 package org.enodeframework.samples.domain.note;
 
-import org.enodeframework.eventing.DomainEvent;
+import org.enodeframework.eventing.AbstractDomainEventMessage;
 
-public class NoteCreated extends DomainEvent<String> {
+public class NoteCreated extends AbstractDomainEventMessage<String> {
 
     private String title;
 

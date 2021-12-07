@@ -2,8 +2,8 @@ package org.enode.pulsar.message;
 
 import org.apache.pulsar.client.api.Producer;
 import org.enodeframework.common.exception.IORuntimeException;
-import org.enodeframework.queue.ISendMessageService;
 import org.enodeframework.queue.QueueMessage;
+import org.enodeframework.queue.SendMessageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 /**
  * @author anruence@gmail.com
  */
-public class PulsarSendMessageService implements ISendMessageService {
+public class PulsarSendMessageService implements SendMessageService {
 
     private static final Logger logger = LoggerFactory.getLogger(PulsarSendMessageService.class);
 

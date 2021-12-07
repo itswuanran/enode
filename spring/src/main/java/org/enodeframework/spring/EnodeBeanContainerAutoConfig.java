@@ -1,9 +1,9 @@
 package org.enodeframework.spring;
 
-import org.enodeframework.common.container.ObjectContainer;
+import org.enodeframework.common.container.DefaultObjectContainer;
 import org.enodeframework.common.extensions.ClassNameComparator;
 import org.enodeframework.common.extensions.ClassPathScanHandler;
-import org.enodeframework.infrastructure.IAssemblyInitializer;
+import org.enodeframework.infrastructure.AssemblyInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -22,12 +22,12 @@ public class EnodeBeanContainerAutoConfig implements ApplicationContextAware {
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
-        ObjectContainer.INSTANCE = new SpringObjectContainer(applicationContext);
-        scanConfiguredPackages(ObjectContainer.BASE_PACKAGES);
+        DefaultObjectContainer.INSTANCE = new SpringObjectContainer(applicationContext);
+        scanConfiguredPackages(DefaultObjectContainer.BASE_PACKAGES);
     }
 
     private void registerBeans(Set<Class<?>> classSet) {
-        applicationContext.getBeansOfType(IAssemblyInitializer.class).values().forEach(provider -> {
+        applicationContext.getBeansOfType(AssemblyInitializer.class).values().forEach(provider -> {
             provider.initialize(classSet);
             if (logger.isDebugEnabled()) {
                 logger.debug("{} initialize success", provider.getClass().getName());

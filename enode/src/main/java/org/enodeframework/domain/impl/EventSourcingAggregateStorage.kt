@@ -3,25 +3,25 @@ package org.enodeframework.domain.impl
 import org.enodeframework.common.exception.AggregateRootInvalidException
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.common.utils.Assert
-import org.enodeframework.domain.IAggregateRoot
-import org.enodeframework.domain.IAggregateRootFactory
-import org.enodeframework.domain.IAggregateSnapshotter
-import org.enodeframework.domain.IAggregateStorage
+import org.enodeframework.domain.AggregateRoot
+import org.enodeframework.domain.AggregateRootFactory
+import org.enodeframework.domain.AggregateSnapshotter
+import org.enodeframework.domain.AggregateStorage
 import org.enodeframework.eventing.DomainEventStream
-import org.enodeframework.eventing.IEventStore
-import org.enodeframework.infrastructure.ITypeNameProvider
+import org.enodeframework.eventing.EventStore
+import org.enodeframework.infrastructure.TypeNameProvider
 import java.util.concurrent.CompletableFuture
 
 /**
  * @author anruence@gmail.com
  */
 class EventSourcingAggregateStorage(
-    private val eventStore: IEventStore,
-    private val aggregateRootFactory: IAggregateRootFactory,
-    private val aggregateSnapshotter: IAggregateSnapshotter,
-    private val typeNameProvider: ITypeNameProvider
-) : IAggregateStorage {
-    override fun <T : IAggregateRoot?> getAsync(
+    private val eventStore: EventStore,
+    private val aggregateRootFactory: AggregateRootFactory,
+    private val aggregateSnapshotter: AggregateSnapshotter,
+    private val typeNameProvider: TypeNameProvider
+) : AggregateStorage {
+    override fun <T : AggregateRoot?> getAsync(
         aggregateRootType: Class<T>,
         aggregateRootId: String
     ): CompletableFuture<T> {
@@ -45,7 +45,7 @@ class EventSourcingAggregateStorage(
         }
     }
 
-    private fun <T : IAggregateRoot?> tryRestoreFromSnapshotAsync(
+    private fun <T : AggregateRoot?> tryRestoreFromSnapshotAsync(
         aggregateRootType: Class<T>,
         aggregateRootId: String,
         retryTimes: Int
@@ -84,7 +84,7 @@ class EventSourcingAggregateStorage(
         return taskSource
     }
 
-    private fun <T : IAggregateRoot?> tryGetFromSnapshot(
+    private fun <T : AggregateRoot?> tryGetFromSnapshot(
         aggregateRootId: String,
         aggregateRootType: Class<T>
     ): CompletableFuture<T> {
@@ -120,7 +120,7 @@ class EventSourcingAggregateStorage(
         }
     }
 
-    private fun <T : IAggregateRoot?> rebuildAggregateRoot(
+    private fun <T : AggregateRoot?> rebuildAggregateRoot(
         aggregateRootType: Class<T>,
         eventStreams: List<DomainEventStream>
     ): T? {

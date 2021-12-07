@@ -1,11 +1,11 @@
 package org.enodeframework.samples.domain.bank.bankaccount;
 
-import org.enodeframework.eventing.DomainEvent;
+import org.enodeframework.eventing.AbstractDomainEventMessage;
 
 /**
  * 账户预操作已执行
  */
-public class TransactionPreparationCommittedEvent extends DomainEvent<String> {
+public class TransactionPreparationCommittedEvent extends AbstractDomainEventMessage<String> {
     public double currentBalance;
     public TransactionPreparation transactionPreparation;
 

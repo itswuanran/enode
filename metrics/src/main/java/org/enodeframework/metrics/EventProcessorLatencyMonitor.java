@@ -5,7 +5,7 @@ import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricSet;
 import org.enodeframework.common.extensions.MessageMonitor;
 import org.enodeframework.common.extensions.NoOpMessageMonitorCallback;
-import org.enodeframework.eventing.IDomainEvent;
+import org.enodeframework.eventing.DomainEventMessage;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Measures the difference in message timestamps between the last ingested and the last processed message.
  */
-public class EventProcessorLatencyMonitor implements MessageMonitor<IDomainEvent<?>>, MetricSet {
+public class EventProcessorLatencyMonitor implements MessageMonitor<DomainEventMessage<?>>, MetricSet {
 
     private final Clock clock;
     private final AtomicLong processTime = new AtomicLong();
@@ -38,7 +38,7 @@ public class EventProcessorLatencyMonitor implements MessageMonitor<IDomainEvent
     }
 
     @Override
-    public MonitorCallback onMessageIngested(IDomainEvent<?> message) {
+    public MonitorCallback onMessageIngested(DomainEventMessage<?> message) {
         if (message != null) {
             this.processTime.set(Duration.between(message.getTimestamp().toInstant(), clock.instant()).toMillis());
         }

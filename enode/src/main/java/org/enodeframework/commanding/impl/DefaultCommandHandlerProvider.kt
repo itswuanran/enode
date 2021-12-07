@@ -1,9 +1,9 @@
 package org.enodeframework.commanding.impl
 
-import org.enodeframework.commanding.ICommand
-import org.enodeframework.commanding.ICommandContext
-import org.enodeframework.commanding.ICommandHandlerProvider
-import org.enodeframework.commanding.ICommandHandlerProxy
+import org.enodeframework.commanding.CommandContext
+import org.enodeframework.commanding.CommandHandlerProvider
+import org.enodeframework.commanding.CommandHandlerProxy
+import org.enodeframework.commanding.CommandMessage
 import org.enodeframework.infrastructure.impl.AbstractHandlerProvider
 import org.enodeframework.messaging.MessageHandlerData
 import java.lang.reflect.Method
@@ -12,14 +12,14 @@ import kotlin.coroutines.Continuation
 /**
  * @author anruence@gmail.com
  */
-class DefaultCommandHandlerProvider : AbstractHandlerProvider<Class<*>, ICommandHandlerProxy, Class<*>>(),
-    ICommandHandlerProvider {
+class DefaultCommandHandlerProvider : AbstractHandlerProvider<Class<*>, CommandHandlerProxy, Class<*>>(),
+    CommandHandlerProvider {
     override fun getKey(method: Method): Class<*> {
         return method.parameterTypes[1]
     }
 
-    override fun getHandlerProxyImplementationType(): Class<out ICommandHandlerProxy> {
-        return CommandHandlerProxy::class.java
+    override fun getHandlerProxyImplementationType(): Class<out CommandHandlerProxy> {
+        return DefaultCommandHandlerProxy::class.java
     }
 
     override fun isHandlerSourceMatchKey(handlerSource: Class<*>, key: Class<*>): Boolean {
@@ -37,13 +37,13 @@ class DefaultCommandHandlerProvider : AbstractHandlerProvider<Class<*>, ICommand
         if (method.parameterTypes.size != 2) {
             return false
         }
-        if (ICommandContext::class.java != method.parameterTypes[0]) {
+        if (CommandContext::class.java != method.parameterTypes[0]) {
             return false
         }
-        if (ICommand::class.java == method.parameterTypes[1]) {
+        if (CommandMessage::class.java == method.parameterTypes[1]) {
             return false
         }
-        if (!ICommand::class.java.isAssignableFrom(method.parameterTypes[1])) {
+        if (!CommandMessage::class.java.isAssignableFrom(method.parameterTypes[1])) {
             return false
         }
         return isMethodAnnotationSubscribe(method)
@@ -53,13 +53,13 @@ class DefaultCommandHandlerProvider : AbstractHandlerProvider<Class<*>, ICommand
         if (method.parameterTypes.size != 3) {
             return false
         }
-        if (ICommandContext::class.java != method.parameterTypes[0]) {
+        if (CommandContext::class.java != method.parameterTypes[0]) {
             return false
         }
-        if (ICommand::class.java == method.parameterTypes[1]) {
+        if (CommandMessage::class.java == method.parameterTypes[1]) {
             return false
         }
-        if (!ICommand::class.java.isAssignableFrom(method.parameterTypes[1])) {
+        if (!CommandMessage::class.java.isAssignableFrom(method.parameterTypes[1])) {
             return false
         }
         if (Continuation::class.java != method.parameterTypes[2]) {
@@ -68,7 +68,7 @@ class DefaultCommandHandlerProvider : AbstractHandlerProvider<Class<*>, ICommand
         return isMethodAnnotationSubscribe(method)
     }
 
-    override fun getHandlers(commandType: Class<*>): List<MessageHandlerData<ICommandHandlerProxy>> {
+    override fun getHandlers(commandType: Class<*>): List<MessageHandlerData<CommandHandlerProxy>> {
         return getHandlersInternal(commandType)
     }
 

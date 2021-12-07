@@ -1,13 +1,13 @@
 package org.enodeframework.test.mock;
 
-import org.enodeframework.common.exception.EnodeRuntimeException;
+import org.enodeframework.common.exception.EnodeException;
 import org.enodeframework.common.exception.IORuntimeException;
-import org.enodeframework.domain.IDomainException;
-import org.enodeframework.messaging.IMessagePublisher;
+import org.enodeframework.domain.DomainExceptionMessage;
+import org.enodeframework.messaging.MessagePublisher;
 
 import java.util.concurrent.CompletableFuture;
 
-public class MockPublishableExceptionPublisher implements IMessagePublisher<IDomainException> {
+public class MockPublishableExceptionPublisher implements MessagePublisher<DomainExceptionMessage> {
     private static final CompletableFuture<Boolean> successResultTask = CompletableFuture.completedFuture(true);
     private int expectFailedCount = 0;
     private int currentFailedCount = 0;
@@ -25,15 +25,15 @@ public class MockPublishableExceptionPublisher implements IMessagePublisher<IDom
     }
 
     @Override
-    public CompletableFuture<Boolean> publishAsync(IDomainException message) {
+    public CompletableFuture<Boolean> publishAsync(DomainExceptionMessage message) {
         if (currentFailedCount < expectFailedCount) {
             currentFailedCount++;
             if (failedType == FailedType.UnKnownException) {
-                throw new EnodeRuntimeException("PublishPublishableExceptionAsyncUnKnownException" + currentFailedCount);
+                throw new EnodeException("PublishPublishableExceptionAsyncUnKnownException" + currentFailedCount);
             } else if (failedType == FailedType.IOException) {
                 throw new IORuntimeException("PublishPublishableExceptionAsyncIOException" + currentFailedCount);
             } else if (failedType == FailedType.TaskIOException) {
-                throw new EnodeRuntimeException("PublishPublishableExceptionAsyncUnKnownException" + currentFailedCount);
+                throw new EnodeException("PublishPublishableExceptionAsyncUnKnownException" + currentFailedCount);
             }
         }
         return successResultTask;

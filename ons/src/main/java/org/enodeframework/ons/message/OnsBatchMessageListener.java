@@ -4,7 +4,7 @@ import com.aliyun.openservices.ons.api.Action;
 import com.aliyun.openservices.ons.api.ConsumeContext;
 import com.aliyun.openservices.ons.api.Message;
 import com.aliyun.openservices.ons.api.batch.BatchMessageListener;
-import org.enodeframework.queue.IMessageHandler;
+import org.enodeframework.queue.MessageHandler;
 
 import java.util.List;
 
@@ -13,9 +13,9 @@ import java.util.List;
  */
 public class OnsBatchMessageListener implements BatchMessageListener {
 
-    private final IMessageHandler messageHandler;
+    private final MessageHandler messageHandler;
 
-    public OnsBatchMessageListener(IMessageHandler messageHandler) {
+    public OnsBatchMessageListener(MessageHandler messageHandler) {
         this.messageHandler = messageHandler;
     }
 

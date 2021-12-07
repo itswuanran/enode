@@ -2,7 +2,7 @@ package org.enodeframework.eventing.impl
 
 import org.enodeframework.eventing.DomainEventStream
 import org.enodeframework.eventing.EventAppendResult
-import org.enodeframework.eventing.IEventStore
+import org.enodeframework.eventing.EventStore
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentMap
 /**
  * @author anruence@gmail.com
  */
-class InMemoryEventStore : IEventStore {
+class InMemoryEventStore : EventStore {
     private val lockObj = Any()
     private val aggregateInfoDict: ConcurrentMap<String, AggregateInfo>
     private fun queryAggregateEvents(

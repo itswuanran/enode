@@ -4,11 +4,11 @@ import org.enodeframework.annotation.Command
 import org.enodeframework.annotation.Event
 import org.enodeframework.annotation.Priority
 import org.enodeframework.annotation.Subscribe
-import org.enodeframework.common.container.ObjectContainer
+import org.enodeframework.common.container.DefaultObjectContainer
 import org.enodeframework.common.exception.HandlerRegisterException
-import org.enodeframework.infrastructure.IAssemblyInitializer
-import org.enodeframework.infrastructure.IObjectProxy
+import org.enodeframework.infrastructure.AssemblyInitializer
 import org.enodeframework.infrastructure.MethodInvocation
+import org.enodeframework.infrastructure.ObjectProxy
 import org.enodeframework.messaging.MessageHandlerData
 import org.reflections.ReflectionUtils
 import java.lang.invoke.MethodHandles
@@ -19,7 +19,7 @@ import java.util.function.Consumer
 import kotlin.reflect.jvm.kotlinFunction
 
 abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface, THandlerSource> :
-    IAssemblyInitializer where THandlerProxyInterface : IObjectProxy, THandlerProxyInterface : MethodInvocation {
+    AssemblyInitializer where THandlerProxyInterface : ObjectProxy, THandlerProxyInterface : MethodInvocation {
     private val handlerDict: MutableMap<TKey, MutableList<THandlerProxyInterface>> = HashMap()
     private val messageHandlerDict: MutableMap<TKey, MessageHandlerData<THandlerProxyInterface>> = HashMap()
     private val lookup = MethodHandles.lookup()
@@ -121,7 +121,7 @@ abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface, THandlerSou
             // 针对command，只允许一个处理器
             val handlers = handlerDict.computeIfAbsent(key) { ArrayList() }
             val handlerProxy = this.getHandlerProxyImplementationType().getDeclaredConstructor().newInstance()
-            handlerProxy.setInnerObject(ObjectContainer.resolve(handlerType))
+            handlerProxy.setInnerObject(DefaultObjectContainer.resolve(handlerType))
             handlerProxy.setMethod(method)
             handlerProxy.setMethodHandle(handleMethod)
             handlers.add(handlerProxy)

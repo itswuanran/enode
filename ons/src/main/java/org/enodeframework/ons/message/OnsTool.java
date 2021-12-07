@@ -2,7 +2,7 @@ package org.enodeframework.ons.message;
 
 import com.aliyun.openservices.ons.api.Message;
 import org.enodeframework.common.io.Task;
-import org.enodeframework.queue.IMessageHandler;
+import org.enodeframework.queue.MessageHandler;
 import org.enodeframework.queue.QueueMessage;
 
 import java.nio.charset.StandardCharsets;
@@ -30,14 +30,14 @@ public class OnsTool {
         return message;
     }
 
-    public static void handle(List<Message> msgs, IMessageHandler messageHandler) {
+    public static void handle(List<Message> msgs, MessageHandler messageHandler) {
         int size = msgs.size();
         CountDownLatch latch = new CountDownLatch(size);
         handleConcurrently(0, size, msgs, latch, messageHandler);
         Task.await(latch);
     }
 
-    private static void handleConcurrently(int index, int total, List<Message> msgs, CountDownLatch latch, IMessageHandler messageHandler) {
+    private static void handleConcurrently(int index, int total, List<Message> msgs, CountDownLatch latch, MessageHandler messageHandler) {
         msgs.forEach(msg -> {
             QueueMessage queueMessage = covertToQueueMessage(msg);
             messageHandler.handle(queueMessage, message -> {
@@ -46,7 +46,7 @@ public class OnsTool {
         });
     }
 
-    private static void handleRecursively(int index, int total, List<Message> msgs, CountDownLatch latch, IMessageHandler messageHandler) {
+    private static void handleRecursively(int index, int total, List<Message> msgs, CountDownLatch latch, MessageHandler messageHandler) {
         if (index == total) {
             return;
         }

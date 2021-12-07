@@ -1,11 +1,11 @@
 package org.enodeframework.common.extensions;
 
-import org.enodeframework.messaging.IMessage;
+import org.enodeframework.messaging.Message;
 
 /**
  * A message monitor that returns a NoOp message callback
  */
-public enum NoOpMessageMonitor implements MessageMonitor<IMessage> {
+public enum NoOpMessageMonitor implements MessageMonitor<Message> {
 
     /**
      * Singleton instance of a {@link NoOpMessageMonitor}.
@@ -23,7 +23,7 @@ public enum NoOpMessageMonitor implements MessageMonitor<IMessage> {
     }
 
     @Override
-    public MonitorCallback onMessageIngested(IMessage message) {
+    public MonitorCallback onMessageIngested(Message message) {
         return NoOpMessageMonitorCallback.INSTANCE;
     }
 

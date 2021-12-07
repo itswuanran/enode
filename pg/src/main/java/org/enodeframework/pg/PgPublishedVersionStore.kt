@@ -4,7 +4,7 @@ import io.vertx.pgclient.PgPool
 import io.vertx.sqlclient.Tuple
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.configurations.EventStoreConfiguration
-import org.enodeframework.eventing.IPublishedVersionStore
+import org.enodeframework.eventing.PublishedVersionStore
 import org.enodeframework.pg.handler.PgFindPublishedVersionHandler
 import org.enodeframework.pg.handler.PgUpsertPublishedVersionHandler
 import java.time.LocalDateTime
@@ -15,7 +15,7 @@ import java.util.concurrent.CompletableFuture
  */
 class PgPublishedVersionStore(
     private val sqlClient: PgPool, private val configuration: EventStoreConfiguration
-) : IPublishedVersionStore {
+) : PublishedVersionStore {
 
     override fun updatePublishedVersionAsync(
         processorName: String, aggregateRootTypeName: String, aggregateRootId: String, publishedVersion: Int

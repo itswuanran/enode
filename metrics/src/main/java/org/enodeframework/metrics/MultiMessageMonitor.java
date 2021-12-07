@@ -2,7 +2,7 @@ package org.enodeframework.metrics;
 
 import org.enodeframework.common.extensions.MessageMonitor;
 import org.enodeframework.common.utils.Assert;
-import org.enodeframework.messaging.IMessage;
+import org.enodeframework.messaging.Message;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 /**
  * Delegates messages and callbacks to the given list of message monitors
  */
-public class MultiMessageMonitor<T extends IMessage> implements MessageMonitor<T> {
+public class MultiMessageMonitor<T extends Message> implements MessageMonitor<T> {
 
     private final List<MessageMonitor<? super T>> messageMonitors;
 

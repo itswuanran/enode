@@ -4,7 +4,7 @@ import io.vertx.mysqlclient.MySQLPool
 import io.vertx.sqlclient.Tuple
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.configurations.EventStoreConfiguration
-import org.enodeframework.eventing.IPublishedVersionStore
+import org.enodeframework.eventing.PublishedVersionStore
 import org.enodeframework.mysql.handler.MySQLFindPublishedVersionHandler
 import org.enodeframework.mysql.handler.MySQLUpsertPublishedVersionHandler
 import java.time.LocalDateTime
@@ -15,7 +15,7 @@ import java.util.concurrent.CompletableFuture
  */
 class MySQLPublishedVersionStore(
     private val client: MySQLPool, private val configuration: EventStoreConfiguration
-) : IPublishedVersionStore {
+) : PublishedVersionStore {
 
     override fun updatePublishedVersionAsync(
         processorName: String, aggregateRootTypeName: String, aggregateRootId: String, publishedVersion: Int

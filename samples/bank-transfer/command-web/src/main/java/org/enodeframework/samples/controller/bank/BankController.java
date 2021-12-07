@@ -1,9 +1,9 @@
 package org.enodeframework.samples.controller.bank;
 
 import com.google.common.base.Stopwatch;
+import org.enodeframework.commanding.CommandBus;
 import org.enodeframework.commanding.CommandResult;
 import org.enodeframework.commanding.CommandReturnType;
-import org.enodeframework.commanding.ICommandService;
 import org.enodeframework.common.io.Task;
 import org.enodeframework.common.utils.IdGenerator;
 import org.enodeframework.samples.commands.bank.CreateAccountCommand;
@@ -26,7 +26,7 @@ import java.util.concurrent.CountDownLatch;
 @RequestMapping("/bank")
 public class BankController {
     @Autowired
-    private ICommandService commandService;
+    private CommandBus commandService;
 
     @RequestMapping("deposit")
     public Mono<Boolean> deposit() {

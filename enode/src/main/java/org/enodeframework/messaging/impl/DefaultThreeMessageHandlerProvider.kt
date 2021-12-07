@@ -1,20 +1,20 @@
 package org.enodeframework.messaging.impl
 
-import org.enodeframework.eventing.IDomainEvent
+import org.enodeframework.eventing.DomainEventMessage
 import org.enodeframework.infrastructure.impl.AbstractHandlerProvider
 import org.enodeframework.infrastructure.impl.ManyType
-import org.enodeframework.messaging.IMessage
-import org.enodeframework.messaging.IMessageHandlerProxy3
-import org.enodeframework.messaging.IThreeMessageHandlerProvider
+import org.enodeframework.messaging.Message
 import org.enodeframework.messaging.MessageHandlerData
+import org.enodeframework.messaging.MessageHandlerProxy3
+import org.enodeframework.messaging.ThreeMessageHandlerProvider
 import java.lang.reflect.Method
 import kotlin.coroutines.Continuation
 
 /**
  * @author anruence@gmail.com
  */
-class DefaultThreeMessageHandlerProvider : AbstractHandlerProvider<ManyType, IMessageHandlerProxy3, List<Class<*>>>(),
-    IThreeMessageHandlerProvider {
+class DefaultThreeMessageHandlerProvider : AbstractHandlerProvider<ManyType, MessageHandlerProxy3, List<Class<*>>>(),
+    ThreeMessageHandlerProvider {
 
     override fun getKey(method: Method): ManyType {
         return ManyType(listOf(*method.parameterTypes))
@@ -24,8 +24,8 @@ class DefaultThreeMessageHandlerProvider : AbstractHandlerProvider<ManyType, IMe
         return false
     }
 
-    override fun getHandlerProxyImplementationType(): Class<out IMessageHandlerProxy3> {
-        return MessageHandlerProxy3::class.java
+    override fun getHandlerProxyImplementationType(): Class<out MessageHandlerProxy3> {
+        return DefaultMessageHandlerProxy3::class.java
     }
 
     override fun isHandlerSourceMatchKey(handlerSource: List<Class<*>>, key: ManyType): Boolean {
@@ -48,22 +48,22 @@ class DefaultThreeMessageHandlerProvider : AbstractHandlerProvider<ManyType, IMe
         if (method.parameterTypes.size != 3) {
             return false
         }
-        if (IMessage::class.java == method.parameterTypes[0]) {
+        if (Message::class.java == method.parameterTypes[0]) {
             return false
         }
-        if (IMessage::class.java == method.parameterTypes[1]) {
+        if (Message::class.java == method.parameterTypes[1]) {
             return false
         }
-        if (IMessage::class.java == method.parameterTypes[2]) {
+        if (Message::class.java == method.parameterTypes[2]) {
             return false
         }
-        if (!IDomainEvent::class.java.isAssignableFrom(method.parameterTypes[0])) {
+        if (!DomainEventMessage::class.java.isAssignableFrom(method.parameterTypes[0])) {
             return false
         }
-        if (!IDomainEvent::class.java.isAssignableFrom(method.parameterTypes[1])) {
+        if (!DomainEventMessage::class.java.isAssignableFrom(method.parameterTypes[1])) {
             return false
         }
-        if (!IDomainEvent::class.java.isAssignableFrom(method.parameterTypes[2])) {
+        if (!DomainEventMessage::class.java.isAssignableFrom(method.parameterTypes[2])) {
             return false
         }
         return isMethodAnnotationSubscribe(method)
@@ -73,22 +73,22 @@ class DefaultThreeMessageHandlerProvider : AbstractHandlerProvider<ManyType, IMe
         if (method.parameterTypes.size != 4) {
             return false
         }
-        if (IMessage::class.java == method.parameterTypes[0]) {
+        if (Message::class.java == method.parameterTypes[0]) {
             return false
         }
-        if (IMessage::class.java == method.parameterTypes[1]) {
+        if (Message::class.java == method.parameterTypes[1]) {
             return false
         }
-        if (IMessage::class.java == method.parameterTypes[2]) {
+        if (Message::class.java == method.parameterTypes[2]) {
             return false
         }
-        if (!IDomainEvent::class.java.isAssignableFrom(method.parameterTypes[0])) {
+        if (!DomainEventMessage::class.java.isAssignableFrom(method.parameterTypes[0])) {
             return false
         }
-        if (!IDomainEvent::class.java.isAssignableFrom(method.parameterTypes[1])) {
+        if (!DomainEventMessage::class.java.isAssignableFrom(method.parameterTypes[1])) {
             return false
         }
-        if (!IDomainEvent::class.java.isAssignableFrom(method.parameterTypes[2])) {
+        if (!DomainEventMessage::class.java.isAssignableFrom(method.parameterTypes[2])) {
             return false
         }
         if (Continuation::class.java != method.parameterTypes[3]) {
@@ -97,7 +97,7 @@ class DefaultThreeMessageHandlerProvider : AbstractHandlerProvider<ManyType, IMe
         return isMethodAnnotationSubscribe(method)
     }
 
-    override fun getHandlers(messageTypes: List<Class<*>>): List<MessageHandlerData<IMessageHandlerProxy3>> {
+    override fun getHandlers(messageTypes: List<Class<*>>): List<MessageHandlerData<MessageHandlerProxy3>> {
         return getHandlersInternal(messageTypes)
     }
 }

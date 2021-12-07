@@ -1,11 +1,11 @@
 package org.enodeframework.samples.commands.bank;
 
-import org.enodeframework.commanding.Command;
+import org.enodeframework.commanding.AbstractCommandMessage;
 
 /**
  * 确认转出
  */
-public class ConfirmTransferOutCommand extends Command<String> {
+public class ConfirmTransferOutCommand extends AbstractCommandMessage<String> {
     public ConfirmTransferOutCommand() {
     }
 

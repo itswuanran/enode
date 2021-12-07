@@ -1,7 +1,7 @@
 package org.enodeframework.samples.controller.note;
 
+import org.enodeframework.commanding.CommandBus;
 import org.enodeframework.commanding.CommandReturnType;
-import org.enodeframework.commanding.ICommandService;
 import org.enodeframework.common.utils.IdGenerator;
 import org.enodeframework.samples.commands.note.ChangeNoteTitleCommand;
 import org.enodeframework.samples.commands.note.CreateNoteCommand;
@@ -21,7 +21,7 @@ import java.util.concurrent.CountDownLatch;
 public class NoteController {
 
     @Autowired
-    private ICommandService commandService;
+    private CommandBus commandService;
 
     @RequestMapping("create")
     public Mono create(@RequestParam("id") String noteId, @RequestParam("t") String title) {

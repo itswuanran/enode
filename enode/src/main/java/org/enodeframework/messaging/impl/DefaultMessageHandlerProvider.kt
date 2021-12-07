@@ -1,25 +1,25 @@
 package org.enodeframework.messaging.impl
 
-import org.enodeframework.eventing.IDomainEvent
+import org.enodeframework.eventing.DomainEventMessage
 import org.enodeframework.infrastructure.impl.AbstractHandlerProvider
-import org.enodeframework.messaging.IMessage
-import org.enodeframework.messaging.IMessageHandlerProvider
-import org.enodeframework.messaging.IMessageHandlerProxy1
+import org.enodeframework.messaging.Message
 import org.enodeframework.messaging.MessageHandlerData
+import org.enodeframework.messaging.MessageHandlerProvider
+import org.enodeframework.messaging.MessageHandlerProxy1
 import java.lang.reflect.Method
 import kotlin.coroutines.Continuation
 
 /**
  * @author anruence@gmail.com
  */
-class DefaultMessageHandlerProvider : AbstractHandlerProvider<Class<*>, IMessageHandlerProxy1, Class<*>>(),
-    IMessageHandlerProvider {
+class DefaultMessageHandlerProvider : AbstractHandlerProvider<Class<*>, MessageHandlerProxy1, Class<*>>(),
+    MessageHandlerProvider {
     override fun getKey(method: Method): Class<*> {
         return method.parameterTypes[0]
     }
 
-    override fun getHandlerProxyImplementationType(): Class<out IMessageHandlerProxy1> {
-        return MessageHandlerProxy1::class.java
+    override fun getHandlerProxyImplementationType(): Class<out MessageHandlerProxy1> {
+        return DefaultMessageHandlerProxy1::class.java
     }
 
     override fun isHandleMethodMatch(method: Method): Boolean {
@@ -33,10 +33,10 @@ class DefaultMessageHandlerProvider : AbstractHandlerProvider<Class<*>, IMessage
         if (method.parameterTypes.size != 1) {
             return false
         }
-        if (IMessage::class.java == method.parameterTypes[0]) {
+        if (Message::class.java == method.parameterTypes[0]) {
             return false
         }
-        if (!IDomainEvent::class.java.isAssignableFrom(method.parameterTypes[0])) {
+        if (!DomainEventMessage::class.java.isAssignableFrom(method.parameterTypes[0])) {
             return false
         }
         return isMethodAnnotationSubscribe(method)
@@ -46,10 +46,10 @@ class DefaultMessageHandlerProvider : AbstractHandlerProvider<Class<*>, IMessage
         if (method.parameterTypes.size != 2) {
             return false
         }
-        if (IMessage::class.java == method.parameterTypes[0]) {
+        if (Message::class.java == method.parameterTypes[0]) {
             return false
         }
-        if (!IDomainEvent::class.java.isAssignableFrom(method.parameterTypes[0])) {
+        if (!DomainEventMessage::class.java.isAssignableFrom(method.parameterTypes[0])) {
             return false
         }
         if (Continuation::class.java != method.parameterTypes[1]) {
@@ -62,7 +62,7 @@ class DefaultMessageHandlerProvider : AbstractHandlerProvider<Class<*>, IMessage
         return key == handlerSource
     }
 
-    override fun getHandlers(messageType: Class<*>): List<MessageHandlerData<IMessageHandlerProxy1>> {
+    override fun getHandlers(messageType: Class<*>): List<MessageHandlerData<MessageHandlerProxy1>> {
         return getHandlersInternal(messageType)
     }
 

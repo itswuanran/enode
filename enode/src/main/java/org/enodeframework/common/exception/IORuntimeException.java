@@ -5,7 +5,7 @@ package org.enodeframework.common.exception;
  *
  * @author anruence@gmail.com
  */
-public class IORuntimeException extends EnodeRuntimeException {
+public class IORuntimeException extends EnodeException {
     private static final long serialVersionUID = 2976713867727370181L;
 
     public IORuntimeException() {

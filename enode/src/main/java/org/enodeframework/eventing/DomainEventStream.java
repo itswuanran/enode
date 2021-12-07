@@ -1,7 +1,7 @@
 package org.enodeframework.eventing;
 
 import org.enodeframework.common.exception.DomainEventInvalidException;
-import org.enodeframework.messaging.Message;
+import org.enodeframework.messaging.AbstractMessage;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -11,27 +11,39 @@ import java.util.Map;
 /**
  * @author anruence@gmail.com
  */
-public class DomainEventStream extends Message {
+public class DomainEventStream extends AbstractMessage {
     private String commandId;
     private String aggregateRootTypeName;
     private String aggregateRootId;
     private int version;
-    private List<IDomainEvent<?>> events;
+    private List<DomainEventMessage<?>> events;
 
-    public DomainEventStream(String commandId, String aggregateRootId, String aggregateRootTypeName, Date timestamp, List<IDomainEvent<?>> events, Map<String, Object> items) {
+    public DomainEventStream() {
+    }
+
+    public DomainEventStream(String commandId, String aggregateRootId, int version, String aggregateRootTypeName, List<DomainEventMessage<?>> events, Map<String, Object> items) {
+        this.commandId = commandId;
+        this.aggregateRootId = aggregateRootId;
+        this.aggregateRootTypeName = aggregateRootTypeName;
+        this.version = version;
+        this.events = events;
+        this.items = items;
+    }
+
+    public DomainEventStream(String commandId, String aggregateRootId, String aggregateRootTypeName, Date timestamp, List<DomainEventMessage<?>> events, Map<String, Object> items) {
         if (events == null || events.size() == 0) {
             throw new IllegalArgumentException("Parameter events cannot be null or empty.");
         }
         this.commandId = commandId;
         this.aggregateRootId = aggregateRootId;
         this.aggregateRootTypeName = aggregateRootTypeName;
-        this.version = events.stream().findFirst().map(IDomainEvent::getVersion).orElse(0);
+        this.version = events.stream().findFirst().map(DomainEventMessage::getVersion).orElse(0);
         this.timestamp = timestamp;
         this.events = events;
         this.items = items == null ? new HashMap<>() : items;
         this.id = aggregateRootId + "_" + version;
         int sequence = 1;
-        for (IDomainEvent<?> event : events) {
+        for (DomainEventMessage<?> event : events) {
             if (event.getVersion() != this.getVersion()) {
                 throw new DomainEventInvalidException(String.format("Invalid domain event version, aggregateRootTypeName: %s aggregateRootId: %s expected version: %d, but was: %d",
                     aggregateRootTypeName,
@@ -47,11 +59,11 @@ public class DomainEventStream extends Message {
         }
     }
 
-    public List<IDomainEvent<?>> getEvents() {
+    public List<DomainEventMessage<?>> getEvents() {
         return events;
     }
 
-    public void setEvents(List<IDomainEvent<?>> events) {
+    public void setEvents(List<DomainEventMessage<?>> events) {
         this.events = events;
     }
 
@@ -87,7 +99,7 @@ public class DomainEventStream extends Message {
         this.version = version;
     }
 
-    public List<IDomainEvent<?>> events() {
+    public List<DomainEventMessage<?>> events() {
         return events;
     }
 }

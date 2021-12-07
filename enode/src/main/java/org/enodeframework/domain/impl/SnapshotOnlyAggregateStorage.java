@@ -3,25 +3,25 @@ package org.enodeframework.domain.impl;
 import org.enodeframework.common.exception.AggregateRootInvalidException;
 import org.enodeframework.common.io.IOHelper;
 import org.enodeframework.common.utils.Assert;
-import org.enodeframework.domain.IAggregateRoot;
-import org.enodeframework.domain.IAggregateSnapshotter;
-import org.enodeframework.domain.IAggregateStorage;
+import org.enodeframework.domain.AggregateRoot;
+import org.enodeframework.domain.AggregateSnapshotter;
+import org.enodeframework.domain.AggregateStorage;
 
 import java.util.concurrent.CompletableFuture;
 
 /**
  * @author anruence@gmail.com
  */
-public class SnapshotOnlyAggregateStorage implements IAggregateStorage {
+public class SnapshotOnlyAggregateStorage implements AggregateStorage {
 
-    private final IAggregateSnapshotter aggregateSnapshotter;
+    private final AggregateSnapshotter aggregateSnapshotter;
 
-    public SnapshotOnlyAggregateStorage(IAggregateSnapshotter aggregateSnapshotter) {
+    public SnapshotOnlyAggregateStorage(AggregateSnapshotter aggregateSnapshotter) {
         this.aggregateSnapshotter = aggregateSnapshotter;
     }
 
     @Override
-    public <T extends IAggregateRoot> CompletableFuture<T> getAsync(Class<T> aggregateRootType, String aggregateRootId) {
+    public <T extends AggregateRoot> CompletableFuture<T> getAsync(Class<T> aggregateRootType, String aggregateRootId) {
         Assert.nonNull(aggregateRootId, "aggregateRootId");
         Assert.nonNull(aggregateRootType, "aggregateRootType");
         return tryRestoreFromSnapshotAsync(aggregateRootType, aggregateRootId, 0, new CompletableFuture<>())
@@ -37,7 +37,7 @@ public class SnapshotOnlyAggregateStorage implements IAggregateStorage {
             });
     }
 
-    private <T extends IAggregateRoot> CompletableFuture<T> tryRestoreFromSnapshotAsync(Class<T> aggregateRootType, String aggregateRootId, int retryTimes, CompletableFuture<T> taskSource) {
+    private <T extends AggregateRoot> CompletableFuture<T> tryRestoreFromSnapshotAsync(Class<T> aggregateRootType, String aggregateRootId, int retryTimes, CompletableFuture<T> taskSource) {
         IOHelper.tryAsyncActionRecursively("TryRestoreFromSnapshotAsync",
             () -> aggregateSnapshotter.restoreFromSnapshotAsync(aggregateRootType, aggregateRootId),
             taskSource::complete,

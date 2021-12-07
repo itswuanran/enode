@@ -1,9 +1,9 @@
 package org.enodeframework.spring;
 
 import io.vertx.mysqlclient.MySQLPool;
-import org.enodeframework.common.serializing.ISerializeService;
+import org.enodeframework.common.serializing.SerializeService;
 import org.enodeframework.configurations.EventStoreConfiguration;
-import org.enodeframework.eventing.IEventSerializer;
+import org.enodeframework.eventing.EventSerializer;
 import org.enodeframework.mysql.MySQLEventStore;
 import org.enodeframework.mysql.MySQLPublishedVersionStore;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Bean;
 public class EnodeMySQLEventStoreAutoConfig {
 
     @Bean
-    public MySQLEventStore mysqlEventStore(@Qualifier("enodeMySQLPool") MySQLPool pool, IEventSerializer eventSerializer, ISerializeService serializeService) {
+    public MySQLEventStore mysqlEventStore(@Qualifier("enodeMySQLPool") MySQLPool pool, EventSerializer eventSerializer, SerializeService serializeService) {
         MySQLEventStore eventStore = new MySQLEventStore(pool, EventStoreConfiguration.mysql(), eventSerializer, serializeService);
         return eventStore;
     }

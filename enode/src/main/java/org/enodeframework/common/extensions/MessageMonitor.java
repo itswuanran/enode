@@ -1,6 +1,6 @@
 package org.enodeframework.common.extensions;
 
-import org.enodeframework.messaging.IMessage;
+import org.enodeframework.messaging.Message;
 
 import java.util.Collection;
 import java.util.Map;
@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  * For example, a message monitor can track various things like message processing times, failure and success rates and
  * occurred exceptions. It also can gather information contained in messages headers like timestamps and tracers
  */
-public interface MessageMonitor<T extends IMessage> {
+public interface MessageMonitor<T extends Message> {
     /**
      * Takes a message and returns a callback that should be used
      * to inform the message monitor about the result of processing the message

@@ -1,10 +1,10 @@
 package org.enodeframework.samples.domain.bank.bankaccount;
 
-import org.enodeframework.domain.DomainException;
+import org.enodeframework.domain.AbstractDomainExceptionMessage;
 
 import java.util.Map;
 
-public class InsufficientBalanceException extends DomainException {
+public class InsufficientBalanceException extends AbstractDomainExceptionMessage {
     /**
      * 账户ID
      */

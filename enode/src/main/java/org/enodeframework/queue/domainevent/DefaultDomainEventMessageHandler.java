@@ -2,60 +2,60 @@ package org.enodeframework.queue.domainevent;
 
 import com.google.common.base.Strings;
 import org.enodeframework.common.io.Task;
-import org.enodeframework.common.serializing.ISerializeService;
+import org.enodeframework.common.serializing.SerializeService;
 import org.enodeframework.configurations.SysProperties;
-import org.enodeframework.eventing.DomainEventStreamMessage;
-import org.enodeframework.eventing.IEventProcessContext;
-import org.enodeframework.eventing.IEventSerializer;
-import org.enodeframework.eventing.IProcessingEventProcessor;
+import org.enodeframework.eventing.DomainEventStream;
+import org.enodeframework.eventing.EventProcessContext;
+import org.enodeframework.eventing.EventSerializer;
 import org.enodeframework.eventing.ProcessingEvent;
-import org.enodeframework.queue.IMessageContext;
-import org.enodeframework.queue.IMessageHandler;
-import org.enodeframework.queue.ISendReplyService;
+import org.enodeframework.eventing.ProcessingEventProcessor;
+import org.enodeframework.queue.MessageContext;
+import org.enodeframework.queue.MessageHandler;
 import org.enodeframework.queue.QueueMessage;
+import org.enodeframework.queue.SendReplyService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class DefaultDomainEventMessageHandler implements IMessageHandler {
+public class DefaultDomainEventMessageHandler implements MessageHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultDomainEventMessageHandler.class);
 
-    private final ISendReplyService sendReplyService;
+    private final SendReplyService sendReplyService;
 
-    private final IEventSerializer eventSerializer;
+    private final EventSerializer eventSerializer;
 
-    private final IProcessingEventProcessor domainEventMessageProcessor;
+    private final ProcessingEventProcessor domainEventMessageProcessor;
 
-    private final ISerializeService serializeService;
+    private final SerializeService serializeService;
 
     private boolean sendEventHandledMessage = true;
 
-    public DefaultDomainEventMessageHandler(ISendReplyService sendReplyService, IProcessingEventProcessor domainEventMessageProcessor, IEventSerializer eventSerializer, ISerializeService serializeService) {
+    public DefaultDomainEventMessageHandler(SendReplyService sendReplyService, ProcessingEventProcessor domainEventMessageProcessor, EventSerializer eventSerializer, SerializeService serializeService) {
         this.sendReplyService = sendReplyService;
         this.eventSerializer = eventSerializer;
         this.domainEventMessageProcessor = domainEventMessageProcessor;
         this.serializeService = serializeService;
     }
 
-    public ISendReplyService getSendReplyService() {
+    public SendReplyService getSendReplyService() {
         return sendReplyService;
     }
 
     @Override
-    public void handle(QueueMessage queueMessage, IMessageContext context) {
+    public void handle(QueueMessage queueMessage, MessageContext context) {
         logger.info("Received event stream message: {}", serializeService.serialize(queueMessage));
-        EventStreamMessage message = serializeService.deserialize(queueMessage.getBody(), EventStreamMessage.class);
-        DomainEventStreamMessage domainEventStreamMessage = convertToDomainEventStream(message);
+        GenericDomainEventMessage message = serializeService.deserialize(queueMessage.getBody(), GenericDomainEventMessage.class);
+        DomainEventStream domainEventStreamMessage = convertToDomainEventStream(message);
         DomainEventStreamProcessContext processContext = new DomainEventStreamProcessContext(this, domainEventStreamMessage, queueMessage, context);
         ProcessingEvent processingMessage = new ProcessingEvent(domainEventStreamMessage, processContext);
         domainEventMessageProcessor.process(processingMessage);
     }
 
-    private DomainEventStreamMessage convertToDomainEventStream(EventStreamMessage message) {
-        DomainEventStreamMessage domainEventStreamMessage = new DomainEventStreamMessage(
+    private DomainEventStream convertToDomainEventStream(GenericDomainEventMessage message) {
+        DomainEventStream domainEventStreamMessage = new DomainEventStream(
             message.getCommandId(),
             message.getAggregateRootId(),
             message.getVersion(),
@@ -76,17 +76,17 @@ public class DefaultDomainEventMessageHandler implements IMessageHandler {
         this.sendEventHandledMessage = sendEventHandledMessage;
     }
 
-    static class DomainEventStreamProcessContext implements IEventProcessContext {
+    static class DomainEventStreamProcessContext implements EventProcessContext {
         private final DefaultDomainEventMessageHandler eventConsumer;
-        private final DomainEventStreamMessage domainEventStreamMessage;
+        private final DomainEventStream domainEventStreamMessage;
         private final QueueMessage queueMessage;
-        private final IMessageContext messageContext;
+        private final MessageContext messageContext;
 
         public DomainEventStreamProcessContext(
             DefaultDomainEventMessageHandler eventConsumer,
-            DomainEventStreamMessage domainEventStreamMessage,
+            DomainEventStream domainEventStreamMessage,
             QueueMessage queueMessage,
-            IMessageContext messageContext) {
+            MessageContext messageContext) {
             this.eventConsumer = eventConsumer;
             this.domainEventStreamMessage = domainEventStreamMessage;
             this.queueMessage = queueMessage;

@@ -1,16 +1,16 @@
 package org.enodeframework.metrics;
 
 import com.codahale.metrics.MetricRegistry;
-import org.enodeframework.commanding.ICommand;
-import org.enodeframework.commanding.ICommandService;
+import org.enodeframework.commanding.CommandBus;
+import org.enodeframework.commanding.CommandMessage;
 import org.enodeframework.common.extensions.MessageMonitor;
 import org.enodeframework.common.extensions.NoOpMessageMonitor;
-import org.enodeframework.eventing.DomainEvent;
-import org.enodeframework.eventing.IDomainEvent;
-import org.enodeframework.eventing.IProcessingEventProcessor;
-import org.enodeframework.messaging.IMessage;
-import org.enodeframework.messaging.IMessagePublisher;
+import org.enodeframework.eventing.AbstractDomainEventMessage;
+import org.enodeframework.eventing.DomainEventMessage;
+import org.enodeframework.eventing.ProcessingEventProcessor;
+import org.enodeframework.messaging.AbstractMessage;
 import org.enodeframework.messaging.Message;
+import org.enodeframework.messaging.MessagePublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,14 +61,14 @@ public class GlobalMetricRegistry {
      * @param componentName the name under which the component should be registered to the registry
      * @return a {@link MessageMonitor} to monitor the behavior of the given {@code componentType}
      */
-    public MessageMonitor<? extends IMessage> registerComponent(Class<?> componentType, String componentName) {
-        if (IDomainEvent.class.isAssignableFrom(componentType)) {
+    public MessageMonitor<? extends Message> registerComponent(Class<?> componentType, String componentName) {
+        if (DomainEventMessage.class.isAssignableFrom(componentType)) {
             return registerEventProcessor(componentName);
         }
-        if (ICommand.class.isAssignableFrom(componentType)) {
+        if (CommandMessage.class.isAssignableFrom(componentType)) {
             return registerCommandBus(componentName);
         }
-        if (IMessage.class.isAssignableFrom(componentType)) {
+        if (Message.class.isAssignableFrom(componentType)) {
             return registerEventBus(componentName);
         }
         logger.warn("Cannot provide MessageMonitor for component [{}] of type [{}]. Returning No-Op instance.",
@@ -77,14 +77,14 @@ public class GlobalMetricRegistry {
     }
 
     /**
-     * Registers new metrics to the registry to monitor an {@link IProcessingEventProcessor}. The monitor will be registered with
+     * Registers new metrics to the registry to monitor an {@link ProcessingEventProcessor}. The monitor will be registered with
      * the registry under the given {@code eventProcessorName}. The returned {@link MessageMonitor} can be installed on
      * the {@code EventProcessor} to initiate the monitoring.
      *
-     * @param eventProcessorName the name under which the {@link IProcessingEventProcessor} should be registered to the registry
-     * @return a {@link MessageMonitor} to monitor the behavior of an {@link IProcessingEventProcessor}
+     * @param eventProcessorName the name under which the {@link ProcessingEventProcessor} should be registered to the registry
+     * @return a {@link MessageMonitor} to monitor the behavior of an {@link ProcessingEventProcessor}
      */
-    public MessageMonitor<? super DomainEvent<?>> registerEventProcessor(String eventProcessorName) {
+    public MessageMonitor<? super AbstractDomainEventMessage<?>> registerEventProcessor(String eventProcessorName) {
         MessageTimerMonitor messageTimerMonitor = MessageTimerMonitor.builder().build();
         EventProcessorLatencyMonitor eventProcessorLatencyMonitor = new EventProcessorLatencyMonitor();
         CapacityMonitor capacityMonitor = new CapacityMonitor(1, TimeUnit.MINUTES);
@@ -97,7 +97,7 @@ public class GlobalMetricRegistry {
         eventProcessingRegistry.register("capacity", capacityMonitor);
         registry.register(eventProcessorName, eventProcessingRegistry);
 
-        List<MessageMonitor<? super DomainEvent<?>>> monitors = new ArrayList<>();
+        List<MessageMonitor<? super AbstractDomainEventMessage<?>>> monitors = new ArrayList<>();
         monitors.add(messageTimerMonitor);
         monitors.add(eventProcessorLatencyMonitor);
         monitors.add(capacityMonitor);
@@ -106,26 +106,26 @@ public class GlobalMetricRegistry {
     }
 
     /**
-     * Registers new metrics to the registry to monitor a {@link ICommandService}. The monitor will be registered with the
+     * Registers new metrics to the registry to monitor a {@link CommandBus}. The monitor will be registered with the
      * registry under the given {@code commandBusName}. The returned {@link MessageMonitor} can be installed on the
      * {@code CommandBus} to initiate the monitoring.
      *
      * @param commandBusName the name under which the commandBus should be registered to the registry
      * @return a {@link MessageMonitor} to monitor the behavior of a CommandBus
      */
-    public MessageMonitor<? super ICommand> registerCommandBus(String commandBusName) {
+    public MessageMonitor<? super CommandMessage> registerCommandBus(String commandBusName) {
         return registerDefaultHandlerMessageMonitor(commandBusName);
     }
 
     /**
-     * Registers new metrics to the registry to monitor an {@link IMessagePublisher}. The monitor will be registered with the
+     * Registers new metrics to the registry to monitor an {@link MessagePublisher}. The monitor will be registered with the
      * registry under the given {@code eventBusName}. The returned {@link MessageMonitor} can be installed on the {@code
      * EventBus} to initiate the monitoring.
      *
-     * @param eventBusName the name under which the {@link IMessagePublisher} should be registered to the registry
-     * @return a {@link MessageMonitor} to monitor the behavior of an {@link IMessagePublisher}
+     * @param eventBusName the name under which the {@link MessagePublisher} should be registered to the registry
+     * @return a {@link MessageMonitor} to monitor the behavior of an {@link MessagePublisher}
      */
-    public MessageMonitor<? super Message> registerEventBus(String eventBusName) {
+    public MessageMonitor<? super AbstractMessage> registerEventBus(String eventBusName) {
         MessageCountingMonitor messageCounterMonitor = new MessageCountingMonitor();
         MessageTimerMonitor messageTimerMonitor = MessageTimerMonitor.builder().build();
 
@@ -137,7 +137,7 @@ public class GlobalMetricRegistry {
         return new MultiMessageMonitor<>(Arrays.asList(messageCounterMonitor, messageTimerMonitor));
     }
 
-    private MessageMonitor<IMessage> registerDefaultHandlerMessageMonitor(String name) {
+    private MessageMonitor<Message> registerDefaultHandlerMessageMonitor(String name) {
         MessageTimerMonitor messageTimerMonitor = MessageTimerMonitor.builder().build();
         CapacityMonitor capacityMonitor = new CapacityMonitor(1, TimeUnit.MINUTES);
         MessageCountingMonitor messageCountingMonitor = new MessageCountingMonitor();

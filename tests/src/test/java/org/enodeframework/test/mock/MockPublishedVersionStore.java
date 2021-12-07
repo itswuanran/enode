@@ -1,13 +1,13 @@
 package org.enodeframework.test.mock;
 
-import org.enodeframework.common.exception.EnodeRuntimeException;
+import org.enodeframework.common.exception.EnodeException;
 import org.enodeframework.common.exception.IORuntimeException;
-import org.enodeframework.eventing.IPublishedVersionStore;
+import org.enodeframework.eventing.PublishedVersionStore;
 import org.enodeframework.eventing.impl.InMemoryPublishedVersionStore;
 
 import java.util.concurrent.CompletableFuture;
 
-public class MockPublishedVersionStore implements IPublishedVersionStore {
+public class MockPublishedVersionStore implements PublishedVersionStore {
     private final InMemoryPublishedVersionStore _inMemoryPublishedVersionStore = new InMemoryPublishedVersionStore();
     private int _expectGetFailedCount = 0;
     private int _expectUpdateFailedCount = 0;
@@ -34,7 +34,7 @@ public class MockPublishedVersionStore implements IPublishedVersionStore {
         if (_currentUpdateFailedCount < _expectUpdateFailedCount) {
             _currentUpdateFailedCount++;
             if (_failedType == FailedType.UnKnownException) {
-                throw new EnodeRuntimeException("UpdatePublishedVersionAsyncUnKnownException" + _currentUpdateFailedCount);
+                throw new EnodeException("UpdatePublishedVersionAsyncUnKnownException" + _currentUpdateFailedCount);
             } else if (_failedType == FailedType.IOException) {
                 throw new IORuntimeException("UpdatePublishedVersionAsyncIOException" + _currentUpdateFailedCount);
             } else if (_failedType == FailedType.TaskIOException) {
@@ -48,7 +48,7 @@ public class MockPublishedVersionStore implements IPublishedVersionStore {
         if (_currentGetFailedCount < _expectGetFailedCount) {
             _currentGetFailedCount++;
             if (_failedType == FailedType.UnKnownException) {
-                throw new EnodeRuntimeException("GetPublishedVersionAsyncUnKnownException" + _currentGetFailedCount);
+                throw new EnodeException("GetPublishedVersionAsyncUnKnownException" + _currentGetFailedCount);
             } else if (_failedType == FailedType.IOException) {
                 throw new IORuntimeException("GetPublishedVersionAsyncIOException" + _currentGetFailedCount);
             } else if (_failedType == FailedType.TaskIOException) {

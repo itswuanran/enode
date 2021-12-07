@@ -8,17 +8,17 @@ import kotlinx.coroutines.future.asCompletableFuture
 import org.enodeframework.commanding.*
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.common.io.Task
-import org.enodeframework.common.serializing.ISerializeService
+import org.enodeframework.common.serializing.SerializeService
 import org.enodeframework.configurations.SysProperties
+import org.enodeframework.domain.AggregateRoot
 import org.enodeframework.domain.AggregateRootReferenceChangedException
-import org.enodeframework.domain.IAggregateRoot
-import org.enodeframework.domain.IDomainException
-import org.enodeframework.domain.IMemoryCache
+import org.enodeframework.domain.DomainExceptionMessage
+import org.enodeframework.domain.MemoryCache
 import org.enodeframework.eventing.*
-import org.enodeframework.infrastructure.ITypeNameProvider
-import org.enodeframework.messaging.IApplicationMessage
-import org.enodeframework.messaging.IMessagePublisher
+import org.enodeframework.infrastructure.TypeNameProvider
+import org.enodeframework.messaging.ApplicationMessage
 import org.enodeframework.messaging.MessageHandlerData
+import org.enodeframework.messaging.MessagePublisher
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.CompletableFuture
@@ -29,18 +29,18 @@ import java.util.function.Function
  * @author anruence@gmail.com
  */
 class DefaultProcessingCommandHandler(
-    private val eventStore: IEventStore,
-    private val commandHandlerProvider: ICommandHandlerProvider,
-    private val typeNameProvider: ITypeNameProvider,
-    private val eventCommittingService: IEventCommittingService,
-    private val memoryCache: IMemoryCache,
-    private val applicationMessagePublisher: IMessagePublisher<IApplicationMessage>,
-    private val exceptionPublisher: IMessagePublisher<IDomainException>,
-    private val serializeService: ISerializeService,
-) : IProcessingCommandHandler {
+    private val eventStore: EventStore,
+    private val commandHandlerProvider: CommandHandlerProvider,
+    private val typeNameProvider: TypeNameProvider,
+    private val eventCommittingService: EventCommittingService,
+    private val memoryCache: MemoryCache,
+    private val applicationMessagePublisher: MessagePublisher<ApplicationMessage>,
+    private val exceptionPublisher: MessagePublisher<DomainExceptionMessage>,
+    private val serializeService: SerializeService,
+) : ProcessingCommandHandler {
     override fun handleAsync(processingCommand: ProcessingCommand): CompletableFuture<Boolean> {
         val command = processingCommand.message
-        if (Strings.isNullOrEmpty(command.aggregateRootId)) {
+        if (Strings.isNullOrEmpty(command.getAggregateRootIdAsString())) {
             val errorMessage = String.format(
                 "The aggregateRootId of command cannot be null or empty. commandType:%s, commandId:%s",
                 command.javaClass.name,
@@ -54,7 +54,7 @@ class DefaultProcessingCommandHandler(
         }
         when (findResult.findStatus) {
             HandlerFindStatus.Found -> {
-                return handleCommandInternal(processingCommand, findResult.findHandler as ICommandHandlerProxy, 0)
+                return handleCommandInternal(processingCommand, findResult.findHandler as CommandHandlerProxy, 0)
             }
             HandlerFindStatus.TooManyHandlerData -> {
                 logger.error(
@@ -96,7 +96,7 @@ class DefaultProcessingCommandHandler(
     }
 
     private fun handleCommandInternal(
-        processingCommand: ProcessingCommand, commandHandler: ICommandHandlerProxy, retryTimes: Int
+        processingCommand: ProcessingCommand, commandHandler: CommandHandlerProxy, retryTimes: Int
     ): CompletableFuture<Boolean> {
         val command = processingCommand.message
         val commandContext = processingCommand.commandExecuteContext
@@ -193,8 +193,8 @@ class DefaultProcessingCommandHandler(
         val context = processingCommand.commandExecuteContext
         val trackedAggregateRoots = context.trackedAggregateRoots
         var dirtyAggregateRootCount = 0
-        var dirtyAggregateRoot: IAggregateRoot? = null
-        var changedEvents: List<IDomainEvent<*>> = ArrayList()
+        var dirtyAggregateRoot: AggregateRoot? = null
+        var changedEvents: List<DomainEventMessage<*>> = ArrayList()
         for (aggregateRoot in trackedAggregateRoots) {
             val events = aggregateRoot.changes
             if (events.size > 0) {
@@ -248,7 +248,7 @@ class DefaultProcessingCommandHandler(
         val future = CompletableFuture<Boolean>()
         val command = processingCommand.message
         IOHelper.tryAsyncActionRecursively("ProcessIfNoEventsOfCommand", {
-            eventStore.findAsync(command.aggregateRootId, command.id)
+            eventStore.findAsync(command.getAggregateRootIdAsString(), command.id)
         }, { result: DomainEventStream? ->
             if (result != null) {
                 eventCommittingService.publishDomainEventAsync(processingCommand, result)
@@ -269,7 +269,7 @@ class DefaultProcessingCommandHandler(
 
     private fun handleExceptionAsync(
         processingCommand: ProcessingCommand,
-        commandHandler: ICommandHandlerProxy,
+        commandHandler: CommandHandlerProxy,
         exception: Throwable,
         errorMessage: String,
         retryTimes: Int
@@ -277,7 +277,7 @@ class DefaultProcessingCommandHandler(
         val command = processingCommand.message
         val future = CompletableFuture<Boolean>()
         IOHelper.tryAsyncActionRecursively("FindEventByCommandIdAsync", {
-            eventStore.findAsync(command.aggregateRootId, command.id)
+            eventStore.findAsync(command.getAggregateRootIdAsString(), command.id)
         }, { result: DomainEventStream? ->
             if (result != null) {
                 //这里，我们需要再重新做一遍发布事件这个操作；
@@ -290,9 +290,9 @@ class DefaultProcessingCommandHandler(
                 //那就判断当前异常是否是需要被发布出去的异常，如果是，则发布该异常给所有消费者；
                 //否则，就记录错误日志，然后认为该command处理失败即可；
                 val realException = getRealException(exception)
-                if (realException is IDomainException) {
+                if (realException is DomainExceptionMessage) {
                     publishExceptionAsync(
-                        processingCommand, realException as IDomainException, 0
+                        processingCommand, realException as DomainExceptionMessage, 0
                     ).whenComplete { _, _ -> future.complete(true) }
                 } else {
                     completeCommand(
@@ -314,17 +314,18 @@ class DefaultProcessingCommandHandler(
 
     private fun getRealException(exception: Throwable): Throwable {
         if (exception is CompletionException) {
-            if (exception.cause is IDomainException) {
+            if (exception.cause is DomainExceptionMessage) {
                 return exception.cause!!
             }
-            return Arrays.stream(exception.suppressed).filter { x: Throwable? -> x is IDomainException }.findFirst()
+            return Arrays.stream(exception.suppressed).filter { x: Throwable? -> x is DomainExceptionMessage }
+                .findFirst()
                 .orElse(exception)
         }
         return exception
     }
 
     private fun publishExceptionAsync(
-        processingCommand: ProcessingCommand, exception: IDomainException, retryTimes: Int
+        processingCommand: ProcessingCommand, exception: DomainExceptionMessage, retryTimes: Int
     ): CompletableFuture<Boolean> {
         exception.mergeItems(processingCommand.message.items)
         val future = CompletableFuture<Boolean>()
@@ -348,7 +349,7 @@ class DefaultProcessingCommandHandler(
     }
 
     private fun commitChangesAsync(
-        processingCommand: ProcessingCommand, success: Boolean, message: IApplicationMessage?, errorMessage: String
+        processingCommand: ProcessingCommand, success: Boolean, message: ApplicationMessage?, errorMessage: String
     ): CompletableFuture<Boolean> {
         if (success) {
             if (message != null) {
@@ -361,7 +362,7 @@ class DefaultProcessingCommandHandler(
     }
 
     private fun publishMessageAsync(
-        processingCommand: ProcessingCommand, message: IApplicationMessage, retryTimes: Int
+        processingCommand: ProcessingCommand, message: ApplicationMessage, retryTimes: Int
     ): CompletableFuture<Boolean> {
         val command = processingCommand.message
         val future = CompletableFuture<Boolean>()
@@ -385,7 +386,7 @@ class DefaultProcessingCommandHandler(
 
     private fun getCommandHandler(
         processingCommand: ProcessingCommand,
-        getHandlersFunc: Function<Class<*>, List<MessageHandlerData<ICommandHandlerProxy>>>
+        getHandlersFunc: Function<Class<*>, List<MessageHandlerData<CommandHandlerProxy>>>
     ): HandlerFindResult {
         val command = processingCommand.message
         val handlerDataList = getHandlersFunc.apply(command.javaClass)
@@ -408,7 +409,11 @@ class DefaultProcessingCommandHandler(
         processingCommand: ProcessingCommand, commandStatus: CommandStatus, resultType: String, result: String?
     ): CompletableFuture<Boolean> {
         val commandResult = CommandResult(
-            commandStatus, processingCommand.message.id, processingCommand.message.aggregateRootId, result, resultType
+            commandStatus,
+            processingCommand.message.id,
+            processingCommand.message.getAggregateRootIdAsString(),
+            result,
+            resultType
         )
         return processingCommand.mailBox.completeMessage(processingCommand, commandResult)
     }

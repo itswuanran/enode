@@ -1,23 +1,23 @@
 package org.enodeframework.queue.domainevent;
 
-import org.enodeframework.common.serializing.ISerializeService;
+import org.enodeframework.common.serializing.SerializeService;
 import org.enodeframework.common.utils.Assert;
-import org.enodeframework.eventing.DomainEventStreamMessage;
-import org.enodeframework.eventing.IEventSerializer;
-import org.enodeframework.messaging.IMessagePublisher;
-import org.enodeframework.queue.ISendMessageService;
+import org.enodeframework.eventing.DomainEventStream;
+import org.enodeframework.eventing.EventSerializer;
+import org.enodeframework.messaging.MessagePublisher;
 import org.enodeframework.queue.QueueMessage;
+import org.enodeframework.queue.SendMessageService;
 
 import java.util.concurrent.CompletableFuture;
 
-public class DefaultDomainEventPublisher implements IMessagePublisher<DomainEventStreamMessage> {
+public class DefaultDomainEventPublisher implements MessagePublisher<DomainEventStream> {
     private final String topic;
     private final String tag;
-    private final IEventSerializer eventSerializer;
-    private final ISendMessageService sendMessageService;
-    private final ISerializeService serializeService;
+    private final EventSerializer eventSerializer;
+    private final SendMessageService sendMessageService;
+    private final SerializeService serializeService;
 
-    public DefaultDomainEventPublisher(String topic, String tag, IEventSerializer eventSerializer, ISendMessageService sendMessageService, ISerializeService serializeService) {
+    public DefaultDomainEventPublisher(String topic, String tag, EventSerializer eventSerializer, SendMessageService sendMessageService, SerializeService serializeService) {
         this.eventSerializer = eventSerializer;
         this.sendMessageService = sendMessageService;
         this.topic = topic;
@@ -25,10 +25,10 @@ public class DefaultDomainEventPublisher implements IMessagePublisher<DomainEven
         this.serializeService = serializeService;
     }
 
-    protected QueueMessage createDomainEventStreamMessage(DomainEventStreamMessage eventStream) {
+    protected QueueMessage createDomainEventStreamMessage(DomainEventStream eventStream) {
         Assert.nonNull(eventStream.getAggregateRootId(), "aggregateRootId");
         Assert.nonNull(topic, "topic");
-        EventStreamMessage message = new EventStreamMessage();
+        GenericDomainEventMessage message = new GenericDomainEventMessage();
         message.setId(eventStream.getId());
         message.setCommandId(eventStream.getCommandId());
         message.setAggregateRootTypeName(eventStream.getAggregateRootTypeName());
@@ -49,7 +49,7 @@ public class DefaultDomainEventPublisher implements IMessagePublisher<DomainEven
     }
 
     @Override
-    public CompletableFuture<Boolean> publishAsync(DomainEventStreamMessage message) {
+    public CompletableFuture<Boolean> publishAsync(DomainEventStream message) {
         return sendMessageService.sendMessageAsync(createDomainEventStreamMessage(message));
     }
 }

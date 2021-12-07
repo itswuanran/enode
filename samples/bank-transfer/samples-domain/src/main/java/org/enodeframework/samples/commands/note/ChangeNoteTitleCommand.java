@@ -1,8 +1,8 @@
 package org.enodeframework.samples.commands.note;
 
-import org.enodeframework.commanding.Command;
+import org.enodeframework.commanding.AbstractCommandMessage;
 
-public class ChangeNoteTitleCommand extends Command<String> {
+public class ChangeNoteTitleCommand extends AbstractCommandMessage<String> {
     private String title;
 
     public ChangeNoteTitleCommand() {

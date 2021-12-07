@@ -1,8 +1,8 @@
 package org.enodeframework.test.command;
 
-import org.enodeframework.commanding.Command;
+import org.enodeframework.commanding.AbstractCommandMessage;
 
-public class ChangeTestAggregateTitleWhenDirtyCommand extends Command<String> {
+public class ChangeTestAggregateTitleWhenDirtyCommand extends AbstractCommandMessage<String> {
     private String title;
 
     private boolean firstExecute;

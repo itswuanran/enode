@@ -2,18 +2,17 @@ package org.enodeframework.test;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.enodeframework.commanding.CommandMessage;
 import org.enodeframework.commanding.CommandResult;
 import org.enodeframework.commanding.CommandReturnType;
 import org.enodeframework.commanding.CommandStatus;
-import org.enodeframework.commanding.ICommand;
 import org.enodeframework.common.extensions.ManualResetEvent;
 import org.enodeframework.common.io.Task;
 import org.enodeframework.common.utils.IdGenerator;
-import org.enodeframework.domain.IAggregateRoot;
+import org.enodeframework.domain.AggregateRoot;
+import org.enodeframework.eventing.DomainEventMessage;
 import org.enodeframework.eventing.DomainEventStream;
-import org.enodeframework.eventing.DomainEventStreamMessage;
 import org.enodeframework.eventing.EventAppendResult;
-import org.enodeframework.eventing.IDomainEvent;
 import org.enodeframework.eventing.ProcessingEvent;
 import org.enodeframework.test.command.AggregateThrowExceptionCommand;
 import org.enodeframework.test.command.AsyncHandlerBaseCommand;
@@ -258,7 +257,7 @@ public class EnodeCoreTest extends AbstractTest {
                     TestAggregate note1 = Task.await(memoryCache.getAsync(aggregateId, TestAggregate.class));
                     Assert.assertNotNull(note1);
                     Assert.assertEquals("Changed Note", note1.getTitle());
-                    Assert.assertEquals(totalCount + 1, ((IAggregateRoot) note1).getVersion());
+                    Assert.assertEquals(totalCount + 1, ((AggregateRoot) note1).getVersion());
                     waitHandle.set();
                 }
             });
@@ -500,7 +499,7 @@ public class EnodeCoreTest extends AbstractTest {
         Assert.assertNotNull(commandResult);
         Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
         LOGGER.info("----create_concurrent_conflict_and_then_update_many_times_test, _commandService.executeAsync create success");
-        List<ICommand> commandList = new ArrayList<>();
+        List<CommandMessage> commandList = new ArrayList<>();
         for (int i = 0; i < 50; i++) {
             ChangeTestAggregateTitleCommand command1 = new ChangeTestAggregateTitleCommand();
             command1.aggregateRootId = aggregateId;
@@ -509,7 +508,7 @@ public class EnodeCoreTest extends AbstractTest {
         }
         ManualResetEvent waitHandle = new ManualResetEvent(false);
         AtomicLong count = new AtomicLong(0);
-        for (ICommand updateCommand : commandList) {
+        for (CommandMessage updateCommand : commandList) {
             commandService.executeAsync(updateCommand).thenAccept(t -> {
                 Assert.assertNotNull(t);
                 Assert.assertEquals(CommandStatus.Success, t.getStatus());
@@ -545,7 +544,7 @@ public class EnodeCoreTest extends AbstractTest {
         Assert.assertNotNull(result);
         assertAppendResult(result);
         Task.await(publishedVersionStore.updatePublishedVersionAsync("DefaultEventProcessor", TestAggregate.class.getName(), aggregateId, 1));
-        List<ICommand> commandList = new ArrayList<>();
+        List<CommandMessage> commandList = new ArrayList<>();
         CreateTestAggregateCommand command = new CreateTestAggregateCommand();
         command.setId(commandId);
         command.aggregateRootId = commandId;
@@ -560,7 +559,7 @@ public class EnodeCoreTest extends AbstractTest {
         ManualResetEvent waitHandle = new ManualResetEvent(false);
         AtomicLong count = new AtomicLong(0);
         AtomicBoolean createCommandSuccess = new AtomicBoolean(false);
-        for (ICommand updateCommand : commandList) {
+        for (CommandMessage updateCommand : commandList) {
             commandService.executeAsync(updateCommand).whenComplete((commandResult, y) -> {
                 Assert.assertNotNull(commandResult);
                 Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
@@ -657,7 +656,7 @@ public class EnodeCoreTest extends AbstractTest {
         assertAppendResult(result);
         Task.await(publishedVersionStore.updatePublishedVersionAsync("DefaultEventProcessor",
             TestAggregate.class.getName(), aggregateId, 2));
-        List<ICommand> commandList = new ArrayList<>();
+        List<CommandMessage> commandList = new ArrayList<>();
         for (int i = 0; i < 50; i++) {
             ChangeTestAggregateTitleCommand command1 = new ChangeTestAggregateTitleCommand();
             command1.aggregateRootId = aggregateId;
@@ -666,7 +665,7 @@ public class EnodeCoreTest extends AbstractTest {
         }
         ManualResetEvent waitHandle = new ManualResetEvent(false);
         AtomicLong count = new AtomicLong(0);
-        for (ICommand updateCommand : commandList) {
+        for (CommandMessage updateCommand : commandList) {
             commandService.executeAsync(updateCommand, CommandReturnType.EventHandled).thenAccept(t -> {
                 Assert.assertNotNull(t);
                 Assert.assertEquals(CommandStatus.Success, t.getStatus());
@@ -739,13 +738,13 @@ public class EnodeCoreTest extends AbstractTest {
     @Test
     public void sequence_domain_event_process_test() {
         TestAggregate note = new TestAggregate(IdGenerator.nextId(), "initial title");
-        DomainEventStreamMessage message1 = createMessage(note);
-        ((IAggregateRoot) note).acceptChanges();
+        DomainEventStream message1 = createMessage(note);
+        ((AggregateRoot) note).acceptChanges();
         note.changeTitle("title1");
-        DomainEventStreamMessage message2 = createMessage(note);
-        ((IAggregateRoot) note).acceptChanges();
+        DomainEventStream message2 = createMessage(note);
+        ((AggregateRoot) note).acceptChanges();
         note.changeTitle("title2");
-        DomainEventStreamMessage message3 = createMessage(note);
+        DomainEventStream message3 = createMessage(note);
         ManualResetEvent waitHandle = new ManualResetEvent(false);
         List<Integer> versionList = new ArrayList<>();
         processor.process(new ProcessingEvent(message1, new DomainEventStreamProcessContext(message1, waitHandle, versionList)));
@@ -760,16 +759,16 @@ public class EnodeCoreTest extends AbstractTest {
     @Test
     public void sequence_domain_event_process_test2() {
         TestAggregate note = new TestAggregate(IdGenerator.nextId(), "initial title");
-        IAggregateRoot aggregate = note;
-        DomainEventStreamMessage message1 = createMessage(aggregate);
+        AggregateRoot aggregate = note;
+        DomainEventStream message1 = createMessage(aggregate);
 
         aggregate.acceptChanges();
         note.changeTitle("title1");
-        DomainEventStreamMessage message2 = createMessage(aggregate);
+        DomainEventStream message2 = createMessage(aggregate);
 
         aggregate.acceptChanges();
         note.changeTitle("title2");
-        DomainEventStreamMessage message3 = createMessage(aggregate);
+        DomainEventStream message3 = createMessage(aggregate);
 
         ManualResetEvent waitHandle = new ManualResetEvent(false);
         List<Integer> versionList = new ArrayList<>();
@@ -809,7 +808,7 @@ public class EnodeCoreTest extends AbstractTest {
 
         String directUpdateEventStoreCommandId = IdGenerator.nextId();
         List<DomainEventStream> eventStreamList = new ArrayList<>();
-        List<IDomainEvent<?>> evnts = new ArrayList<>();
+        List<DomainEventMessage<?>> evnts = new ArrayList<>();
         TestAggregateTitleChanged evnt = new TestAggregateTitleChanged("Note Title2");
         evnt.setAggregateRootId(aggregateId);
         evnt.setAggregateRootTypeName(TestAggregate.class.getName());
@@ -837,8 +836,8 @@ public class EnodeCoreTest extends AbstractTest {
         Assert.assertEquals(3, note.getVersion());
     }
 
-    private DomainEventStreamMessage createMessage(IAggregateRoot aggregateRoot) {
-        return new DomainEventStreamMessage(
+    private DomainEventStream createMessage(AggregateRoot aggregateRoot) {
+        return new DomainEventStream(
             IdGenerator.nextId(),
             aggregateRoot.getUniqueId(),
             aggregateRoot.getVersion() + 1,

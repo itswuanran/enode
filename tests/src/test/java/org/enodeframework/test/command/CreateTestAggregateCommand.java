@@ -1,8 +1,8 @@
 package org.enodeframework.test.command;
 
-import org.enodeframework.commanding.Command;
+import org.enodeframework.commanding.AbstractCommandMessage;
 
-public class CreateTestAggregateCommand extends Command<String> {
+public class CreateTestAggregateCommand extends AbstractCommandMessage<String> {
 
     public String title;
 

@@ -1,12 +1,12 @@
 package org.enodeframework.samples.domain.bank.deposittransaction;
 
-import org.enodeframework.domain.AggregateRoot;
+import org.enodeframework.domain.AbstractAggregateRoot;
 import org.enodeframework.samples.domain.bank.TransactionStatus;
 
 /**
  * 聚合根，表示一笔银行存款交易
  */
-public class DepositTransaction extends AggregateRoot<String> {
+public class DepositTransaction extends AbstractAggregateRoot<String> {
     private String accountId;
     private double amount;
     private int status;

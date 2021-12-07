@@ -3,7 +3,7 @@ package org.enodeframework.common.exception;
 /**
  * @author anruence@gmail.com
  */
-public class ReplyAddressException extends EnodeRuntimeException {
+public class ReplyAddressException extends EnodeException {
 
     public ReplyAddressException() {
         super();

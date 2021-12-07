@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicLong
  * @author anruence@gmail.com
  */
 class ProcessingCommandMailbox(
-    var aggregateRootId: String, private val messageHandler: IProcessingCommandHandler, private val batchSize: Int
+    var aggregateRootId: String, private val messageHandler: ProcessingCommandHandler, private val batchSize: Int
 ) {
     private val lockObj = Any()
     private val asyncLockObj = Any()

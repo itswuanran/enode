@@ -1,6 +1,6 @@
 package org.enodeframework.spring;
 
-import org.enodeframework.common.container.IObjectContainer;
+import org.enodeframework.common.container.ObjectContainer;
 import org.springframework.context.ApplicationContext;
 
 /**
@@ -8,7 +8,7 @@ import org.springframework.context.ApplicationContext;
  *
  * @author anruence@gmail.com
  */
-public class SpringObjectContainer implements IObjectContainer {
+public class SpringObjectContainer implements ObjectContainer {
 
     private final ApplicationContext applicationContext;
 

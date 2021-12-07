@@ -3,7 +3,7 @@ package org.enodeframework.metrics;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricSet;
 import org.enodeframework.common.extensions.MessageMonitor;
-import org.enodeframework.messaging.IMessage;
+import org.enodeframework.messaging.AbstractMessage;
 import org.enodeframework.messaging.Message;
 
 import java.util.Collections;
@@ -13,7 +13,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * A {@link MessageMonitor} implementation which creates a new MessageMonitor for every {@link Message} payload type
+ * A {@link MessageMonitor} implementation which creates a new MessageMonitor for every {@link AbstractMessage} payload type
  * ingested by it. The PayloadTypeMessageMonitorWrapper keeps track of all distinct payload types it has created
  * and only creates a new one if there is none present.
  * <p>
@@ -23,8 +23,8 @@ import java.util.function.Supplier;
  * @param <T> The type of the MessageMonitor created for every payload type.Must implement both {@link MessageMonitor}
  *            and {@link MetricSet}
  */
-public class PayloadTypeMessageMonitorWrapper<T extends MessageMonitor<IMessage> & MetricSet>
-    implements MessageMonitor<IMessage>, MetricSet {
+public class PayloadTypeMessageMonitorWrapper<T extends MessageMonitor<Message> & MetricSet>
+    implements MessageMonitor<Message>, MetricSet {
 
     private final Supplier<T> monitorSupplier;
     private final Function<Class<?>, String> monitorNameBuilder;
@@ -58,10 +58,10 @@ public class PayloadTypeMessageMonitorWrapper<T extends MessageMonitor<IMessage>
     }
 
     @Override
-    public MonitorCallback onMessageIngested(IMessage message) {
+    public MonitorCallback onMessageIngested(Message message) {
         String monitorName = monitorNameBuilder.apply(message.getClass());
 
-        MessageMonitor<IMessage> messageMonitorForPayloadType =
+        MessageMonitor<Message> messageMonitorForPayloadType =
             payloadTypeMonitors.computeIfAbsent(monitorName, payloadType -> monitorSupplier.get());
 
         return messageMonitorForPayloadType.onMessageIngested(message);

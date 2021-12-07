@@ -1,11 +1,11 @@
 package org.enodeframework.samples.commands.bank;
 
-import org.enodeframework.commanding.Command;
+import org.enodeframework.commanding.AbstractCommandMessage;
 
 /**
  * 确认账户验证已通过
  */
-public class ConfirmAccountValidatePassedCommand extends Command<String> {
+public class ConfirmAccountValidatePassedCommand extends AbstractCommandMessage<String> {
     /**
      * 账户ID
      */

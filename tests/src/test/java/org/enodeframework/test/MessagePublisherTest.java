@@ -5,10 +5,10 @@ import org.enodeframework.commanding.CommandReturnType;
 import org.enodeframework.commanding.CommandStatus;
 import org.enodeframework.common.io.Task;
 import org.enodeframework.common.utils.IdGenerator;
-import org.enodeframework.domain.IDomainException;
-import org.enodeframework.eventing.DomainEventStreamMessage;
-import org.enodeframework.messaging.IApplicationMessage;
-import org.enodeframework.messaging.IMessagePublisher;
+import org.enodeframework.domain.DomainExceptionMessage;
+import org.enodeframework.eventing.DomainEventStream;
+import org.enodeframework.messaging.ApplicationMessage;
+import org.enodeframework.messaging.MessagePublisher;
 import org.enodeframework.test.command.AggregateThrowExceptionCommand;
 import org.enodeframework.test.command.AsyncHandlerCommand;
 import org.enodeframework.test.command.CreateTestAggregateCommand;
@@ -32,15 +32,15 @@ public class MessagePublisherTest extends AbstractTest {
 
     @Autowired
     @Qualifier("mockDomainEventPublisher")
-    protected IMessagePublisher<DomainEventStreamMessage> domainEventPublisher;
+    protected MessagePublisher<DomainEventStream> domainEventPublisher;
 
     @Autowired
     @Qualifier("mockApplicationMessagePublisher")
-    protected IMessagePublisher<IApplicationMessage> applicationMessagePublisher;
+    protected MessagePublisher<ApplicationMessage> applicationMessagePublisher;
 
     @Autowired
     @Qualifier("mockPublishableExceptionPublisher")
-    protected IMessagePublisher<IDomainException> publishableExceptionPublisher;
+    protected MessagePublisher<DomainExceptionMessage> publishableExceptionPublisher;
 
     @Test
     public void event_store_failed_test() {

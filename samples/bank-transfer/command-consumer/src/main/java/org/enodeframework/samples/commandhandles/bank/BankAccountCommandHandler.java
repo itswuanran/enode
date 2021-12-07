@@ -2,8 +2,8 @@ package org.enodeframework.samples.commandhandles.bank;
 
 import org.enodeframework.annotation.Command;
 import org.enodeframework.annotation.Subscribe;
-import org.enodeframework.commanding.ICommandContext;
-import org.enodeframework.messaging.IApplicationMessage;
+import org.enodeframework.commanding.CommandContext;
+import org.enodeframework.messaging.ApplicationMessage;
 import org.enodeframework.samples.applicationmessages.AccountValidateFailedMessage;
 import org.enodeframework.samples.applicationmessages.AccountValidatePassedMessage;
 import org.enodeframework.samples.commands.bank.AddTransactionPreparationCommand;
@@ -27,7 +27,7 @@ public class BankAccountCommandHandler {
      * 开户
      */
     @Subscribe
-    public void handleAsync(ICommandContext context, CreateAccountCommand command) {
+    public void handleAsync(CommandContext context, CreateAccountCommand command) {
         context.addAsync(new BankAccount(command.getAggregateRootId(), command.owner));
     }
 
@@ -35,7 +35,7 @@ public class BankAccountCommandHandler {
      * 添加预操作
      */
     @Subscribe
-    public CompletableFuture<BankAccount> handleAsync(ICommandContext context, AddTransactionPreparationCommand command) {
+    public CompletableFuture<BankAccount> handleAsync(CommandContext context, AddTransactionPreparationCommand command) {
         CompletableFuture<BankAccount> future = context.getAsync(command.getAggregateRootId(), BankAccount.class);
         future.thenAccept(bankAccount -> {
             bankAccount.addTransactionPreparation(command.transactionId, command.transactionType, command.preparationType, command.amount);
@@ -47,8 +47,8 @@ public class BankAccountCommandHandler {
      * 验证账户是否合法
      */
     @Subscribe
-    public void handleAsync(ICommandContext context, ValidateAccountCommand command) {
-        IApplicationMessage applicationMessage = new AccountValidatePassedMessage(command.getAggregateRootId(), command.transactionId);
+    public void handleAsync(CommandContext context, ValidateAccountCommand command) {
+        ApplicationMessage applicationMessage = new AccountValidatePassedMessage(command.getAggregateRootId(), command.transactionId);
         //此处应该会调用外部接口验证账号是否合法，这里仅仅简单通过账号是否以INVALID字符串开头来判断是否合法；根据账号的合法性，返回不同的应用层消息
         if (command.getAggregateRootId().startsWith("INVALID")) {
             applicationMessage = new AccountValidateFailedMessage(command.getAggregateRootId(), command.transactionId, "账户不合法.");
@@ -60,7 +60,7 @@ public class BankAccountCommandHandler {
      * 提交预操作
      */
     @Subscribe
-    public CompletableFuture<BankAccount> handleAsync(ICommandContext context, CommitTransactionPreparationCommand command) {
+    public CompletableFuture<BankAccount> handleAsync(CommandContext context, CommitTransactionPreparationCommand command) {
         CompletableFuture<BankAccount> future = context.getAsync(command.getAggregateRootId(), BankAccount.class);
         future.thenAccept(bankAccount -> {
             bankAccount.commitTransactionPreparation(command.transactionId);

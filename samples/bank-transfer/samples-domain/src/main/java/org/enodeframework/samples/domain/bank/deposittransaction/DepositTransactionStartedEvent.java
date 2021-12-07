@@ -1,8 +1,8 @@
 package org.enodeframework.samples.domain.bank.deposittransaction;
 
-import org.enodeframework.eventing.DomainEvent;
+import org.enodeframework.eventing.AbstractDomainEventMessage;
 
-public class DepositTransactionStartedEvent extends DomainEvent<String> {
+public class DepositTransactionStartedEvent extends AbstractDomainEventMessage<String> {
     public String accountId;
     public double amount;
 

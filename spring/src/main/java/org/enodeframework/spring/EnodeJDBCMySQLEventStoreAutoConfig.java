@@ -1,8 +1,8 @@
 package org.enodeframework.spring;
 
-import org.enodeframework.common.serializing.ISerializeService;
+import org.enodeframework.common.serializing.SerializeService;
 import org.enodeframework.configurations.EventStoreConfiguration;
-import org.enodeframework.eventing.IEventSerializer;
+import org.enodeframework.eventing.EventSerializer;
 import org.enodeframework.jdbc.JDBCEventStore;
 import org.enodeframework.jdbc.JDBCPublishedVersionStore;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -15,7 +15,7 @@ import javax.sql.DataSource;
 public class EnodeJDBCMySQLEventStoreAutoConfig {
 
     @Bean
-    public JDBCEventStore jdbcEventStore(@Qualifier("enodeMySQLDataSource") DataSource enodeMySQLDataSource, IEventSerializer eventSerializer, ISerializeService serializeService) {
+    public JDBCEventStore jdbcEventStore(@Qualifier("enodeMySQLDataSource") DataSource enodeMySQLDataSource, EventSerializer eventSerializer, SerializeService serializeService) {
         JDBCEventStore eventStore = new JDBCEventStore(enodeMySQLDataSource, EventStoreConfiguration.mysql(), eventSerializer, serializeService);
         return eventStore;
     }

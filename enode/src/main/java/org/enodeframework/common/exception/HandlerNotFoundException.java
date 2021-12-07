@@ -3,7 +3,7 @@ package org.enodeframework.common.exception;
 /**
  * @author anruence@gmail.com
  */
-public class HandlerNotFoundException extends EnodeRuntimeException {
+public class HandlerNotFoundException extends EnodeException {
 
     public HandlerNotFoundException() {
         super();

@@ -1,18 +1,18 @@
 package org.enodeframework.messaging.impl;
 
-import org.enodeframework.infrastructure.IObjectProxy;
-import org.enodeframework.infrastructure.ITypeNameProvider;
-import org.enodeframework.messaging.IMessage;
+import org.enodeframework.infrastructure.ObjectProxy;
+import org.enodeframework.infrastructure.TypeNameProvider;
+import org.enodeframework.messaging.Message;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SingleMessageDispatching {
-    private final ConcurrentHashMap<String, IObjectProxy> handlerDict;
+    private final ConcurrentHashMap<String, ObjectProxy> handlerDict;
     private final QueueMessageDispatching queueMessageDispatching;
-    private final IMessage message;
+    private final Message message;
 
-    public SingleMessageDispatching(IMessage message, QueueMessageDispatching queueMessageDispatching, List<? extends IObjectProxy> handlers, ITypeNameProvider typeNameProvider) {
+    public SingleMessageDispatching(Message message, QueueMessageDispatching queueMessageDispatching, List<? extends ObjectProxy> handlers, TypeNameProvider typeNameProvider) {
         this.message = message;
         this.queueMessageDispatching = queueMessageDispatching;
         this.handlerDict = new ConcurrentHashMap<>();
@@ -27,7 +27,7 @@ public class SingleMessageDispatching {
         }
     }
 
-    public IMessage getMessage() {
+    public Message getMessage() {
         return message;
     }
 }

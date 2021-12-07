@@ -1,11 +1,11 @@
 package org.enodeframework.samples.commands.bank;
 
-import org.enodeframework.commanding.Command;
+import org.enodeframework.commanding.AbstractCommandMessage;
 
 /**
  * 发起一笔存款交易
  */
-public class StartDepositTransactionCommand extends Command<String> {
+public class StartDepositTransactionCommand extends AbstractCommandMessage<String> {
     /**
      * 账户ID
      */

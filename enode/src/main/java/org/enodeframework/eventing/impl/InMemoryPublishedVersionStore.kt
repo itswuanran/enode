@@ -1,6 +1,6 @@
 package org.enodeframework.eventing.impl
 
-import org.enodeframework.eventing.IPublishedVersionStore
+import org.enodeframework.eventing.PublishedVersionStore
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentMap
 /**
  * @author anruence@gmail.com
  */
-class InMemoryPublishedVersionStore : IPublishedVersionStore {
+class InMemoryPublishedVersionStore : PublishedVersionStore {
     private val versionDict: ConcurrentMap<String, Int> = ConcurrentHashMap()
     override fun updatePublishedVersionAsync(
         processorName: String,

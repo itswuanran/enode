@@ -2,8 +2,8 @@ package org.enodeframework.kafka;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.enodeframework.common.exception.IORuntimeException;
-import org.enodeframework.queue.ISendMessageService;
 import org.enodeframework.queue.QueueMessage;
+import org.enodeframework.queue.SendMessageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -15,7 +15,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * @author anruence@gmail.com
  */
-public class KafkaSendMessageService implements ISendMessageService {
+public class KafkaSendMessageService implements SendMessageService {
     private final static Logger logger = LoggerFactory.getLogger(KafkaSendMessageService.class);
 
     private final KafkaTemplate<String, String> producer;

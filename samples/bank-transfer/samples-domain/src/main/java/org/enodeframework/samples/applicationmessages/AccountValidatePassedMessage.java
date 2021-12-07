@@ -1,11 +1,11 @@
 package org.enodeframework.samples.applicationmessages;
 
-import org.enodeframework.messaging.ApplicationMessage;
+import org.enodeframework.messaging.AbstractApplicationMessage;
 
 /**
  * 账户验证已通过
  */
-public class AccountValidatePassedMessage extends ApplicationMessage {
+public class AccountValidatePassedMessage extends AbstractApplicationMessage {
     public String accountId;
     public String transactionId;
 

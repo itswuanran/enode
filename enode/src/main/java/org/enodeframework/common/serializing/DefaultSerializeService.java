@@ -6,9 +6,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import org.enodeframework.common.exception.EnodeRuntimeException;
+import org.enodeframework.common.exception.EnodeException;
 
-public class DefaultSerializeService implements ISerializeService {
+public class DefaultSerializeService implements SerializeService {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -28,7 +28,7 @@ public class DefaultSerializeService implements ISerializeService {
         try {
             return MAPPER.readValue(json, type);
         } catch (JsonProcessingException e) {
-            throw new EnodeRuntimeException(e);
+            throw new EnodeException(e);
         }
     }
 
@@ -37,7 +37,7 @@ public class DefaultSerializeService implements ISerializeService {
         try {
             return MAPPER.writeValueAsString(target);
         } catch (JsonProcessingException e) {
-            throw new EnodeRuntimeException(e);
+            throw new EnodeException(e);
         }
     }
 }

@@ -1,12 +1,12 @@
 package org.enodeframework.infrastructure.impl
 
 import org.enodeframework.common.exception.EnodeClassNotFoundException
-import org.enodeframework.infrastructure.ITypeNameProvider
+import org.enodeframework.infrastructure.TypeNameProvider
 
 /**
  * @author anruence@gmail.com
  */
-class DefaultTypeNameProvider(private val typeDict: Map<String, String>) : ITypeNameProvider {
+class DefaultTypeNameProvider(private val typeDict: Map<String, String>) : TypeNameProvider {
     override fun getTypeName(type: Class<*>): String {
         return type.name
     }

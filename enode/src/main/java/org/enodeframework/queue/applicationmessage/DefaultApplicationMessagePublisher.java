@@ -1,35 +1,35 @@
 package org.enodeframework.queue.applicationmessage;
 
-import org.enodeframework.common.serializing.ISerializeService;
+import org.enodeframework.common.serializing.SerializeService;
 import org.enodeframework.common.utils.Assert;
-import org.enodeframework.messaging.IApplicationMessage;
-import org.enodeframework.messaging.IMessagePublisher;
-import org.enodeframework.queue.ISendMessageService;
+import org.enodeframework.messaging.ApplicationMessage;
+import org.enodeframework.messaging.MessagePublisher;
 import org.enodeframework.queue.QueueMessage;
+import org.enodeframework.queue.SendMessageService;
 
 import java.util.concurrent.CompletableFuture;
 
-public class DefaultApplicationMessagePublisher implements IMessagePublisher<IApplicationMessage> {
+public class DefaultApplicationMessagePublisher implements MessagePublisher<ApplicationMessage> {
 
     private final String topic;
 
     private final String tag;
 
-    private final ISendMessageService producer;
+    private final SendMessageService producer;
 
-    private final ISerializeService serializeService;
+    private final SerializeService serializeService;
 
-    public DefaultApplicationMessagePublisher(String topic, String tag, ISendMessageService producer, ISerializeService serializeService) {
+    public DefaultApplicationMessagePublisher(String topic, String tag, SendMessageService producer, SerializeService serializeService) {
         this.topic = topic;
         this.tag = tag;
         this.producer = producer;
         this.serializeService = serializeService;
     }
 
-    protected QueueMessage createApplicationMessage(IApplicationMessage message) {
+    protected QueueMessage createApplicationMessage(ApplicationMessage message) {
         Assert.nonNull(topic, "topic");
         String appMessageData = serializeService.serialize(message);
-        ApplicationDataMessage appDataMessage = new ApplicationDataMessage(appMessageData, message.getClass().getName());
+        GenericApplicationMessage appDataMessage = new GenericApplicationMessage(appMessageData, message.getClass().getName());
         String data = serializeService.serialize(appDataMessage);
         String routeKey = message.getId();
         QueueMessage queueMessage = new QueueMessage();
@@ -42,7 +42,7 @@ public class DefaultApplicationMessagePublisher implements IMessagePublisher<IAp
     }
 
     @Override
-    public CompletableFuture<Boolean> publishAsync(IApplicationMessage message) {
+    public CompletableFuture<Boolean> publishAsync(ApplicationMessage message) {
         return producer.sendMessageAsync(createApplicationMessage(message));
     }
 }

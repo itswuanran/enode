@@ -1,8 +1,8 @@
 package org.enodeframework.test.command;
 
-import org.enodeframework.commanding.Command;
+import org.enodeframework.commanding.AbstractCommandMessage;
 
-public class AggregateThrowExceptionCommand extends Command<String> {
+public class AggregateThrowExceptionCommand extends AbstractCommandMessage<String> {
     public boolean publishableException;
 
     public boolean isPublishableException() {

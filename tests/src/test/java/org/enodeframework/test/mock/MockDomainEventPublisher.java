@@ -1,13 +1,13 @@
 package org.enodeframework.test.mock;
 
-import org.enodeframework.common.exception.EnodeRuntimeException;
+import org.enodeframework.common.exception.EnodeException;
 import org.enodeframework.common.exception.IORuntimeException;
-import org.enodeframework.eventing.DomainEventStreamMessage;
-import org.enodeframework.messaging.IMessagePublisher;
+import org.enodeframework.eventing.DomainEventStream;
+import org.enodeframework.messaging.MessagePublisher;
 
 import java.util.concurrent.CompletableFuture;
 
-public class MockDomainEventPublisher implements IMessagePublisher<DomainEventStreamMessage> {
+public class MockDomainEventPublisher implements MessagePublisher<DomainEventStream> {
     private int expectFailedCount = 0;
     private int currentFailedCount = 0;
     private FailedType failedType;
@@ -24,11 +24,11 @@ public class MockDomainEventPublisher implements IMessagePublisher<DomainEventSt
     }
 
     @Override
-    public CompletableFuture<Boolean> publishAsync(DomainEventStreamMessage message) {
+    public CompletableFuture<Boolean> publishAsync(DomainEventStream message) {
         if (currentFailedCount < expectFailedCount) {
             currentFailedCount++;
             if (failedType == FailedType.UnKnownException) {
-                throw new EnodeRuntimeException("PublishDomainEventStreamMessageAsyncUnKnownException" + currentFailedCount);
+                throw new EnodeException("PublishDomainEventStreamMessageAsyncUnKnownException" + currentFailedCount);
             } else if (failedType == FailedType.IOException) {
                 throw new IORuntimeException("PublishDomainEventStreamMessageAsyncIOException" + currentFailedCount);
             } else if (failedType == FailedType.TaskIOException) {

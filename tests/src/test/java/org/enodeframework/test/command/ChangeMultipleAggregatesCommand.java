@@ -1,8 +1,8 @@
 package org.enodeframework.test.command;
 
-import org.enodeframework.commanding.Command;
+import org.enodeframework.commanding.AbstractCommandMessage;
 
-public class ChangeMultipleAggregatesCommand extends Command {
+public class ChangeMultipleAggregatesCommand extends AbstractCommandMessage {
     public String AggregateRootId1;
     public String AggregateRootId2;
 

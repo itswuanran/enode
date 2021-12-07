@@ -4,7 +4,7 @@ import com.codahale.metrics.Counter;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricSet;
 import org.enodeframework.common.extensions.MessageMonitor;
-import org.enodeframework.messaging.IMessage;
+import org.enodeframework.messaging.Message;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * Counts the number of ingested, successful, failed and processed messages
  */
-public class MessageCountingMonitor implements MessageMonitor<IMessage>, MetricSet {
+public class MessageCountingMonitor implements MessageMonitor<Message>, MetricSet {
 
     private final Counter ingestedCounter = new Counter();
     private final Counter successCounter = new Counter();
@@ -21,7 +21,7 @@ public class MessageCountingMonitor implements MessageMonitor<IMessage>, MetricS
     private final Counter ignoredCounter = new Counter();
 
     @Override
-    public MonitorCallback onMessageIngested(IMessage message) {
+    public MonitorCallback onMessageIngested(Message message) {
         ingestedCounter.inc();
         return new MessageMonitor.MonitorCallback() {
             @Override

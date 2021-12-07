@@ -1,6 +1,6 @@
 package org.enodeframework.test.command;
 
-import org.enodeframework.commanding.Command;
+import org.enodeframework.commanding.AbstractCommandMessage;
 
-public class NotCheckAsyncHandlerExistCommand extends Command {
+public class NotCheckAsyncHandlerExistCommand extends AbstractCommandMessage {
 }

@@ -1,8 +1,8 @@
 package org.enodeframework.samples.commands.bank;
 
-import org.enodeframework.commanding.Command;
+import org.enodeframework.commanding.AbstractCommandMessage;
 
-public class CreateAccountCommand extends Command<String> {
+public class CreateAccountCommand extends AbstractCommandMessage<String> {
     public String owner;
 
     public CreateAccountCommand() {

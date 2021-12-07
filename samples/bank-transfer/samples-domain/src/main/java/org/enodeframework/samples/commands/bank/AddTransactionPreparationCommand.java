@@ -1,11 +1,11 @@
 package org.enodeframework.samples.commands.bank;
 
-import org.enodeframework.commanding.Command;
+import org.enodeframework.commanding.AbstractCommandMessage;
 
 /**
  * 向账户添加一笔预操作
  */
-public class AddTransactionPreparationCommand extends Command<String> {
+public class AddTransactionPreparationCommand extends AbstractCommandMessage<String> {
     public String transactionId;
     public int transactionType;
     public int preparationType;

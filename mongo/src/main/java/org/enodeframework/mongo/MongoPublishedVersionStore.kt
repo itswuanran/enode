@@ -5,7 +5,7 @@ import com.mongodb.client.model.Updates
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.mongo.MongoClient
 import org.enodeframework.configurations.EventStoreConfiguration
-import org.enodeframework.eventing.IPublishedVersionStore
+import org.enodeframework.eventing.PublishedVersionStore
 import org.enodeframework.mongo.handler.MongoAddPublishedVersionHandler
 import org.enodeframework.mongo.handler.MongoFindPublishedVersionHandler
 import org.enodeframework.mongo.handler.MongoUpdatePublishedVersionHandler
@@ -18,7 +18,7 @@ import java.util.concurrent.CompletableFuture
 class MongoPublishedVersionStore @JvmOverloads constructor(
     private val mongoClient: MongoClient,
     private val configuration: EventStoreConfiguration = EventStoreConfiguration.mongo()
-) : IPublishedVersionStore {
+) : PublishedVersionStore {
     override fun updatePublishedVersionAsync(
         processorName: String,
         aggregateRootTypeName: String,

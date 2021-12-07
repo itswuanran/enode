@@ -1,9 +1,9 @@
 package org.enodeframework.test.domain;
 
-import org.enodeframework.eventing.DomainEvent;
+import org.enodeframework.eventing.AbstractDomainEventMessage;
 
 
-public class TestAggregateCreated extends DomainEvent<String> {
+public class TestAggregateCreated extends AbstractDomainEventMessage<String> {
     private String title;
 
     public TestAggregateCreated() {

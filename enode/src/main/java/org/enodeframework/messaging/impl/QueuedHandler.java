@@ -1,12 +1,12 @@
 package org.enodeframework.messaging.impl;
 
 import org.enodeframework.common.function.Action2;
-import org.enodeframework.infrastructure.IObjectProxy;
+import org.enodeframework.infrastructure.ObjectProxy;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class QueuedHandler<T extends IObjectProxy> {
+public class QueuedHandler<T extends ObjectProxy> {
     private final Action2<QueuedHandler<T>, T> dispatchToNextHandler;
     private final ConcurrentLinkedQueue<T> handlerQueue;
 

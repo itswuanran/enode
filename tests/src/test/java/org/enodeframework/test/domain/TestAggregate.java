@@ -1,9 +1,9 @@
 package org.enodeframework.test.domain;
 
 import com.google.common.collect.Lists;
-import org.enodeframework.domain.AggregateRoot;
+import org.enodeframework.domain.AbstractAggregateRoot;
 
-public class TestAggregate extends AggregateRoot<String> {
+public class TestAggregate extends AbstractAggregateRoot<String> {
     private String title;
 
     public TestAggregate() {

@@ -4,11 +4,11 @@ package org.enodeframework.eventing;
  * @author anruence@gmail.com
  */
 public class ProcessingEvent {
-    private final DomainEventStreamMessage message;
-    private final IEventProcessContext processContext;
+    private final DomainEventStream message;
+    private final EventProcessContext processContext;
     private ProcessingEventMailBox mailbox;
 
-    public ProcessingEvent(DomainEventStreamMessage message, IEventProcessContext processContext) {
+    public ProcessingEvent(DomainEventStream message, EventProcessContext processContext) {
         this.message = message;
         this.processContext = processContext;
     }
@@ -28,11 +28,11 @@ public class ProcessingEvent {
         }
     }
 
-    public IEventProcessContext getProcessContext() {
+    public EventProcessContext getProcessContext() {
         return processContext;
     }
 
-    public DomainEventStreamMessage getMessage() {
+    public DomainEventStream getMessage() {
         return message;
     }
 }

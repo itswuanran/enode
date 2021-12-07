@@ -5,16 +5,16 @@ import com.aliyun.openservices.ons.api.ConsumeContext;
 import com.aliyun.openservices.ons.api.Message;
 import com.aliyun.openservices.ons.api.MessageListener;
 import com.google.common.collect.Lists;
-import org.enodeframework.queue.IMessageHandler;
+import org.enodeframework.queue.MessageHandler;
 
 /**
  * @author anruence@gmail.com
  */
 public class OnsMessageListener implements MessageListener {
 
-    private final IMessageHandler messageHandler;
+    private final MessageHandler messageHandler;
 
-    public OnsMessageListener(IMessageHandler messageHandler) {
+    public OnsMessageListener(MessageHandler messageHandler) {
         this.messageHandler = messageHandler;
     }
 

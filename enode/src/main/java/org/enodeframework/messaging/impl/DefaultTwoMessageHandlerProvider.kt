@@ -1,26 +1,26 @@
 package org.enodeframework.messaging.impl
 
-import org.enodeframework.eventing.IDomainEvent
+import org.enodeframework.eventing.DomainEventMessage
 import org.enodeframework.infrastructure.impl.AbstractHandlerProvider
 import org.enodeframework.infrastructure.impl.ManyType
-import org.enodeframework.messaging.IMessage
-import org.enodeframework.messaging.IMessageHandlerProxy2
-import org.enodeframework.messaging.ITwoMessageHandlerProvider
+import org.enodeframework.messaging.Message
 import org.enodeframework.messaging.MessageHandlerData
+import org.enodeframework.messaging.MessageHandlerProxy2
+import org.enodeframework.messaging.TwoMessageHandlerProvider
 import java.lang.reflect.Method
 import kotlin.coroutines.Continuation
 
 /**
  * @author anruence@gmail.com
  */
-class DefaultTwoMessageHandlerProvider : AbstractHandlerProvider<ManyType, IMessageHandlerProxy2, List<Class<*>>>(),
-    ITwoMessageHandlerProvider {
+class DefaultTwoMessageHandlerProvider : AbstractHandlerProvider<ManyType, MessageHandlerProxy2, List<Class<*>>>(),
+    TwoMessageHandlerProvider {
     override fun getKey(method: Method): ManyType {
         return ManyType(listOf(*method.parameterTypes))
     }
 
-    override fun getHandlerProxyImplementationType(): Class<out IMessageHandlerProxy2> {
-        return MessageHandlerProxy2::class.java
+    override fun getHandlerProxyImplementationType(): Class<out MessageHandlerProxy2> {
+        return DefaultMessageHandlerProxy2::class.java
     }
 
     override fun isHandlerSourceMatchKey(handlerSource: List<Class<*>>, key: ManyType): Boolean {
@@ -47,16 +47,16 @@ class DefaultTwoMessageHandlerProvider : AbstractHandlerProvider<ManyType, IMess
         if (method.parameterTypes.size != 2) {
             return false
         }
-        if (IMessage::class.java == method.parameterTypes[0]) {
+        if (Message::class.java == method.parameterTypes[0]) {
             return false
         }
-        if (IMessage::class.java == method.parameterTypes[1]) {
+        if (Message::class.java == method.parameterTypes[1]) {
             return false
         }
-        if (!IDomainEvent::class.java.isAssignableFrom(method.parameterTypes[0])) {
+        if (!DomainEventMessage::class.java.isAssignableFrom(method.parameterTypes[0])) {
             return false
         }
-        if (!IDomainEvent::class.java.isAssignableFrom(method.parameterTypes[1])) {
+        if (!DomainEventMessage::class.java.isAssignableFrom(method.parameterTypes[1])) {
             return false
         }
         return isMethodAnnotationSubscribe(method)
@@ -66,16 +66,16 @@ class DefaultTwoMessageHandlerProvider : AbstractHandlerProvider<ManyType, IMess
         if (method.parameterTypes.size != 3) {
             return false
         }
-        if (IMessage::class.java == method.parameterTypes[0]) {
+        if (Message::class.java == method.parameterTypes[0]) {
             return false
         }
-        if (IMessage::class.java == method.parameterTypes[1]) {
+        if (Message::class.java == method.parameterTypes[1]) {
             return false
         }
-        if (!IDomainEvent::class.java.isAssignableFrom(method.parameterTypes[0])) {
+        if (!DomainEventMessage::class.java.isAssignableFrom(method.parameterTypes[0])) {
             return false
         }
-        if (!IDomainEvent::class.java.isAssignableFrom(method.parameterTypes[1])) {
+        if (!DomainEventMessage::class.java.isAssignableFrom(method.parameterTypes[1])) {
             return false
         }
         if (Continuation::class.java != method.parameterTypes[2]) {
@@ -84,7 +84,7 @@ class DefaultTwoMessageHandlerProvider : AbstractHandlerProvider<ManyType, IMess
         return isMethodAnnotationSubscribe(method)
     }
 
-    override fun getHandlers(messageTypes: List<Class<*>>): List<MessageHandlerData<IMessageHandlerProxy2>> {
+    override fun getHandlers(messageTypes: List<Class<*>>): List<MessageHandlerData<MessageHandlerProxy2>> {
         return getHandlersInternal(messageTypes)
     }
 }

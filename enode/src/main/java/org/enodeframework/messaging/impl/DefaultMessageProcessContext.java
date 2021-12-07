@@ -1,8 +1,8 @@
 package org.enodeframework.messaging.impl;
 
 import org.enodeframework.common.io.Task;
-import org.enodeframework.eventing.IEventProcessContext;
-import org.enodeframework.queue.IMessageContext;
+import org.enodeframework.eventing.EventProcessContext;
+import org.enodeframework.queue.MessageContext;
 import org.enodeframework.queue.QueueMessage;
 
 import java.util.concurrent.CompletableFuture;
@@ -10,11 +10,11 @@ import java.util.concurrent.CompletableFuture;
 /**
  * @author anruence@gmail.com
  */
-public class DefaultMessageProcessContext implements IEventProcessContext {
+public class DefaultMessageProcessContext implements EventProcessContext {
     protected final QueueMessage queueMessage;
-    protected final IMessageContext messageContext;
+    protected final MessageContext messageContext;
 
-    public DefaultMessageProcessContext(QueueMessage queueMessage, IMessageContext messageContext) {
+    public DefaultMessageProcessContext(QueueMessage queueMessage, MessageContext messageContext) {
         this.queueMessage = queueMessage;
         this.messageContext = messageContext;
     }
