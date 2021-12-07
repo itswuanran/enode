@@ -1,4 +1,4 @@
-package org.enodeframework.common.extensions;
+package org.enodeframework.test.async;
 
 import org.enodeframework.common.exception.EnodeInterruptException;
 

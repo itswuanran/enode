@@ -303,7 +303,7 @@ db.published_version.createIndex({processorName:1,aggregateRootId:1},{unique:tru
 @Command
 class ChangeNoteTitleCommandHandler {
     @Subscribe
-    suspend fun handleAsync(context: ICommandContext, command: ChangeNoteTitleCommand) {
+    suspend fun handleAsync(context: CommandContext, command: ChangeNoteTitleCommand) {
         val note = context.get(command.getAggregateRootId(), true, Note::class.java)
         note.changeTitle(command.title)
     }
@@ -312,7 +312,7 @@ class ChangeNoteTitleCommandHandler {
 
 ```java
 @Subscribe
-public CompletableFuture<BankAccount> handleAsync(ICommandContext context, AddTransactionPreparationCommand command) {
+public CompletableFuture<BankAccount> handleAsync(CommandContext context, AddTransactionPreparationCommand command) {
     CompletableFuture<BankAccount> future = context.getAsync(command.getAggregateRootId(), BankAccount.class);
     future.thenAccept(bankAccount -> {
     bankAccount.addTransactionPreparation(command.transactionId, command.transactionType, command.preparationType, command.amount);
@@ -329,13 +329,12 @@ CompletableFuture<CommandResult> future = commandService.executeAsync(createNote
 命令处理：
 
 ```java
-
 /**
  * 银行账户相关命令处理
- * ICommandHandler<CreateAccountCommand>,                       //开户
- * ICommandAsyncHandler<ValidateAccountCommand>,                //验证账户是否合法
- * ICommandHandler<AddTransactionPreparationCommand>,           //添加预操作
- * ICommandHandler<CommitTransactionPreparationCommand>         //提交预操作
+ * CommandHandler<CreateAccountCommand>,                       //开户
+ * CommandAsyncHandler<ValidateAccountCommand>,                //验证账户是否合法
+ * CommandHandler<AddTransactionPreparationCommand>,           //添加预操作
+ * CommandHandler<CommitTransactionPreparationCommand>         //提交预操作
  */
 @Command
 public class BankAccountCommandHandler {
@@ -343,7 +342,7 @@ public class BankAccountCommandHandler {
      * 开户
      */
     @Subscribe
-    public void handleAsync(ICommandContext context, CreateAccountCommand command) {
+    public void handleAsync(CommandContext context, CreateAccountCommand command) {
         context.addAsync(new BankAccount(command.getAggregateRootId(), command.owner));
     }
 
@@ -351,7 +350,7 @@ public class BankAccountCommandHandler {
      * 添加预操作
      */
     @Subscribe
-    public CompletableFuture<BankAccount> handleAsync(ICommandContext context, AddTransactionPreparationCommand command) {
+    public CompletableFuture<BankAccount> handleAsync(CommandContext context, AddTransactionPreparationCommand command) {
         CompletableFuture<BankAccount> future = context.getAsync(command.getAggregateRootId(), BankAccount.class);
         future.thenAccept(bankAccount -> {
             bankAccount.addTransactionPreparation(command.transactionId, command.transactionType, command.preparationType, command.amount);
@@ -363,8 +362,8 @@ public class BankAccountCommandHandler {
      * 验证账户是否合法
      */
     @Subscribe
-    public void handleAsync(ICommandContext context, ValidateAccountCommand command) {
-        IApplicationMessage applicationMessage = new AccountValidatePassedMessage(command.getAggregateRootId(), command.transactionId);
+    public void handleAsync(CommandContext context, ValidateAccountCommand command) {
+        ApplicationMessage applicationMessage = new AccountValidatePassedMessage(command.getAggregateRootId(), command.transactionId);
         //此处应该会调用外部接口验证账号是否合法，这里仅仅简单通过账号是否以INVALID字符串开头来判断是否合法；根据账号的合法性，返回不同的应用层消息
         if (command.getAggregateRootId().startsWith("INVALID")) {
             applicationMessage = new AccountValidateFailedMessage(command.getAggregateRootId(), command.transactionId, "账户不合法.");
@@ -376,7 +375,7 @@ public class BankAccountCommandHandler {
      * 提交预操作
      */
     @Subscribe
-    public CompletableFuture<BankAccount> handleAsync(ICommandContext context, CommitTransactionPreparationCommand command) {
+    public CompletableFuture<BankAccount> handleAsync(CommandContext context, CommitTransactionPreparationCommand command) {
         CompletableFuture<BankAccount> future = context.getAsync(command.getAggregateRootId(), BankAccount.class);
         future.thenAccept(bankAccount -> {
             bankAccount.commitTransactionPreparation(command.transactionId);
@@ -402,13 +401,13 @@ public class BankAccountCommandHandler {
 public class DepositTransactionProcessManager {
 
     @Resource
-    private ICommandService commandService;
+    private CommandBus commandBus;
 
     @Subscribe
     public CompletableFuture<Boolean> handleAsync(DepositTransactionStartedEvent evnt) {
         AddTransactionPreparationCommand command = new AddTransactionPreparationCommand(evnt.accountId, evnt.getAggregateRootId(), TransactionType.DEPOSIT_TRANSACTION, PreparationType.CREDIT_PREPARATION, evnt.amount);
         command.setId(evnt.getId());
-        return commandService.sendAsync(command);
+        return commandBus.sendAsync(command);
     }
 
     @Subscribe
@@ -416,7 +415,7 @@ public class DepositTransactionProcessManager {
         if (evnt.transactionPreparation.transactionType == TransactionType.DEPOSIT_TRANSACTION && evnt.transactionPreparation.preparationType == PreparationType.CREDIT_PREPARATION) {
             ConfirmDepositPreparationCommand command = new ConfirmDepositPreparationCommand(evnt.transactionPreparation.transactionId);
             command.setId(evnt.getId());
-            return commandService.sendAsync(command);
+            return commandBus.sendAsync(command);
         }
         return Task.completedTask;
     }
@@ -425,7 +424,7 @@ public class DepositTransactionProcessManager {
     public CompletableFuture<Boolean> handleAsync(DepositTransactionPreparationCompletedEvent evnt) {
         CommitTransactionPreparationCommand command = new CommitTransactionPreparationCommand(evnt.accountId, evnt.getAggregateRootId());
         command.setId(evnt.getId());
-        return (commandService.sendAsync(command));
+        return (commandBus.sendAsync(command));
     }
 
     @Subscribe
@@ -433,7 +432,7 @@ public class DepositTransactionProcessManager {
         if (evnt.transactionPreparation.transactionType == TransactionType.DEPOSIT_TRANSACTION && evnt.transactionPreparation.preparationType == PreparationType.CREDIT_PREPARATION) {
             ConfirmDepositCommand command = new ConfirmDepositCommand(evnt.transactionPreparation.transactionId);
             command.setId(evnt.getId());
-            return (commandService.sendAsync(command));
+            return (commandBus.sendAsync(command));
         }
         return Task.completedTask;
     }
@@ -515,14 +514,14 @@ aggregateRootType.getDeclaredConstructor().newInstance();
 在我们的这个场景里面，`command-web`只需要很少的机器就能满足前端大量的请求，`command-consumer`和`event-consumer`的机器相对较多些。
 如果采用常规的“单请求单连接”的方式，服务提供者很容易就被压跨，通过单一连接，保证单一消费者不会压死提供者，长连接，减少连接握手验证等，并使用异步`IO`，复用线程池，防止`C10K`问题。
 
-### `ICommandHandler`和`ICommandAsyncHandler`区别 (现在统一成一个了)
+### `CommandHandler`和`CommandAsyncHandler`区别 (现在统一成一个了)
 
-- `ICommandHandler`是为了操作内存中的聚合根的，所以不会有异步操作，但后来`ICommandHandler`的`Handle`方法也设计为了`handleAsync`了，目的是为了异步到底，否则异步链路中断的话，异步就没效果了
-- `ICommandAsyncHandler`是为了让开发者调用外部系统的接口的，也就是访问外部`IO`，所以用了`Async
-> `ICommandHandler`，`ICommandAsyncHandler`这两个接口是用于不同的业务场景，`ICommandHandler.handleAsync`方法执行完成后，框架要从`context`中获取当前修改的聚合根的领域事件，然后去提交。而`ICommandAsyncHandler.handleAsync`方法执行完成后，不会有这个逻辑，而是看一下`handleAsync`方法执行的异步消息结果是什么，也就是`IApplicationMessage`。
-目前已经删除了`ICommandAsyncHandler`，统一使用`ICommandHandler`来处理，异步结果会放在`context`中，通过访问 `#setResult`设置
+- `CommandHandler`是为了操作内存中的聚合根的，所以不会有异步操作，但后来`CommandHandler`的`Handle`方法也设计为了`handleAsync`了，目的是为了异步到底，否则异步链路中断的话，异步就没效果了
+- `CommandAsyncHandler`是为了让开发者调用外部系统的接口的，也就是访问外部`IO`，所以用了`Async
+> `CommandHandler`，`CommandAsyncHandler`这两个接口是用于不同的业务场景，`CommandHandler.handleAsync`方法执行完成后，框架要从`context`中获取当前修改的聚合根的领域事件，然后去提交。而`CommandAsyncHandler.handleAsync`方法执行完成后，不会有这个逻辑，而是看一下`handleAsync`方法执行的异步消息结果是什么，也就是`IApplicationMessage`。
+目前已经删除了`CommandAsyncHandler`，统一使用`CommandHandler`来处理，异步结果会放在`context`中，通过访问 `#setResult`设置
 
-### `ICommandService` `sendAsync` 和 `executeAsync`的区别
+### `CommandBus` `sendAsync` 和 `executeAsync`的区别
 
 `sendAsync`只关注发送消息的结果
 `executeAsync`发送消息的同时，关注命令的执行结果，返回的时机如下：

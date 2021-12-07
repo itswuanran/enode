@@ -12,7 +12,7 @@ public class QueueMessage implements Serializable {
      */
     private String body;
     /**
-     *
+     * topic
      */
     private String topic;
     /**

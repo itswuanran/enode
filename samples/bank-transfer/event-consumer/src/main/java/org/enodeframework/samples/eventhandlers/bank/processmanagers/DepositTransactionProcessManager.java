@@ -29,13 +29,13 @@ import java.util.concurrent.CompletableFuture;
 public class DepositTransactionProcessManager {
 
     @Resource
-    private CommandBus commandService;
+    private CommandBus commandBus;
 
     @Subscribe
     public CompletableFuture<Boolean> handleAsync(DepositTransactionStartedEvent evnt) {
         AddTransactionPreparationCommand command = new AddTransactionPreparationCommand(evnt.accountId, evnt.getAggregateRootId(), TransactionType.DEPOSIT_TRANSACTION, PreparationType.CREDIT_PREPARATION, evnt.amount);
         command.setId(evnt.getId());
-        return commandService.sendAsync(command);
+        return commandBus.sendAsync(command);
     }
 
     @Subscribe
@@ -43,7 +43,7 @@ public class DepositTransactionProcessManager {
         if (evnt.transactionPreparation.transactionType == TransactionType.DEPOSIT_TRANSACTION && evnt.transactionPreparation.preparationType == PreparationType.CREDIT_PREPARATION) {
             ConfirmDepositPreparationCommand command = new ConfirmDepositPreparationCommand(evnt.transactionPreparation.transactionId);
             command.setId(evnt.getId());
-            return commandService.sendAsync(command);
+            return commandBus.sendAsync(command);
         }
         return Task.completedTask;
     }
@@ -52,7 +52,7 @@ public class DepositTransactionProcessManager {
     public CompletableFuture<Boolean> handleAsync(DepositTransactionPreparationCompletedEvent evnt) {
         CommitTransactionPreparationCommand command = new CommitTransactionPreparationCommand(evnt.accountId, evnt.getAggregateRootId());
         command.setId(evnt.getId());
-        return (commandService.sendAsync(command));
+        return (commandBus.sendAsync(command));
     }
 
     @Subscribe
@@ -60,7 +60,7 @@ public class DepositTransactionProcessManager {
         if (evnt.transactionPreparation.transactionType == TransactionType.DEPOSIT_TRANSACTION && evnt.transactionPreparation.preparationType == PreparationType.CREDIT_PREPARATION) {
             ConfirmDepositCommand command = new ConfirmDepositCommand(evnt.transactionPreparation.transactionId);
             command.setId(evnt.getId());
-            return (commandService.sendAsync(command));
+            return (commandBus.sendAsync(command));
         }
         return Task.completedTask;
     }

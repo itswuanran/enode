@@ -1,5 +1,10 @@
 ## 发版记录
 
+### 1.1.0
+- 重命名框架中接口格式，修改I开头的接口，更符合Java规范
+- CommandService改名为CommandBus，更符合Command语义
+- 支持CommandMessage传入不同的聚合根id基本类型
+
 ### 1.0.24
 
 - 更新了`vert.x jdbc`驱动，支持传入自定义DataSource，为支持ShardingDataSource提供了便利

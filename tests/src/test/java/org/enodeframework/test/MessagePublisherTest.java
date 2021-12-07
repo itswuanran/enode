@@ -46,7 +46,7 @@ public class MessagePublisherTest extends AbstractTest {
     public void event_store_failed_test() {
         MockEventStore mockEventStore = (MockEventStore) eventStore;
         CreateTestAggregateCommand command = new CreateTestAggregateCommand();
-        command.aggregateRootId = IdGenerator.nextId();
+        command.aggregateRootId = IdGenerator.id();
         command.setTitle("Sample Note");
         mockEventStore.SetExpectFailedCount(FailedType.UnKnownException, 5);
         CommandResult asyncResult = Task.await(commandService.executeAsync(command));
@@ -57,7 +57,7 @@ public class MessagePublisherTest extends AbstractTest {
         Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
         mockEventStore.Reset();
         command = new CreateTestAggregateCommand();
-        command.aggregateRootId = IdGenerator.nextId();
+        command.aggregateRootId = IdGenerator.id();
         command.setTitle("Sample Note");
         mockEventStore.SetExpectFailedCount(FailedType.IOException, 5);
         asyncResult = Task.await(commandService.executeAsync(command));
@@ -68,7 +68,7 @@ public class MessagePublisherTest extends AbstractTest {
         Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
         mockEventStore.Reset();
         command = new CreateTestAggregateCommand();
-        command.aggregateRootId = IdGenerator.nextId();
+        command.aggregateRootId = IdGenerator.id();
         command.setTitle("Sample Note");
         mockEventStore.SetExpectFailedCount(FailedType.TaskIOException, 5);
         asyncResult = Task.await(commandService.executeAsync(command));
@@ -82,7 +82,7 @@ public class MessagePublisherTest extends AbstractTest {
 
     @Test
     public void publishable_exception_publisher_throw_exception_test() {
-        String aggregateId = IdGenerator.nextId();
+        String aggregateId = IdGenerator.id();
         CreateTestAggregateCommand command = new CreateTestAggregateCommand();
         command.aggregateRootId = aggregateId;
         command.setTitle("Sample Note");
@@ -120,7 +120,7 @@ public class MessagePublisherTest extends AbstractTest {
     public void published_version_store_failed_test() {
         MockEventStore mockPublishedVersionStore = (MockEventStore) eventStore;
         CreateTestAggregateCommand command = new CreateTestAggregateCommand();
-        command.aggregateRootId = IdGenerator.nextId();
+        command.aggregateRootId = IdGenerator.id();
         command.setTitle("Sample Note");
         mockPublishedVersionStore.SetExpectFailedCount(FailedType.UnKnownException, 5);
         CommandResult asyncResult = Task.await(commandService.executeAsync(command, CommandReturnType.EventHandled));
@@ -131,7 +131,7 @@ public class MessagePublisherTest extends AbstractTest {
         Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
         mockPublishedVersionStore.Reset();
         command = new CreateTestAggregateCommand();
-        command.aggregateRootId = IdGenerator.nextId();
+        command.aggregateRootId = IdGenerator.id();
         command.setTitle("Sample Note");
         mockPublishedVersionStore.SetExpectFailedCount(FailedType.IOException, 5);
         asyncResult = Task.await(commandService.executeAsync(command, CommandReturnType.EventHandled));
@@ -142,7 +142,7 @@ public class MessagePublisherTest extends AbstractTest {
         Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
         mockPublishedVersionStore.Reset();
         command = new CreateTestAggregateCommand();
-        command.aggregateRootId = IdGenerator.nextId();
+        command.aggregateRootId = IdGenerator.id();
         command.setTitle("Sample Note");
         mockPublishedVersionStore.SetExpectFailedCount(FailedType.TaskIOException, 5);
         asyncResult = Task.await(commandService.executeAsync(command, CommandReturnType.EventHandled));
@@ -158,7 +158,7 @@ public class MessagePublisherTest extends AbstractTest {
 
     public void event_publisher_failed_test() {
         CreateTestAggregateCommand command = new CreateTestAggregateCommand();
-        command.aggregateRootId = IdGenerator.nextId();
+        command.aggregateRootId = IdGenerator.id();
         command.setTitle("Sample Note");
         ((MockDomainEventPublisher) domainEventPublisher).setExpectFailedCount(FailedType.UnKnownException, 5);
         CommandResult asyncResult = Task.await(commandService.executeAsync(command));
@@ -169,7 +169,7 @@ public class MessagePublisherTest extends AbstractTest {
         Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
         ((MockDomainEventPublisher) domainEventPublisher).Reset();
         command = new CreateTestAggregateCommand();
-        command.aggregateRootId = IdGenerator.nextId();
+        command.aggregateRootId = IdGenerator.id();
         command.setTitle("Sample Note");
         ((MockDomainEventPublisher) domainEventPublisher).setExpectFailedCount(FailedType.IOException, 5);
         asyncResult = Task.await(commandService.executeAsync(command));
@@ -180,7 +180,7 @@ public class MessagePublisherTest extends AbstractTest {
         Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
         ((MockDomainEventPublisher) domainEventPublisher).Reset();
         command = new CreateTestAggregateCommand();
-        command.aggregateRootId = IdGenerator.nextId();
+        command.aggregateRootId = IdGenerator.id();
         command.setTitle("Sample Note");
         ((MockDomainEventPublisher) domainEventPublisher).setExpectFailedCount(FailedType.TaskIOException, 5);
         asyncResult = Task.await(commandService.executeAsync(command));
@@ -197,7 +197,7 @@ public class MessagePublisherTest extends AbstractTest {
         MockApplicationMessagePublisher mockApplicationMessagePublisher = (MockApplicationMessagePublisher) applicationMessagePublisher;
         mockApplicationMessagePublisher.SetExpectFailedCount(FailedType.UnKnownException, 5);
         AsyncHandlerCommand command = new AsyncHandlerCommand();
-        command.aggregateRootId = IdGenerator.nextId();
+        command.aggregateRootId = IdGenerator.id();
         command.setShouldGenerateApplicationMessage(true);
         CommandResult asyncResult = Task.await(commandService.executeAsync(command));
         Assert.assertNotNull(asyncResult);
@@ -208,7 +208,7 @@ public class MessagePublisherTest extends AbstractTest {
         mockApplicationMessagePublisher.Reset();
         mockApplicationMessagePublisher.SetExpectFailedCount(FailedType.IOException, 5);
         AsyncHandlerCommand command1 = new AsyncHandlerCommand();
-        command1.aggregateRootId = IdGenerator.nextId();
+        command1.aggregateRootId = IdGenerator.id();
         command1.setShouldGenerateApplicationMessage(true);
         asyncResult = Task.await(commandService.executeAsync(command1));
         Assert.assertNotNull(asyncResult);
@@ -219,7 +219,7 @@ public class MessagePublisherTest extends AbstractTest {
         mockApplicationMessagePublisher.Reset();
         mockApplicationMessagePublisher.SetExpectFailedCount(FailedType.TaskIOException, 5);
         AsyncHandlerCommand command2 = new AsyncHandlerCommand();
-        command2.aggregateRootId = IdGenerator.nextId();
+        command2.aggregateRootId = IdGenerator.id();
         command2.setShouldGenerateApplicationMessage(true);
         asyncResult = Task.await(commandService.executeAsync(command2));
         Assert.assertNotNull(asyncResult);

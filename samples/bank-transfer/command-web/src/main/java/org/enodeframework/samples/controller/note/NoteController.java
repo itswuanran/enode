@@ -42,7 +42,7 @@ public class NoteController {
         long start = System.currentTimeMillis();
         CountDownLatch latch = new CountDownLatch(totalCount);
         for (int i = 0; i < totalCount; i++) {
-            CreateNoteCommand command = new CreateNoteCommand(IdGenerator.nextId(), "Sample Note" + IdGenerator.nextId());
+            CreateNoteCommand command = new CreateNoteCommand(IdGenerator.id(), "Sample Note" + IdGenerator.id());
             command.setId(String.valueOf(i));
             command.setId(String.valueOf(i));
             try {

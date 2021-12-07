@@ -30,27 +30,27 @@ public class BankController {
 
     @RequestMapping("deposit")
     public Mono<Boolean> deposit() {
-        String account1 = IdGenerator.nextId();
-        String account2 = IdGenerator.nextId();
-        String account3 = "INVALID-" + IdGenerator.nextId();
+        String account1 = IdGenerator.id();
+        String account2 = IdGenerator.id();
+        String account3 = "INVALID-" + IdGenerator.id();
         //创建两个银行账户
         //每个账户都存入1000元，这里要等到事件执行完成才算是存入成功，否则有可能在下面操作转账记录聚合根时，出现余额为0的情况
         CompletableFuture<CommandResult> future1 = commandService.executeAsync(new CreateAccountCommand(account1, "account1"), CommandReturnType.EventHandled).thenCompose(x -> {
-            return (commandService.executeAsync(new StartDepositTransactionCommand(IdGenerator.nextId(), account1, 1000), CommandReturnType.EventHandled));
+            return (commandService.executeAsync(new StartDepositTransactionCommand(IdGenerator.id(), account1, 1000), CommandReturnType.EventHandled));
         });
         CompletableFuture<CommandResult> future2 = commandService.executeAsync(new CreateAccountCommand(account2, "account2"), CommandReturnType.EventHandled).thenCompose(x -> {
-            return (commandService.executeAsync(new StartDepositTransactionCommand(IdGenerator.nextId(), account2, 1000), CommandReturnType.EventHandled));
+            return (commandService.executeAsync(new StartDepositTransactionCommand(IdGenerator.id(), account2, 1000), CommandReturnType.EventHandled));
         });
 
         CompletableFuture<Boolean> future = CompletableFuture.allOf(future1, future2).thenCompose(x -> {
             //账户1向账户3转账300元，交易会失败，因为账户3不存在
-            return commandService.executeAsync(new StartTransferTransactionCommand(IdGenerator.nextId(), new TransferTransactionInfo(account1, account3, 300D)))
+            return commandService.executeAsync(new StartTransferTransactionCommand(IdGenerator.id(), new TransferTransactionInfo(account1, account3, 300D)))
                 .thenCompose(y -> {
                     //账户1向账户2转账1200元，交易会失败，因为余额不足
-                    return commandService.sendAsync(new StartTransferTransactionCommand(IdGenerator.nextId(), new TransferTransactionInfo(account1, account2, 1200D)));
+                    return commandService.sendAsync(new StartTransferTransactionCommand(IdGenerator.id(), new TransferTransactionInfo(account1, account2, 1200D)));
                 }).thenCompose(z -> {
                     //账户2向账户1转账500元，交易成功
-                    return commandService.sendAsync(new StartTransferTransactionCommand(IdGenerator.nextId(), new TransferTransactionInfo(account2, account1, 500D)));
+                    return commandService.sendAsync(new StartTransferTransactionCommand(IdGenerator.id(), new TransferTransactionInfo(account2, account1, 500D)));
                 });
         });
         return Mono.fromFuture(future);
@@ -64,13 +64,13 @@ public class BankController {
         double transferAmount = 100D;
         //创建银行账户
         for (int i = 0; i < accountCount; i++) {
-            String accountId = IdGenerator.nextId();
+            String accountId = IdGenerator.id();
             commandService.executeAsync(new CreateAccountCommand(accountId, "SampleAccount" + i), CommandReturnType.EventHandled).join();
             accountList.add(accountId);
         }
         //每个账户都存入初始额度
         for (String accountId : accountList) {
-            commandService.sendAsync(new StartDepositTransactionCommand(IdGenerator.nextId(), accountId, depositAmount)).join();
+            commandService.sendAsync(new StartDepositTransactionCommand(IdGenerator.id(), accountId, depositAmount)).join();
         }
         CountDownLatch countDownLatch = new CountDownLatch(transactionCount);
         Stopwatch watch = Stopwatch.createStarted();
@@ -79,7 +79,7 @@ public class BankController {
             int targetAccountIndex = sourceAccountIndex + 1;
             String sourceAccount = accountList.get(sourceAccountIndex);
             String targetAccount = accountList.get(targetAccountIndex);
-            commandService.executeAsync(new StartTransferTransactionCommand(IdGenerator.nextId(), new TransferTransactionInfo(sourceAccount, targetAccount, transferAmount)), CommandReturnType.EventHandled)
+            commandService.executeAsync(new StartTransferTransactionCommand(IdGenerator.id(), new TransferTransactionInfo(sourceAccount, targetAccount, transferAmount)), CommandReturnType.EventHandled)
                 .whenComplete((x, y) -> {
                     countDownLatch.countDown();
                 });

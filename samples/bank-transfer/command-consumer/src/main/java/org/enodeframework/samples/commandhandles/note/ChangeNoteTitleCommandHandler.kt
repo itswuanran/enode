@@ -10,7 +10,7 @@ import org.enodeframework.samples.domain.note.Note
 class ChangeNoteTitleCommandHandler {
     @Subscribe
     suspend fun handleAsync(context: CommandContext, command: ChangeNoteTitleCommand) {
-        val note = context.get(command.getAggregateRootId(), true, Note::class.java)
+        val note = context.get(command.aggregateRootId, true, Note::class.java)
         note.changeTitle(command.title)
     }
 }

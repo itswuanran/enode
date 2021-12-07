@@ -1,9 +1,13 @@
 package org.enodeframework.domain.impl
 
+import org.enodeframework.common.exception.AggregateRootReferenceChangedException
 import org.enodeframework.common.exception.AggregateRootTypeNotMatchException
 import org.enodeframework.common.scheduling.ScheduleService
 import org.enodeframework.common.utils.Assert
-import org.enodeframework.domain.*
+import org.enodeframework.domain.AggregateCacheInfo
+import org.enodeframework.domain.AggregateRoot
+import org.enodeframework.domain.AggregateStorage
+import org.enodeframework.domain.MemoryCache
 import org.enodeframework.infrastructure.TypeNameProvider
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -87,7 +91,9 @@ class DefaultMemoryCache(
             val aggregateRootOldVersion = cacheInfo!!.aggregateRoot.version
             //更新到内存缓存前需要先检查聚合根引用是否有变化，有变化说明此聚合根已经被重置过状态了
             if (aggregateRoot.version > 1 && cacheInfo.aggregateRoot !== aggregateRoot) {
-                throw AggregateRootReferenceChangedException(aggregateRoot)
+                throw AggregateRootReferenceChangedException(
+                    aggregateRoot
+                )
             }
             aggregateRoot.acceptChanges()
             //接受聚合根的最新事件修改，更新聚合根版本号

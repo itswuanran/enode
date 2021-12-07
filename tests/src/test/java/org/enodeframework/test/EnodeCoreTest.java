@@ -6,7 +6,7 @@ import org.enodeframework.commanding.CommandMessage;
 import org.enodeframework.commanding.CommandResult;
 import org.enodeframework.commanding.CommandReturnType;
 import org.enodeframework.commanding.CommandStatus;
-import org.enodeframework.common.extensions.ManualResetEvent;
+import org.enodeframework.test.async.ManualResetEvent;
 import org.enodeframework.common.io.Task;
 import org.enodeframework.common.utils.IdGenerator;
 import org.enodeframework.domain.AggregateRoot;
@@ -73,7 +73,7 @@ public class EnodeCoreTest extends AbstractTest {
 
     @Test
     public void create_and_update_aggregate_test() {
-        String aggregateId = IdGenerator.nextId();
+        String aggregateId = IdGenerator.id();
         CreateTestAggregateCommand command = new CreateTestAggregateCommand();
         command.aggregateRootId = aggregateId;
         command.setTitle("Sample Note");
@@ -102,7 +102,7 @@ public class EnodeCoreTest extends AbstractTest {
 
     @Test
     public void create_and_update_inherit_aggregate_test() {
-        String aggregateId = IdGenerator.nextId();
+        String aggregateId = IdGenerator.id();
         CreateInheritTestAggregateCommand command = new CreateInheritTestAggregateCommand();
         command.aggregateRootId = aggregateId;
         command.setTitle("Sample Note");
@@ -131,7 +131,7 @@ public class EnodeCoreTest extends AbstractTest {
 
     @Test
     public void command_sync_execute_test() {
-        String aggregateId = IdGenerator.nextId();
+        String aggregateId = IdGenerator.id();
         CreateTestAggregateCommand command = new CreateTestAggregateCommand();
         command.aggregateRootId = aggregateId;
         command.setTitle("Sample Note");
@@ -158,7 +158,7 @@ public class EnodeCoreTest extends AbstractTest {
 
     @Test
     public void duplicate_create_aggregate_command_test() {
-        String aggregateId = IdGenerator.nextId();
+        String aggregateId = IdGenerator.id();
         CreateTestAggregateCommand command = new CreateTestAggregateCommand();
         command.aggregateRootId = aggregateId;
         command.setTitle("Sample Note");
@@ -190,7 +190,7 @@ public class EnodeCoreTest extends AbstractTest {
 
     @Test
     public void duplicate_update_aggregate_command_test() {
-        String aggregateId = IdGenerator.nextId();
+        String aggregateId = IdGenerator.id();
         CreateTestAggregateCommand command1 = new CreateTestAggregateCommand();
         command1.aggregateRootId = aggregateId;
         command1.setTitle("Sample Note");
@@ -228,7 +228,7 @@ public class EnodeCoreTest extends AbstractTest {
 
     @Test
     public void create_and_concurrent_update_aggregate_test() {
-        String aggregateId = IdGenerator.nextId();
+        String aggregateId = IdGenerator.id();
         CreateTestAggregateCommand command = new CreateTestAggregateCommand();
         command.aggregateRootId = aggregateId;
         command.setTitle("Sample Note");
@@ -268,7 +268,7 @@ public class EnodeCoreTest extends AbstractTest {
     @Test
     public void change_nothing_test() {
         ChangeNothingCommand command = new ChangeNothingCommand();
-        command.aggregateRootId = (IdGenerator.nextId());
+        command.aggregateRootId = (IdGenerator.id());
         CommandResult commandResult = Task.await(commandService.executeAsync(command));
         Assert.assertNotNull(commandResult);
         Assert.assertEquals(CommandStatus.NothingChanged, commandResult.getStatus());
@@ -277,7 +277,7 @@ public class EnodeCoreTest extends AbstractTest {
     @Test
     public void set_result_command_test() {
         SetResultCommand command = new SetResultCommand();
-        command.aggregateRootId = (IdGenerator.nextId());
+        command.aggregateRootId = (IdGenerator.id());
         command.setResult("CommandResult");
         CommandResult commandResult = Task.await(commandService.executeAsync(command));
         Assert.assertNotNull(commandResult);
@@ -288,15 +288,15 @@ public class EnodeCoreTest extends AbstractTest {
     @Test
     public void change_multiple_aggregates_test() {
         CreateTestAggregateCommand command1 = new CreateTestAggregateCommand();
-        command1.aggregateRootId = IdGenerator.nextId();
+        command1.aggregateRootId = IdGenerator.id();
         command1.setTitle("Sample Note1");
         Task.await(commandService.executeAsync(command1));
         CreateTestAggregateCommand command2 = new CreateTestAggregateCommand();
-        command2.aggregateRootId = IdGenerator.nextId();
+        command2.aggregateRootId = IdGenerator.id();
         command2.setTitle("Sample Note2");
         Task.await(commandService.executeAsync(command2));
         ChangeMultipleAggregatesCommand command3 = new ChangeMultipleAggregatesCommand();
-        command3.aggregateRootId = IdGenerator.nextId();
+        command3.aggregateRootId = IdGenerator.id();
         command3.setAggregateRootId1(command1.getAggregateRootId());
         command3.setAggregateRootId2(command2.getAggregateRootId());
         CommandResult commandResult = Task.await(commandService.executeAsync(command3));
@@ -307,7 +307,7 @@ public class EnodeCoreTest extends AbstractTest {
     @Test
     public void no_handler_command_test() {
         NoHandlerCommand command = new NoHandlerCommand();
-        command.aggregateRootId = (IdGenerator.nextId());
+        command.aggregateRootId = (IdGenerator.id());
         CommandResult commandResult = Task.await(commandService.executeAsync(command));
         Assert.assertNotNull(commandResult);
         Assert.assertEquals(CommandStatus.Failed, commandResult.getStatus());
@@ -316,7 +316,7 @@ public class EnodeCoreTest extends AbstractTest {
     // 运行时检测
     public void two_handlers_command_test() {
         TwoHandlersCommand command = new TwoHandlersCommand();
-        command.aggregateRootId = (IdGenerator.nextId());
+        command.aggregateRootId = (IdGenerator.id());
         CommandResult commandResult = Task.await(commandService.executeAsync(command));
         Assert.assertNotNull(commandResult);
         Assert.assertEquals(CommandStatus.Failed, commandResult.getStatus());
@@ -325,7 +325,7 @@ public class EnodeCoreTest extends AbstractTest {
     @Test
     public void handler_throw_exception_command_test() {
         ThrowExceptionCommand command = new ThrowExceptionCommand();
-        command.aggregateRootId = (IdGenerator.nextId());
+        command.aggregateRootId = (IdGenerator.id());
         CommandResult commandResult = Task.await(commandService.executeAsync(command));
         Assert.assertNotNull(commandResult);
         Assert.assertEquals(CommandStatus.Failed, commandResult.getStatus());
@@ -333,7 +333,7 @@ public class EnodeCoreTest extends AbstractTest {
 
     @Test
     public void aggregate_throw_exception_command_test() {
-        String aggregateId = IdGenerator.nextId();
+        String aggregateId = IdGenerator.id();
         CreateTestAggregateCommand command = new CreateTestAggregateCommand();
         command.aggregateRootId = aggregateId;
         command.setTitle("Sample Note");
@@ -355,13 +355,13 @@ public class EnodeCoreTest extends AbstractTest {
     @Test
     public void command_inheritance_test() {
         BaseCommand command = new BaseCommand();
-        command.aggregateRootId = (IdGenerator.nextId());
+        command.aggregateRootId = (IdGenerator.id());
         CommandResult commandResult = Task.await(commandService.executeAsync(command));
         Assert.assertNotNull(commandResult);
         Assert.assertEquals(CommandStatus.NothingChanged, commandResult.getStatus());
         Assert.assertEquals("ResultFromBaseCommand", commandResult.getResult());
         command = new ChildCommand();
-        command.aggregateRootId = (IdGenerator.nextId());
+        command.aggregateRootId = (IdGenerator.id());
         commandResult = Task.await(commandService.executeAsync(command));
         Assert.assertNotNull(commandResult);
 
@@ -375,7 +375,7 @@ public class EnodeCoreTest extends AbstractTest {
     public void async_command_handler_test() {
         AsyncHandlerCommand command = new AsyncHandlerCommand();
         command.setShouldGenerateApplicationMessage(true);
-        command.aggregateRootId = IdGenerator.nextId();
+        command.aggregateRootId = IdGenerator.id();
         CommandResult commandResult = Task.await(commandService.executeAsync(command));
         Assert.assertNotNull(commandResult);
         Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
@@ -384,12 +384,12 @@ public class EnodeCoreTest extends AbstractTest {
     @Test
     public void async_command_handler_throw_exception_test() {
         AsyncHandlerCommand command = new AsyncHandlerCommand();
-        command.aggregateRootId = (IdGenerator.nextId());
+        command.aggregateRootId = (IdGenerator.id());
         command.setShouldThrowException(true);
         CommandResult commandResult = Task.await(commandService.executeAsync(command));
         Assert.assertEquals(CommandStatus.Failed, commandResult.getStatus());
         AsyncHandlerCommand command1 = new AsyncHandlerCommand();
-        command1.aggregateRootId = IdGenerator.nextId();
+        command1.aggregateRootId = IdGenerator.id();
         command1.setShouldThrowIOException(true);
         commandResult = Task.await(commandService.executeAsync(command1));
         Assert.assertNotNull(commandResult);
@@ -399,7 +399,7 @@ public class EnodeCoreTest extends AbstractTest {
     @Test
     public void async_command_two_handlers_test() {
         TwoAsyncHandlersCommand command = new TwoAsyncHandlersCommand();
-        command.aggregateRootId = IdGenerator.nextId();
+        command.aggregateRootId = IdGenerator.id();
         CommandResult commandResult = Task.await(commandService.executeAsync(command));
         Assert.assertNotNull(commandResult);
         Assert.assertEquals(CommandStatus.Failed, commandResult.getStatus());
@@ -409,7 +409,7 @@ public class EnodeCoreTest extends AbstractTest {
     public void duplicate_async_command_test() {
         AsyncHandlerCommand command = new AsyncHandlerCommand();
         command.setShouldGenerateApplicationMessage(true);
-        command.aggregateRootId = IdGenerator.nextId();
+        command.aggregateRootId = IdGenerator.id();
         CommandResult commandResult = Task.await(commandService.executeAsync(command));
         Assert.assertNotNull(commandResult);
         Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
@@ -423,7 +423,7 @@ public class EnodeCoreTest extends AbstractTest {
     @Test
     public void duplicate_async_command_with_application_message_test() {
         AsyncHandlerCommand command = new AsyncHandlerCommand();
-        command.aggregateRootId = IdGenerator.nextId();
+        command.aggregateRootId = IdGenerator.id();
         command.setShouldGenerateApplicationMessage(true);
         CommandResult commandResult = Task.await(commandService.executeAsync(command));
         Assert.assertNotNull(commandResult);
@@ -438,7 +438,7 @@ public class EnodeCoreTest extends AbstractTest {
     @Test
     public void duplicate_async_command_not_check_handler_exist_with_result_test() {
         NotCheckAsyncHandlerExistWithResultCommand command = new NotCheckAsyncHandlerExistWithResultCommand();
-        command.aggregateRootId = IdGenerator.nextId();
+        command.aggregateRootId = IdGenerator.id();
         CommandResult commandResult = Task.await(commandService.executeAsync(command));
         Assert.assertNotNull(commandResult);
         Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
@@ -452,12 +452,12 @@ public class EnodeCoreTest extends AbstractTest {
     @Test
     public void async_command_inheritance_test() {
         AsyncHandlerBaseCommand command = new AsyncHandlerBaseCommand();
-        command.aggregateRootId = (IdGenerator.nextId());
+        command.aggregateRootId = (IdGenerator.id());
         CommandResult commandResult = Task.await(commandService.executeAsync(command));
         Assert.assertNotNull(commandResult);
         Assert.assertEquals(CommandStatus.NothingChanged, commandResult.getStatus());
         command = new AsyncHandlerChildCommand();
-        command.aggregateRootId = (IdGenerator.nextId());
+        command.aggregateRootId = (IdGenerator.id());
         commandResult = Task.await(commandService.executeAsync(command));
         Assert.assertNotNull(commandResult);
 
@@ -471,8 +471,8 @@ public class EnodeCoreTest extends AbstractTest {
      */
     @Test
     public void create_concurrent_conflict_and_then_update_many_times_test() {
-        String aggregateId = IdGenerator.nextId();
-        String commandId = IdGenerator.nextId();
+        String aggregateId = IdGenerator.id();
+        String commandId = IdGenerator.id();
         TestAggregateCreated aggregateCreated = new TestAggregateCreated("Note Title");
         aggregateCreated.setVersion(1);
         aggregateCreated.setAggregateRootId(aggregateId);
@@ -527,8 +527,8 @@ public class EnodeCoreTest extends AbstractTest {
 
     @Test
     public void create_concurrent_conflict_and_then_update_many_times_test2() {
-        String aggregateId = IdGenerator.nextId();
-        String commandId = IdGenerator.nextId();
+        String aggregateId = IdGenerator.id();
+        String commandId = IdGenerator.id();
         TestAggregateCreated aggregateCreated = new TestAggregateCreated("Note Title");
         aggregateCreated.setAggregateRootId(aggregateId);
         aggregateCreated.setVersion(1);
@@ -582,8 +582,8 @@ public class EnodeCoreTest extends AbstractTest {
 
     @Test
     public void create_concurrent_conflict_not_enable_batch_insert_test() {
-        String aggregateId = IdGenerator.nextId();
-        String commandId = IdGenerator.nextId();
+        String aggregateId = IdGenerator.id();
+        String commandId = IdGenerator.id();
         TestAggregateTitleChanged titleChanged = new TestAggregateTitleChanged("Note Title");
         titleChanged.setAggregateRootId(aggregateId);
         titleChanged.setVersion(1);
@@ -627,7 +627,7 @@ public class EnodeCoreTest extends AbstractTest {
 
     @Test
     public void update_concurrent_conflict_test() {
-        String aggregateId = IdGenerator.nextId();
+        String aggregateId = IdGenerator.id();
         CreateTestAggregateCommand command = new CreateTestAggregateCommand();
         command.aggregateRootId = aggregateId;
         command.setTitle("Sample Note");
@@ -645,7 +645,7 @@ public class EnodeCoreTest extends AbstractTest {
         aggregateTitleChanged.setVersion(2);
         //往EventStore直接插入事件，用于模拟并发冲突的情况
         DomainEventStream eventStream = new DomainEventStream(
-            IdGenerator.nextId(),
+            IdGenerator.id(),
             aggregateId,
             TestAggregate.class.getName(),
             new Date(),
@@ -685,7 +685,7 @@ public class EnodeCoreTest extends AbstractTest {
 
     @Test
     public void event_handler_priority_test() {
-        String noteId = IdGenerator.nextId();
+        String noteId = IdGenerator.id();
         CreateTestAggregateCommand command1 = new CreateTestAggregateCommand();
         command1.aggregateRootId = noteId;
         command1.setTitle("Sample Title1");
@@ -712,7 +712,7 @@ public class EnodeCoreTest extends AbstractTest {
 
     @Test
     public void note_update_many_times_test() {
-        String noteId = IdGenerator.nextId();
+        String noteId = IdGenerator.id();
         // 使用无界队列模拟不会出现异常，如果有界队列
         Executor executor = Executors.newCachedThreadPool();
         CountDownLatch latch = new CountDownLatch(300);
@@ -737,7 +737,7 @@ public class EnodeCoreTest extends AbstractTest {
 
     @Test
     public void sequence_domain_event_process_test() {
-        TestAggregate note = new TestAggregate(IdGenerator.nextId(), "initial title");
+        TestAggregate note = new TestAggregate(IdGenerator.id(), "initial title");
         DomainEventStream message1 = createMessage(note);
         ((AggregateRoot) note).acceptChanges();
         note.changeTitle("title1");
@@ -758,7 +758,7 @@ public class EnodeCoreTest extends AbstractTest {
 
     @Test
     public void sequence_domain_event_process_test2() {
-        TestAggregate note = new TestAggregate(IdGenerator.nextId(), "initial title");
+        TestAggregate note = new TestAggregate(IdGenerator.id(), "initial title");
         AggregateRoot aggregate = note;
         DomainEventStream message1 = createMessage(aggregate);
 
@@ -793,7 +793,7 @@ public class EnodeCoreTest extends AbstractTest {
 
     @Test
     public void create_and_update_dirty_aggregate_test() {
-        String aggregateId = IdGenerator.nextId();
+        String aggregateId = IdGenerator.id();
         CreateTestAggregateCommand command = new CreateTestAggregateCommand();
         command.setAggregateRootId(aggregateId);
         command.setTitle("Sample Note");
@@ -806,7 +806,7 @@ public class EnodeCoreTest extends AbstractTest {
         Assert.assertEquals("Sample Note", note.getTitle());
         Assert.assertEquals(1, note.getVersion());
 
-        String directUpdateEventStoreCommandId = IdGenerator.nextId();
+        String directUpdateEventStoreCommandId = IdGenerator.id();
         List<DomainEventStream> eventStreamList = new ArrayList<>();
         List<DomainEventMessage<?>> evnts = new ArrayList<>();
         TestAggregateTitleChanged evnt = new TestAggregateTitleChanged("Note Title2");
@@ -815,7 +815,7 @@ public class EnodeCoreTest extends AbstractTest {
         evnt.setCommandId(directUpdateEventStoreCommandId);
         evnt.setVersion(2);
         evnts.add(evnt);
-        DomainEventStream eventStream = new DomainEventStream(IdGenerator.nextId(), aggregateId, TestAggregate.class.getName(), new Date(), evnts, Maps.newHashMap());
+        DomainEventStream eventStream = new DomainEventStream(IdGenerator.id(), aggregateId, TestAggregate.class.getName(), new Date(), evnts, Maps.newHashMap());
         eventStreamList.add(eventStream);
         Task.await(eventStore.batchAppendAsync(eventStreamList));
 
@@ -838,7 +838,7 @@ public class EnodeCoreTest extends AbstractTest {
 
     private DomainEventStream createMessage(AggregateRoot aggregateRoot) {
         return new DomainEventStream(
-            IdGenerator.nextId(),
+            IdGenerator.id(),
             aggregateRoot.getUniqueId(),
             aggregateRoot.getVersion() + 1,
             aggregateRoot.getClass().getName(),

@@ -18,7 +18,7 @@ public abstract class AbstractMessage implements Message {
     }
 
     public AbstractMessage() {
-        this(IdGenerator.nextId());
+        this(IdGenerator.id());
     }
 
     @Override

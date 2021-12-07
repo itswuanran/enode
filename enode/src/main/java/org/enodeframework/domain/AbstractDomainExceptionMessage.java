@@ -1,19 +1,19 @@
 package org.enodeframework.domain;
 
+import org.enodeframework.common.exception.EnodeException;
 import org.enodeframework.common.utils.IdGenerator;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class AbstractDomainExceptionMessage extends RuntimeException implements DomainExceptionMessage {
-    private static final long serialVersionUID = 2099914413380872726L;
+public abstract class AbstractDomainExceptionMessage extends EnodeException implements DomainExceptionMessage {
     private String id;
     private Date timestamp;
     private Map<String, Object> items;
 
     public AbstractDomainExceptionMessage() {
-        this(IdGenerator.nextId());
+        this(IdGenerator.id());
     }
 
     public AbstractDomainExceptionMessage(String id) {

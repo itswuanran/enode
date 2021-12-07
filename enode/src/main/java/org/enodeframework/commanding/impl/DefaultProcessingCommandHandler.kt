@@ -6,12 +6,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asCompletableFuture
 import org.enodeframework.commanding.*
+import org.enodeframework.common.exception.AggregateRootReferenceChangedException
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.common.io.Task
 import org.enodeframework.common.serializing.SerializeService
 import org.enodeframework.configurations.SysProperties
 import org.enodeframework.domain.AggregateRoot
-import org.enodeframework.domain.AggregateRootReferenceChangedException
 import org.enodeframework.domain.DomainExceptionMessage
 import org.enodeframework.domain.MemoryCache
 import org.enodeframework.eventing.*

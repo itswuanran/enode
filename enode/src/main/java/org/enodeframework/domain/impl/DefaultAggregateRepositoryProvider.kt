@@ -9,7 +9,6 @@ import org.enodeframework.infrastructure.AssemblyInitializer
 import org.enodeframework.infrastructure.TypeUtils
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
-import java.util.*
 
 /**
  * @author anruence@gmail.com
@@ -29,11 +28,10 @@ class DefaultAggregateRepositoryProvider : AggregateRepositoryProvider, Assembly
      * 获取继承AggregateRoot的class，IAggregateRepository接口的泛型
      */
     private fun registerAggregateRepository(aggregateRepositoryType: Class<*>) {
-        val genericInterfaces = aggregateRepositoryType.genericInterfaces
-        Arrays.stream(genericInterfaces).forEach { x: Type ->
-            val superGenericInterfaceType = x as ParameterizedType
+        aggregateRepositoryType.genericInterfaces.forEach { type: Type ->
+            val superGenericInterfaceType = type as ParameterizedType
             if (AggregateRepository::class.java != superGenericInterfaceType.rawType) {
-                return@forEach
+                return
             }
             val aggregateRepositoryProxy = DefaultAggregateRepositoryProxy<AggregateRoot>()
             aggregateRepositoryProxy.setInnerObject(DefaultObjectContainer.resolve(aggregateRepositoryType))

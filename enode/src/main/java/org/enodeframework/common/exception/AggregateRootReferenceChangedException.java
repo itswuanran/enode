@@ -1,6 +1,9 @@
-package org.enodeframework.domain;
+package org.enodeframework.common.exception;
 
-public class AggregateRootReferenceChangedException extends RuntimeException {
+import org.enodeframework.common.exception.EnodeException;
+import org.enodeframework.domain.AggregateRoot;
+
+public class AggregateRootReferenceChangedException extends EnodeException {
 
     private final AggregateRoot aggregateRoot;
 

@@ -11,11 +11,11 @@ public class IdGenerator {
 
     private static final SnowFlake IDENTIFIER_GENERATOR = new SnowFlake();
 
-    public static String nextId() {
-        return Objects.toString(id(), "");
+    public static String id() {
+        return Objects.toString(lid(), "");
     }
 
-    public static long id() {
+    public static long lid() {
         return IDENTIFIER_GENERATOR.nextId();
     }
 }
