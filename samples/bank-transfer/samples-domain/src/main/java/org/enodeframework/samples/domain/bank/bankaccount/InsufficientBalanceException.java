@@ -1,5 +1,6 @@
 package org.enodeframework.samples.domain.bank.bankaccount;
 
+import io.vertx.core.json.JsonObject;
 import org.enodeframework.domain.AbstractDomainExceptionMessage;
 
 import java.util.Map;
@@ -56,11 +57,12 @@ public class InsufficientBalanceException extends AbstractDomainExceptionMessage
 
     @Override
     public void restoreFrom(Map<String, Object> serializableInfo) {
-        accountId = (String) serializableInfo.get("AccountId");
-        transactionId = (String) serializableInfo.get("TransactionId");
-        transactionType = (Integer) serializableInfo.get("TransactionType");
-        amount = (Double) (serializableInfo.get("Amount"));
-        currentBalance = (Double) (serializableInfo.get("CurrentBalance"));
-        currentAvailableBalance = (Double) (serializableInfo.get("CurrentAvailableBalance"));
+        JsonObject object = new JsonObject(serializableInfo);
+        accountId = object.getString("AccountId");
+        transactionId = object.getString("TransactionId");
+        transactionType = object.getInteger("TransactionType");
+        amount = object.getDouble("Amount");
+        currentBalance = object.getDouble("CurrentBalance");
+        currentAvailableBalance = object.getDouble("CurrentAvailableBalance");
     }
 }

@@ -336,14 +336,7 @@ class DefaultProcessingCommandHandler(
                 processingCommand, CommandStatus.Failed, exception.javaClass.name, (exception as Exception).message
             ).whenComplete { _, _ -> future.complete(true) }
         }, {
-            val serializableInfo: Map<String, Any> = HashMap()
-            exception.serializeTo(serializableInfo)
-            val exceptionInfo = serializableInfo.entries.joinToString(",") { x: Map.Entry<String, Any> ->
-                String.format(
-                    "%s:%s", x.key, x.value
-                )
-            }
-            String.format("[commandId: %s, exceptionInfo: %s]", processingCommand.message.id, exceptionInfo)
+            "[commandId: ${processingCommand.message.id}]"
         }, null, retryTimes, true)
         return future
     }

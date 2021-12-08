@@ -61,14 +61,14 @@ abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface, THandlerSou
             val handlerData = MessageHandlerData<THandlerProxyInterface>()
             val listHandlers: MutableList<THandlerProxyInterface> = ArrayList()
             val queueHandlerDict: MutableMap<THandlerProxyInterface, Int> = HashMap()
-            handlers.forEach(Consumer { handler: THandlerProxyInterface ->
+            handlers.forEach { handler: THandlerProxyInterface ->
                 val priority = getHandleMethodPriority(handler)
                 if (priority == 0) {
                     listHandlers.add(handler)
                 } else {
                     queueHandlerDict[handler] = priority
                 }
-            })
+            }
             handlerData.allHandlers = handlers
             handlerData.listHandlers = listHandlers
             handlerData.queuedHandlers =

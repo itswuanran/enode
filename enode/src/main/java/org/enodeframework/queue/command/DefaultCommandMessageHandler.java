@@ -47,7 +47,7 @@ public class DefaultCommandMessageHandler implements MessageHandler {
 
     @Override
     public void handle(QueueMessage queueMessage, MessageContext context) {
-        logger.info("Received command message: {}", serializeService.serialize(queueMessage));
+        logger.info("Received command message: {}", queueMessage);
         GenericCommandMessage commandMessage = serializeService.deserialize(queueMessage.getBody(), GenericCommandMessage.class);
         Class<?> commandType = typeNameProvider.getType(commandMessage.getCommandType());
         CommandMessage<?> command = (CommandMessage<?>) serializeService.deserialize(commandMessage.getCommandData(), commandType);

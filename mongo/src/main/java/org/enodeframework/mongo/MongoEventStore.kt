@@ -96,7 +96,7 @@ class MongoEventStore(
             document.put("commandId", domainEventStream.commandId)
             document.put("version", domainEventStream.version)
             document.put("gmtCreate", domainEventStream.timestamp.toInstant())
-            document.put("events", serializeService.serialize(eventSerializer.serialize(domainEventStream.events())))
+            document.put("events", serializeService.serialize(eventSerializer.serialize(domainEventStream.getEvents())))
             val bulk = BulkOperation.createInsert(document)
             bulks.add(bulk)
         }

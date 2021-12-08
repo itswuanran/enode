@@ -29,7 +29,7 @@ public class DefaultPublishableExceptionMessageHandler implements MessageHandler
 
     @Override
     public void handle(QueueMessage queueMessage, MessageContext context) {
-        logger.info("Received domain exception message: {}", serializeService.serialize(queueMessage));
+        logger.info("Received domain exception message: {}", queueMessage);
         GenericPublishableExceptionMessage exceptionMessage = serializeService.deserialize(queueMessage.getBody(), GenericPublishableExceptionMessage.class);
         Class<?> exceptionType = typeNameProvider.getType(exceptionMessage.getExceptionType());
         DomainExceptionMessage exception;

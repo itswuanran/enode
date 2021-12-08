@@ -46,7 +46,7 @@ public class DefaultDomainEventMessageHandler implements MessageHandler {
 
     @Override
     public void handle(QueueMessage queueMessage, MessageContext context) {
-        logger.info("Received event stream message: {}", serializeService.serialize(queueMessage));
+        logger.info("Received event stream message: {}", queueMessage);
         GenericDomainEventMessage message = serializeService.deserialize(queueMessage.getBody(), GenericDomainEventMessage.class);
         DomainEventStream domainEventStreamMessage = convertToDomainEventStream(message);
         DomainEventStreamProcessContext processContext = new DomainEventStreamProcessContext(this, domainEventStreamMessage, queueMessage, context);

@@ -58,7 +58,7 @@ public class BankAccount extends AbstractAggregateRoot<String> {
      * 获取当前账户内的一笔预操作，如果预操作不存在，则抛出异常
      */
     private TransactionPreparation getTransactionPreparation(String transactionId) {
-        if (transactionPreparations == null || transactionPreparations.size() == 0) {
+        if (transactionPreparations == null || transactionPreparations.isEmpty()) {
             throw new TransactionPreparationNotExistException(id, transactionId);
         }
         TransactionPreparation transactionPreparation = transactionPreparations.get(transactionId);
@@ -72,7 +72,7 @@ public class BankAccount extends AbstractAggregateRoot<String> {
      * 获取当前账户的可用余额，需要将已冻结的余额计算在内
      */
     private double getAvailableBalance() {
-        if (transactionPreparations == null || transactionPreparations.size() == 0) {
+        if (transactionPreparations == null || transactionPreparations.isEmpty()) {
             return balance;
         }
         double totalDebitTransactionPreparationAmount = 0;

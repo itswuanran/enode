@@ -78,7 +78,7 @@ class MySQLEventStore(
                 domainEventStream.commandId,
                 domainEventStream.version,
                 domainEventStream.timestamp.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(),
-                serializeService.serialize(eventSerializer.serialize(domainEventStream.events()))
+                serializeService.serialize(eventSerializer.serialize(domainEventStream.getEvents()))
             )
         }
         sqlClient.withTransaction { client ->

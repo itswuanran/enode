@@ -9,7 +9,6 @@ import org.enodeframework.eventing.DomainEventStream;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -112,19 +111,22 @@ public abstract class AbstractAggregateRoot<TAggregateRootId> implements Aggrega
 
     @Override
     public void acceptChanges() {
-        if (uncommittedEvents != null && !uncommittedEvents.isEmpty()) {
-            version = uncommittedEvents.peek().getVersion();
-            uncommittedEvents.clear();
+        if (uncommittedEvents == null || uncommittedEvents.isEmpty()) {
+            return;
         }
+        version = uncommittedEvents.peek().getVersion();
+        uncommittedEvents.clear();
     }
 
     @Override
     public void replayEvents(List<DomainEventStream> eventStreams) {
-        Optional.ofNullable(eventStreams).orElse(new ArrayList<>())
-            .forEach(eventStream -> {
-                verifyEvent(eventStream);
-                eventStream.events().forEach(this::handleEvent);
-                this.version = eventStream.getVersion();
-            });
+        if (eventStreams == null || eventStreams.isEmpty()) {
+            return;
+        }
+        eventStreams.forEach(eventStream -> {
+            verifyEvent(eventStream);
+            eventStream.getEvents().forEach(this::handleEvent);
+            this.version = eventStream.getVersion();
+        });
     }
 }

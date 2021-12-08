@@ -208,11 +208,11 @@ class DefaultMemoryCache(
     private fun cleanInactiveAggregateRoot() {
         val inactiveList: List<Map.Entry<String, AggregateCacheInfo>> = aggregateRootInfoDict.entries
             .filter { entry -> entry.value.isExpired(timeoutSeconds) }
-        inactiveList.forEach(Consumer { entry: Map.Entry<String, AggregateCacheInfo> ->
+        inactiveList.forEach { entry: Map.Entry<String, AggregateCacheInfo> ->
             if (aggregateRootInfoDict.remove(entry.key) != null) {
                 logger.info("Removed inactive aggregate root, id: {}", entry.key)
             }
-        })
+        }
     }
 
     companion object {

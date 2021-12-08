@@ -49,7 +49,7 @@ class DefaultEventCommittingService(
             eventStream.aggregateRootId,
             eventStream.version,
             eventStream.aggregateRootTypeName,
-            eventStream.events(),
+            eventStream.events,
             eventStream.items
         )
         return publishDomainEventAsync(processingCommand, eventStreamMessage, 0)

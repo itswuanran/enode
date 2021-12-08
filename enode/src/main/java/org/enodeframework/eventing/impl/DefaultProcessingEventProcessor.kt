@@ -13,7 +13,6 @@ import org.enodeframework.messaging.MessageDispatcher
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.function.Consumer
 
 /**
  * @author anruence@gmail.com
@@ -190,13 +189,13 @@ class DefaultProcessingEventProcessor(
     private fun processToRefreshAggregateRootMailBoxs() {
         val remainingMailboxList: MutableList<ProcessingEventMailBox> = Lists.newArrayList()
         val recoveredMailboxList: MutableList<ProcessingEventMailBox> = Lists.newArrayList()
-        toRefreshAggregateRootMailBoxDict.values.forEach(Consumer { aggregateRootMailBox: ProcessingEventMailBox ->
+        toRefreshAggregateRootMailBoxDict.values.forEach { aggregateRootMailBox: ProcessingEventMailBox ->
             if (aggregateRootMailBox.getWaitingMessageCount() > 0) {
                 remainingMailboxList.add(aggregateRootMailBox)
             } else {
                 recoveredMailboxList.add(aggregateRootMailBox)
             }
-        })
+        }
         for (mailBox in remainingMailboxList) {
             tryToRefreshAggregateMailBoxNextExpectingEventVersion(mailBox)
         }
@@ -214,7 +213,7 @@ class DefaultProcessingEventProcessor(
 
     private fun cleanInactiveMailbox() {
         val inactiveList = mailboxDict.entries.filter { entry -> isMailBoxAllowRemove(entry.value) }
-        inactiveList.forEach(Consumer { (key, value): Map.Entry<String, ProcessingEventMailBox> ->
+        inactiveList.forEach { (key, value): Map.Entry<String, ProcessingEventMailBox> ->
             if (value.tryUsing()) {
                 if (isMailBoxAllowRemove(value)) {
                     val removed = mailboxDict.remove(key)
@@ -228,7 +227,7 @@ class DefaultProcessingEventProcessor(
                     }
                 }
             }
-        })
+        }
     }
 
     private fun isMailBoxAllowRemove(mailbox: ProcessingEventMailBox): Boolean {

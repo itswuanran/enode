@@ -31,8 +31,8 @@ public class DomainEventStream extends AbstractMessage {
     }
 
     public DomainEventStream(String commandId, String aggregateRootId, String aggregateRootTypeName, Date timestamp, List<DomainEventMessage<?>> events, Map<String, Object> items) {
-        if (events == null || events.size() == 0) {
-            throw new IllegalArgumentException("Parameter events cannot be null or empty.");
+        if (events == null || events.isEmpty()) {
+            throw new IllegalArgumentException(String.format("events cannot be empty. aggregateRootId: %s", aggregateRootId));
         }
         this.commandId = commandId;
         this.aggregateRootId = aggregateRootId;
@@ -97,9 +97,5 @@ public class DomainEventStream extends AbstractMessage {
 
     public void setVersion(int version) {
         this.version = version;
-    }
-
-    public List<DomainEventMessage<?>> events() {
-        return events;
     }
 }

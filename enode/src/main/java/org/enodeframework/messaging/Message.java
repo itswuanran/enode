@@ -1,6 +1,7 @@
 package org.enodeframework.messaging;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 public interface Message {
@@ -29,5 +30,14 @@ public interface Message {
     /**
      * Merge the givens key/values into the current Items.
      */
-    void mergeItems(Map<String, Object> items);
+    default void mergeItems(Map<String, Object> data) {
+        if (data == null || data.isEmpty()) {
+            return;
+        }
+        if (this.getItems() == null) {
+            this.setItems(new HashMap<>(data));
+            return;
+        }
+        this.getItems().putAll(data);
+    }
 }

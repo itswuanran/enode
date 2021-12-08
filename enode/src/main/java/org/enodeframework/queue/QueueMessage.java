@@ -1,5 +1,7 @@
 package org.enodeframework.queue;
 
+import com.google.common.base.MoreObjects;
+
 import java.io.Serializable;
 
 /**
@@ -66,5 +68,16 @@ public class QueueMessage implements Serializable {
 
     public void setKey(String key) {
         this.key = key;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("body", body)
+            .add("topic", topic)
+            .add("tag", tag)
+            .add("routeKey", routeKey)
+            .add("key", key)
+            .toString();
     }
 }

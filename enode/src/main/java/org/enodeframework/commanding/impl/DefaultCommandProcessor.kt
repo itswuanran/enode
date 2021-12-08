@@ -79,7 +79,7 @@ class DefaultCommandProcessor(
     private fun cleanInactiveMailbox() {
         val inactiveList: List<Map.Entry<String, ProcessingCommandMailbox>> = mailboxDict.entries
             .filter { entry -> isMailBoxAllowRemove(entry.value) }
-        inactiveList.forEach(Consumer { entry: Map.Entry<String, ProcessingCommandMailbox> ->
+        inactiveList.forEach { entry: Map.Entry<String, ProcessingCommandMailbox> ->
             if (isMailBoxAllowRemove(entry.value)) {
                 val removed = mailboxDict.remove(entry.key)
                 if (removed != null) {
@@ -87,7 +87,7 @@ class DefaultCommandProcessor(
                     logger.info("Removed inactive command mailbox, aggregateRootId: {}", entry.key)
                 }
             }
-        })
+        }
     }
 
     companion object {

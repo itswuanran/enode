@@ -14,7 +14,6 @@ import org.enodeframework.infrastructure.TypeNameProvider
 import org.enodeframework.messaging.*
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
-import java.util.function.Consumer
 
 /**
  * @author anruence@gmail.com
@@ -80,7 +79,7 @@ class DefaultMessageDispatcher(
             queueMessageDispatching.onMessageHandled(message)
             return
         }
-        messageHandlerDataList.forEach(Consumer { messageHandlerData: MessageHandlerData<MessageHandlerProxy1> ->
+        messageHandlerDataList.forEach { messageHandlerData: MessageHandlerData<MessageHandlerProxy1> ->
             val singleMessageDispatching = SingleMessageDispatching(
                 message, queueMessageDispatching, messageHandlerData.allHandlers, typeNameProvider
             )
@@ -102,7 +101,7 @@ class DefaultMessageDispatcher(
                     singleMessageDispatching, queueHandler.dequeueHandler(), queueHandler, 0
                 )
             }
-        })
+        }
     }
 
     private fun <T : ObjectProxy> dispatchMultiMessage(
@@ -111,15 +110,15 @@ class DefaultMessageDispatcher(
         rootDispatching: RootDispatching,
         dispatchAction: Action4<MultiMessageDispatching, T, QueuedHandler<T>?, Int>
     ) {
-        messageHandlerDataList.forEach(Consumer { messageHandlerData: MessageHandlerData<T> ->
+        messageHandlerDataList.forEach { messageHandlerData: MessageHandlerData<T> ->
             val multiMessageDispatching =
                 MultiMessageDispatching(messages, messageHandlerData.allHandlers, rootDispatching, typeNameProvider)
             if (messageHandlerData.listHandlers.isNotEmpty()) {
-                messageHandlerData.listHandlers.forEach(Consumer { handler: T ->
+                messageHandlerData.listHandlers.forEach { handler: T ->
                     dispatchAction.apply(
                         multiMessageDispatching, handler, null, 0
                     )
-                })
+                }
             }
             if (messageHandlerData.queuedHandlers.isNotEmpty()) {
                 val queuedHandler =
@@ -130,7 +129,7 @@ class DefaultMessageDispatcher(
                     }
                 dispatchAction.apply(multiMessageDispatching, queuedHandler.dequeueHandler(), queuedHandler, 0)
             }
-        })
+        }
     }
 
     private fun dispatchSingleMessageToHandlerAsync(

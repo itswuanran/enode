@@ -112,7 +112,7 @@ class EventCommittingContextMailBox(
                     break
                 }
             }
-            if (messageList.size == 0) {
+            if (messageList.isEmpty()) {
                 completeRun()
                 return
             }
