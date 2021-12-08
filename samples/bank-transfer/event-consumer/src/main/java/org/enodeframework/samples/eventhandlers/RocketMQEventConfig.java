@@ -11,9 +11,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 @Configuration
 @ConditionalOnProperty(prefix = "spring.enode", name = "mq", havingValue = "rocketmq")
+@Import(RocketMQEventConfig.ProductConfiguration.class)
 public class RocketMQEventConfig {
 
     @Value("${spring.enode.mq.topic.event}")
@@ -67,11 +69,13 @@ public class RocketMQEventConfig {
         return defaultMQPushConsumer;
     }
 
-    @Bean(name = "enodeMQProducer", initMethod = "start", destroyMethod = "shutdown")
-    public DefaultMQProducer defaultMQProducer() {
-        DefaultMQProducer producer = new DefaultMQProducer();
-        producer.setNamesrvAddr(QueueProperties.NAMESRVADDR);
-        producer.setProducerGroup(QueueProperties.DEFAULT_PRODUCER_GROUP0);
-        return producer;
+    static class ProductConfiguration {
+        @Bean(name = "enodeMQProducer", initMethod = "start", destroyMethod = "shutdown")
+        public DefaultMQProducer defaultMQProducer() {
+            DefaultMQProducer producer = new DefaultMQProducer();
+            producer.setNamesrvAddr(QueueProperties.NAMESRVADDR);
+            producer.setProducerGroup(QueueProperties.DEFAULT_PRODUCER_GROUP0);
+            return producer;
+        }
     }
 }

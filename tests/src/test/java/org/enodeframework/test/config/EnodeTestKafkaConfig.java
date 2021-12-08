@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
@@ -24,6 +25,7 @@ import java.util.Map;
 
 @ConditionalOnProperty(prefix = "spring.enode", name = "mq", havingValue = "kafka")
 @Configuration
+@Import(EnodeTestKafkaConfig.ProducerConfiguration.class)
 public class EnodeTestKafkaConfig {
 
     @Value("${spring.enode.mq.topic.command}")
@@ -67,18 +69,6 @@ public class EnodeTestKafkaConfig {
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
-    @Bean
-    public ProducerFactory<String, String> producerFactory() {
-        Map<String, Object> props = new HashMap<>();
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, Constants.KAFKA_SERVER);
-        props.put(ProducerConfig.RETRIES_CONFIG, 1);
-        props.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
-        props.put(ProducerConfig.LINGER_MS_CONFIG, 1);
-        props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 1024000);
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        return new DefaultKafkaProducerFactory<>(props);
-    }
 
     @Bean
     public ConcurrentMessageListenerContainer<String, String> commandListenerContainer(ConsumerFactory<String, String> consumerFactory) {
@@ -119,8 +109,23 @@ public class EnodeTestKafkaConfig {
         return new ConcurrentMessageListenerContainer<>(consumerFactory, properties);
     }
 
-    @Bean(name = "enodeKafkaTemplate")
-    public KafkaTemplate<String, String> enodeKafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
+    static class ProducerConfiguration {
+        @Bean
+        public ProducerFactory<String, String> producerFactory() {
+            Map<String, Object> props = new HashMap<>();
+            props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, Constants.KAFKA_SERVER);
+            props.put(ProducerConfig.RETRIES_CONFIG, 1);
+            props.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
+            props.put(ProducerConfig.LINGER_MS_CONFIG, 1);
+            props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 1024000);
+            props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+            props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+            return new DefaultKafkaProducerFactory<>(props);
+        }
+
+        @Bean(name = "enodeKafkaTemplate")
+        public KafkaTemplate<String, String> enodeKafkaTemplate() {
+            return new KafkaTemplate<>(producerFactory());
+        }
     }
 }

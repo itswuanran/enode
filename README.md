@@ -75,8 +75,31 @@ spring.enode.mq.topic.application=EnodeBankApplicationMessageTopic
 spring.enode.mq.topic.exception=EnodeBankExceptionTopic
 ```
 
-### `kafka listener bean`配置
+### `kafka bean`配置
+> 如果把生成者和消费者配置在一个config文件中，这里会产生存在一个循环依赖，为了避免这种情况，建议分开两个文件配置
 
+#### producer
+```java
+@Bean
+public ProducerFactory<String, String> producerFactory() {
+    Map<String, Object> props = new HashMap<>();
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, Constants.KAFKA_SERVER);
+    props.put(ProducerConfig.RETRIES_CONFIG, 1);
+    props.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
+    props.put(ProducerConfig.LINGER_MS_CONFIG, 1);
+    props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 1024000);
+    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+    return new DefaultKafkaProducerFactory<>(props);
+}
+
+@Bean
+public KafkaTemplate<String, String> kafkaTemplate(ProducerFactory<String, String> producerFactory) {
+    return new KafkaTemplate<>(producerFactory);
+}
+```
+
+#### consumer
 ```java
 @Value("${spring.enode.mq.topic.command}")
 private String commandTopic;
@@ -101,24 +124,6 @@ public ConsumerFactory<String, String> consumerFactory() {
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     return new DefaultKafkaConsumerFactory<>(props);
-}
-
-@Bean
-public ProducerFactory<String, String> producerFactory() {
-    Map<String, Object> props = new HashMap<>();
-    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, Constants.KAFKA_SERVER);
-    props.put(ProducerConfig.RETRIES_CONFIG, 1);
-    props.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
-    props.put(ProducerConfig.LINGER_MS_CONFIG, 1);
-    props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 1024000);
-    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-    return new DefaultKafkaProducerFactory<>(props);
-}
-
-@Bean
-public KafkaTemplate<String, String> kafkaTemplate(ProducerFactory<String, String> producerFactory) {
-    return new KafkaTemplate<>(producerFactory);
 }
 
 @Bean

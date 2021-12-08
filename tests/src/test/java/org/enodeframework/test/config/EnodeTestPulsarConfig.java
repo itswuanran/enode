@@ -11,9 +11,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 @ConditionalOnProperty(prefix = "spring.enode", name = "mq", havingValue = "pulsar")
 @Configuration
+@Import(EnodeTestPulsarConfig.ProducerConfiguration.class)
 public class EnodeTestPulsarConfig {
 
     @Value("${spring.enode.mq.topic.command}")
@@ -75,23 +77,37 @@ public class EnodeTestPulsarConfig {
             .subscribe();
     }
 
-    @Bean(name = "enodePulsarCommandProducer")
-    public Producer<byte[]> enodePulsarCommandProducer(PulsarClient pulsarClient) throws PulsarClientException {
-        return pulsarClient.newProducer().topic(commandTopic).producerName(Constants.DEFAULT_PRODUCER_GROUP).create();
-    }
+    static class ProducerConfiguration {
+        @Value("${spring.enode.mq.topic.command}")
+        private String commandTopic;
 
-    @Bean(name = "enodePulsarDomainEventProducer")
-    public Producer<byte[]> enodePulsarEventProducer(PulsarClient pulsarClient) throws PulsarClientException {
-        return pulsarClient.newProducer().topic(eventTopic).producerName(Constants.DEFAULT_PRODUCER_GROUP).create();
-    }
+        @Value("${spring.enode.mq.topic.event}")
+        private String eventTopic;
 
-    @Bean(name = "enodePulsarApplicationMessageProducer")
-    public Producer<byte[]> enodePulsarApplicationProducer(PulsarClient pulsarClient) throws PulsarClientException {
-        return pulsarClient.newProducer().topic(applicationTopic).producerName(Constants.DEFAULT_PRODUCER_GROUP).create();
-    }
+        @Value("${spring.enode.mq.topic.application}")
+        private String applicationTopic;
 
-    @Bean(name = "enodePulsarPublishableExceptionProducer")
-    public Producer<byte[]> enodePulsarExceptionProducer(PulsarClient pulsarClient) throws PulsarClientException {
-        return pulsarClient.newProducer().topic(exceptionTopic).producerName(Constants.DEFAULT_PRODUCER_GROUP).create();
+        @Value("${spring.enode.mq.topic.exception}")
+        private String exceptionTopic;
+
+        @Bean(name = "enodePulsarCommandProducer")
+        public Producer<byte[]> enodePulsarCommandProducer(PulsarClient pulsarClient) throws PulsarClientException {
+            return pulsarClient.newProducer().topic(commandTopic).producerName(Constants.DEFAULT_PRODUCER_GROUP).create();
+        }
+
+        @Bean(name = "enodePulsarDomainEventProducer")
+        public Producer<byte[]> enodePulsarEventProducer(PulsarClient pulsarClient) throws PulsarClientException {
+            return pulsarClient.newProducer().topic(eventTopic).producerName(Constants.DEFAULT_PRODUCER_GROUP).create();
+        }
+
+        @Bean(name = "enodePulsarApplicationMessageProducer")
+        public Producer<byte[]> enodePulsarApplicationProducer(PulsarClient pulsarClient) throws PulsarClientException {
+            return pulsarClient.newProducer().topic(applicationTopic).producerName(Constants.DEFAULT_PRODUCER_GROUP).create();
+        }
+
+        @Bean(name = "enodePulsarPublishableExceptionProducer")
+        public Producer<byte[]> enodePulsarExceptionProducer(PulsarClient pulsarClient) throws PulsarClientException {
+            return pulsarClient.newProducer().topic(exceptionTopic).producerName(Constants.DEFAULT_PRODUCER_GROUP).create();
+        }
     }
 }

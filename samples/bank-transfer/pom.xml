@@ -33,12 +33,12 @@
             <dependency>
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-webflux-ui</artifactId>
-                <version>1.5.8</version>
+                <version>1.5.13</version>
             </dependency>
             <dependency>
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-ui</artifactId>
-                <version>1.5.8</version>
+                <version>1.5.13</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
