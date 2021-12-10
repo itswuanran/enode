@@ -25,7 +25,6 @@ public class EnodeTestDataSourceConfig {
     @Value("${spring.enode.datasource.jdbcurl:}")
     private String jdbcUrl;
 
-
     @Value("${spring.enode.datasource.username:}")
     private String username;
 

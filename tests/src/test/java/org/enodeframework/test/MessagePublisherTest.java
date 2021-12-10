@@ -118,44 +118,42 @@ public class MessagePublisherTest extends AbstractTest {
 
     @Test
     public void published_version_store_failed_test() {
-        MockEventStore mockPublishedVersionStore = (MockEventStore) eventStore;
+        MockEventStore mockEventStore = (MockEventStore) eventStore;
         CreateTestAggregateCommand command = new CreateTestAggregateCommand();
         command.aggregateRootId = IdGenerator.id();
         command.setTitle("Sample Note");
-        mockPublishedVersionStore.SetExpectFailedCount(FailedType.UnKnownException, 5);
+        mockEventStore.SetExpectFailedCount(FailedType.UnKnownException, 5);
         CommandResult asyncResult = Task.await(commandService.executeAsync(command, CommandReturnType.EventHandled));
         Assert.assertNotNull(asyncResult);
 
         CommandResult commandResult = asyncResult;
         Assert.assertNotNull(commandResult);
         Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
-        mockPublishedVersionStore.Reset();
+        mockEventStore.Reset();
         command = new CreateTestAggregateCommand();
         command.aggregateRootId = IdGenerator.id();
         command.setTitle("Sample Note");
-        mockPublishedVersionStore.SetExpectFailedCount(FailedType.IOException, 5);
+        mockEventStore.SetExpectFailedCount(FailedType.IOException, 5);
         asyncResult = Task.await(commandService.executeAsync(command, CommandReturnType.EventHandled));
         Assert.assertNotNull(asyncResult);
 
         commandResult = asyncResult;
         Assert.assertNotNull(commandResult);
         Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
-        mockPublishedVersionStore.Reset();
+        mockEventStore.Reset();
         command = new CreateTestAggregateCommand();
         command.aggregateRootId = IdGenerator.id();
         command.setTitle("Sample Note");
-        mockPublishedVersionStore.SetExpectFailedCount(FailedType.TaskIOException, 5);
+        mockEventStore.SetExpectFailedCount(FailedType.TaskIOException, 5);
         asyncResult = Task.await(commandService.executeAsync(command, CommandReturnType.EventHandled));
         Assert.assertNotNull(asyncResult);
-
         commandResult = asyncResult;
         Assert.assertNotNull(commandResult);
         Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
-        mockPublishedVersionStore.Reset();
+        mockEventStore.Reset();
     }
 
     @Test
-
     public void event_publisher_failed_test() {
         CreateTestAggregateCommand command = new CreateTestAggregateCommand();
         command.aggregateRootId = IdGenerator.id();

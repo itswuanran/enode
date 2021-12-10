@@ -5,13 +5,11 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.enodeframework.kafka.KafkaMessageListener;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
@@ -25,7 +23,6 @@ import java.util.Map;
 
 @ConditionalOnProperty(prefix = "spring.enode", name = "mq", havingValue = "kafka")
 @Configuration
-@Import(EnodeTestKafkaConfig.ProducerConfiguration.class)
 public class EnodeTestKafkaConfig {
 
     @Value("${spring.enode.mq.topic.command}")
@@ -40,22 +37,6 @@ public class EnodeTestKafkaConfig {
     @Value("${spring.enode.mq.topic.exception}")
     private String exceptionTopic;
 
-    @Autowired
-    @Qualifier("kafkaCommandListener")
-    private KafkaMessageListener kafkaCommandListener;
-
-    @Autowired
-    @Qualifier("kafkaDomainEventListener")
-    private KafkaMessageListener kafkaDomainEventListener;
-
-    @Autowired
-    @Qualifier("kafkaApplicationMessageListener")
-    private KafkaMessageListener kafkaApplicationMessageListener;
-
-    @Autowired
-    @Qualifier("kafkaPublishableExceptionListener")
-    private KafkaMessageListener kafkaPublishableExceptionListener;
-
     @Bean
     public ConsumerFactory<String, String> consumerFactory() {
         Map<String, Object> props = new HashMap<>();
@@ -69,9 +50,9 @@ public class EnodeTestKafkaConfig {
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
-
     @Bean
-    public ConcurrentMessageListenerContainer<String, String> commandListenerContainer(ConsumerFactory<String, String> consumerFactory) {
+    public ConcurrentMessageListenerContainer<String, String> commandListenerContainer(
+        @Qualifier("kafkaCommandListener") KafkaMessageListener kafkaCommandListener, ConsumerFactory<String, String> consumerFactory) {
         ContainerProperties properties = new ContainerProperties(commandTopic);
         properties.setGroupId(Constants.DEFAULT_CONSUMER_GROUP);
         properties.setMessageListener(kafkaCommandListener);
@@ -80,7 +61,9 @@ public class EnodeTestKafkaConfig {
     }
 
     @Bean
-    public ConcurrentMessageListenerContainer<String, String> domainEventListenerContainer(ConsumerFactory<String, String> consumerFactory) {
+    public ConcurrentMessageListenerContainer<String, String> domainEventListenerContainer(
+        @Qualifier("kafkaDomainEventListener") KafkaMessageListener kafkaDomainEventListener,
+        ConsumerFactory<String, String> consumerFactory) {
         ContainerProperties properties = new ContainerProperties(eventTopic);
         properties.setGroupId(Constants.DEFAULT_PRODUCER_GROUP);
         properties.setMessageListener(kafkaDomainEventListener);
@@ -90,7 +73,10 @@ public class EnodeTestKafkaConfig {
     }
 
     @Bean
-    public ConcurrentMessageListenerContainer<String, String> applicationMessageListenerContainer(ConsumerFactory<String, String> consumerFactory) {
+    public ConcurrentMessageListenerContainer<String, String> applicationMessageListenerContainer(
+        @Qualifier("kafkaApplicationMessageListener") KafkaMessageListener kafkaApplicationMessageListener,
+
+        ConsumerFactory<String, String> consumerFactory) {
         ContainerProperties properties = new ContainerProperties(applicationTopic);
         properties.setGroupId(Constants.DEFAULT_PRODUCER_GROUP);
         properties.setMessageListener(kafkaApplicationMessageListener);
@@ -100,7 +86,10 @@ public class EnodeTestKafkaConfig {
     }
 
     @Bean
-    public ConcurrentMessageListenerContainer<String, String> publishableExceptionListenerContainer(ConsumerFactory<String, String> consumerFactory) {
+    public ConcurrentMessageListenerContainer<String, String> publishableExceptionListenerContainer(
+        @Qualifier("kafkaPublishableExceptionListener") KafkaMessageListener kafkaPublishableExceptionListener,
+
+        ConsumerFactory<String, String> consumerFactory) {
         ContainerProperties properties = new ContainerProperties(exceptionTopic);
         properties.setGroupId(Constants.DEFAULT_PRODUCER_GROUP);
         properties.setMessageListener(kafkaPublishableExceptionListener);
@@ -109,23 +98,21 @@ public class EnodeTestKafkaConfig {
         return new ConcurrentMessageListenerContainer<>(consumerFactory, properties);
     }
 
-    static class ProducerConfiguration {
-        @Bean
-        public ProducerFactory<String, String> producerFactory() {
-            Map<String, Object> props = new HashMap<>();
-            props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, Constants.KAFKA_SERVER);
-            props.put(ProducerConfig.RETRIES_CONFIG, 1);
-            props.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
-            props.put(ProducerConfig.LINGER_MS_CONFIG, 1);
-            props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 1024000);
-            props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-            props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-            return new DefaultKafkaProducerFactory<>(props);
-        }
+    @Bean
+    public ProducerFactory<String, String> producerFactory() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, Constants.KAFKA_SERVER);
+        props.put(ProducerConfig.RETRIES_CONFIG, 1);
+        props.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
+        props.put(ProducerConfig.LINGER_MS_CONFIG, 1);
+        props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 1024000);
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        return new DefaultKafkaProducerFactory<>(props);
+    }
 
-        @Bean(name = "enodeKafkaTemplate")
-        public KafkaTemplate<String, String> enodeKafkaTemplate() {
-            return new KafkaTemplate<>(producerFactory());
-        }
+    @Bean(name = "enodeKafkaTemplate")
+    public KafkaTemplate<String, String> enodeKafkaTemplate() {
+        return new KafkaTemplate<>(producerFactory());
     }
 }

@@ -46,7 +46,7 @@ class JDBCEventStore(
             future.complete(appendResult)
             return future
         }
-        val eventStreamMap = eventStreams.distinct().groupBy { obj: DomainEventStream -> obj.aggregateRootId }
+        val eventStreamMap = eventStreams.distinct().groupBy { eventStream -> eventStream.aggregateRootId }
         val batchAggregateEventAppendResult = BatchAggregateEventAppendResult(eventStreamMap.keys.size)
         for ((key, value) in eventStreamMap) {
             batchAppendAggregateEventsAsync(key, value, batchAggregateEventAppendResult, 0)
@@ -89,7 +89,7 @@ class JDBCEventStore(
                 domainEventStream.commandId,
                 domainEventStream.version,
                 domainEventStream.timestamp.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(),
-                serializeService.serialize(eventSerializer.serialize(domainEventStream.getEvents()))
+                serializeService.serialize(eventSerializer.serialize(domainEventStream.events))
             )
         }
         sqlClient.withTransaction { client ->

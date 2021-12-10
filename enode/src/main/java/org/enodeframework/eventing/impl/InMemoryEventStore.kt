@@ -14,20 +14,24 @@ class InMemoryEventStore : EventStore {
     private val lockObj = Any()
     private val aggregateInfoDict: ConcurrentMap<String, AggregateInfo>
     private fun queryAggregateEvents(
-        aggregateRootId: String, aggregateRootTypeName: String, minVersion: Int, maxVersion: Int
+        aggregateRootId: String,
+        aggregateRootTypeName: String,
+        minVersion: Int,
+        maxVersion: Int
     ): List<DomainEventStream> {
         val eventStreams: List<DomainEventStream> = ArrayList()
         val aggregateInfo = aggregateInfoDict[aggregateRootId] ?: return eventStreams
-        val min = Math.max(minVersion, 1)
-        val max = Math.min(maxVersion, aggregateInfo.currentVersion)
+        val min = minVersion.coerceAtLeast(1)
+        val max = maxVersion.coerceAtMost(aggregateInfo.currentVersion)
         return aggregateInfo.eventDict.filter { x -> x.key in min..max }.map { x -> x.value }
     }
 
     override fun batchAppendAsync(eventStreams: List<DomainEventStream>): CompletableFuture<EventAppendResult> {
-        val eventStreamMap = eventStreams.distinct().groupBy { obj: DomainEventStream -> obj.aggregateRootId }
+        val eventStreamDict: Map<String, List<DomainEventStream>> = eventStreams.distinct()
+            .groupBy { obj: DomainEventStream -> obj.aggregateRootId }
         val eventAppendResult = EventAppendResult()
         val future = CompletableFuture<EventAppendResult>()
-        for ((key, value) in eventStreamMap) {
+        for ((key, value) in eventStreamDict) {
             batchAppend(key, value, eventAppendResult)
         }
         future.complete(eventAppendResult)
@@ -43,17 +47,23 @@ class InMemoryEventStore : EventStore {
     }
 
     override fun queryAggregateEventsAsync(
-        aggregateRootId: String, aggregateRootTypeName: String, minVersion: Int, maxVersion: Int
+        aggregateRootId: String,
+        aggregateRootTypeName: String,
+        minVersion: Int,
+        maxVersion: Int
     ): CompletableFuture<List<DomainEventStream>> {
         return CompletableFuture.completedFuture(
             queryAggregateEvents(
-                aggregateRootId, aggregateRootTypeName, minVersion, maxVersion
+                aggregateRootId,
+                aggregateRootTypeName,
+                minVersion,
+                maxVersion
             )
         )
     }
 
     private fun find(aggregateRootId: String, version: Int): DomainEventStream? {
-        return aggregateInfoDict.get(aggregateRootId)?.eventDict?.get(version)
+        return aggregateInfoDict[aggregateRootId]?.eventDict?.get(version)
     }
 
     private fun find(aggregateRootId: String, commandId: String): DomainEventStream? {
@@ -61,16 +71,19 @@ class InMemoryEventStore : EventStore {
     }
 
     private fun batchAppend(
-        aggregateRootId: String, eventStreamList: List<DomainEventStream>, eventAppendResult: EventAppendResult
+        aggregateRootId: String,
+        eventStreamList: List<DomainEventStream>,
+        eventAppendResult: EventAppendResult
     ) {
         synchronized(lockObj) {
             val aggregateInfo = aggregateInfoDict.computeIfAbsent(aggregateRootId) { AggregateInfo() }
-            eventStreamList.firstOrNull { firstEventStream ->
-                //检查提交过来的第一个事件的版本号是否是当前聚合根的当前版本号的下一个版本号
+            val firstEventStream = eventStreamList.firstOrNull()
+            //检查提交过来的第一个事件的版本号是否是当前聚合根的当前版本号的下一个版本号
+            if (firstEventStream != null) {
                 if (firstEventStream.version != aggregateInfo.currentVersion + 1) {
                     eventAppendResult.addDuplicateEventAggregateRootId(aggregateRootId)
+                    return
                 }
-                return
             }
             //检查提交过来的事件本身是否满足版本号的递增关系
             for (i in 0 until eventStreamList.size - 1) {
@@ -102,13 +115,13 @@ class InMemoryEventStore : EventStore {
         }
     }
 
+    class AggregateInfo {
+        var currentVersion = 0
+        var eventDict: ConcurrentMap<Int, DomainEventStream> = ConcurrentHashMap()
+        var commandDict: ConcurrentMap<String, DomainEventStream> = ConcurrentHashMap()
+    }
+
     init {
         aggregateInfoDict = ConcurrentHashMap()
     }
-}
-
-class AggregateInfo {
-    var currentVersion = 0
-    var eventDict: ConcurrentMap<Int, DomainEventStream> = ConcurrentHashMap()
-    var commandDict: ConcurrentMap<String, DomainEventStream> = ConcurrentHashMap()
 }

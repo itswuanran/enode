@@ -4,6 +4,7 @@ import org.enodeframework.test.mock.MockApplicationMessagePublisher;
 import org.enodeframework.test.mock.MockDomainEventPublisher;
 import org.enodeframework.test.mock.MockEventStore;
 import org.enodeframework.test.mock.MockPublishableExceptionPublisher;
+import org.enodeframework.test.mock.MockPublishedVersionStore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
@@ -27,6 +28,12 @@ public class TestMockConfig {
     @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "mock")
     public MockEventStore mockEventStore() {
         return new MockEventStore();
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "mock")
+    public MockPublishedVersionStore mockPublishedVersionStore() {
+        return new MockPublishedVersionStore();
     }
 
 }

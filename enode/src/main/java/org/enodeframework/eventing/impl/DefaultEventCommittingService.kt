@@ -41,9 +41,8 @@ class DefaultEventCommittingService(
         processingCommand: ProcessingCommand,
         eventStream: DomainEventStream
     ): CompletableFuture<Boolean> {
-        if (eventStream.items == null || eventStream.items.isEmpty()) {
-            eventStream.items = processingCommand.items
-        }
+        // 这里取出event时，没有合并command的信息
+        eventStream.mergeItems(processingCommand.items)
         val eventStreamMessage = DomainEventStream(
             processingCommand.message.id,
             eventStream.aggregateRootId,
@@ -317,7 +316,7 @@ class DefaultEventCommittingService(
             val commandResult = CommandResult(
                 CommandStatus.Success,
                 processingCommand.message.id,
-                eventStream.getAggregateRootId(),
+                eventStream.aggregateRootId,
                 commandHandleResult,
                 String::class.java.name
             )
