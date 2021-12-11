@@ -33,5 +33,4 @@ public class GenericCommandMessage implements Serializable {
     public void setReplyAddress(String replyAddress) {
         this.replyAddress = replyAddress;
     }
-
 }

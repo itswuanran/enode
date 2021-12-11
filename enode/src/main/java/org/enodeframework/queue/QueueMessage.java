@@ -8,7 +8,6 @@ import java.io.Serializable;
  * @author anruence@gmail.com
  */
 public class QueueMessage implements Serializable {
-
     /**
      * 消息体
      */
@@ -29,6 +28,11 @@ public class QueueMessage implements Serializable {
      * 消息唯一标识
      */
     private String key;
+    /**
+     * 消息类型
+     * {@link MessageTypeCode}
+     */
+    private Character type;
 
     public String getBody() {
         return body;
@@ -70,6 +74,18 @@ public class QueueMessage implements Serializable {
         this.key = key;
     }
 
+    public Character getType() {
+        return type;
+    }
+
+    public String getBodyAndType() {
+        return body + "|" + type;
+    }
+
+    public void setType(Character type) {
+        this.type = type;
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -78,6 +94,7 @@ public class QueueMessage implements Serializable {
             .add("tag", tag)
             .add("routeKey", routeKey)
             .add("key", key)
+            .add("type", type)
             .toString();
     }
 }

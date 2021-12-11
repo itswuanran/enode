@@ -8,6 +8,7 @@ import org.enodeframework.commanding.CommandReturnType
 import org.enodeframework.common.serializing.SerializeService
 import org.enodeframework.common.utils.Assert
 import org.enodeframework.common.utils.ReplyUtil
+import org.enodeframework.queue.MessageTypeCode
 import org.enodeframework.queue.QueueMessage
 import org.enodeframework.queue.SendMessageService
 import java.util.concurrent.CompletableFuture
@@ -62,7 +63,7 @@ class DefaultCommandBus(
         return executeAsync(command, commandReturnType).asDeferred().await()
     }
 
-    protected fun buildCommandMessage(command: CommandMessage<*>, needReply: Boolean): QueueMessage {
+    private fun buildCommandMessage(command: CommandMessage<*>, needReply: Boolean): QueueMessage {
         Assert.nonNull(command.aggregateRootId, "aggregateRootId")
         Assert.nonNull(topic, "topic")
         val commandData = serializeService.serialize(command)
@@ -77,6 +78,7 @@ class DefaultCommandBus(
         queueMessage.topic = topic
         queueMessage.tag = tag
         queueMessage.body = messageData
+        queueMessage.type = MessageTypeCode.CommandMessage.value
         queueMessage.routeKey = command.getAggregateRootIdAsString()
         val key = "${command.id}_cmd_agg_${command.getAggregateRootIdAsString()}"
         queueMessage.key = key

@@ -1,5 +1,6 @@
 package org.enodeframework.common.utils;
 
+import java.util.Collection;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -13,6 +14,12 @@ public class Assert {
     public static <T> void nonNull(T expression, String message) {
         if (expression == null) {
             throw new IllegalArgumentException(String.format("%s should not be null.", message));
+        }
+    }
+
+    public static <T> void nonEmpty(Collection<T> expression, String message) {
+        if (expression == null || expression.isEmpty()) {
+            throw new IllegalArgumentException(String.format("%s should not be empty.", message));
         }
     }
 

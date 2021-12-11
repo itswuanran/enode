@@ -1,5 +1,10 @@
 ## 发版记录
 
+### 1.1.2
+
+- 删除application和exception消息的消费者，统一集成到event的topic
+- 获取类名时修改为使用TypeNameProvider
+
 ### 1.1.1
 
 - 常规版本升级，支持kotlin 1.6

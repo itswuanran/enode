@@ -24,12 +24,6 @@ public class EnodeTestPulsarConfig {
     @Value("${spring.enode.mq.topic.event}")
     private String eventTopic;
 
-    @Value("${spring.enode.mq.topic.application}")
-    private String applicationTopic;
-
-    @Value("${spring.enode.mq.topic.exception}")
-    private String exceptionTopic;
-
     @Bean
     public PulsarClient pulsarClient() throws PulsarClientException {
         return PulsarClient.builder()
@@ -54,26 +48,6 @@ public class EnodeTestPulsarConfig {
             .topic(eventTopic)
             .subscriptionType(SubscriptionType.Key_Shared)
             .subscriptionName(Constants.DEFAULT_CONSUMER_GROUP1)
-            .subscribe();
-    }
-
-    @Bean
-    public Consumer<byte[]> applicationConsumer(PulsarClient pulsarClient, @Qualifier("pulsarApplicationMessageListener")
-        PulsarMessageListener pulsarApplicationMessageListener) throws PulsarClientException {
-        return pulsarClient.newConsumer().messageListener(pulsarApplicationMessageListener)
-            .topic(applicationTopic)
-            .subscriptionType(SubscriptionType.Key_Shared)
-            .subscriptionName(Constants.DEFAULT_CONSUMER_GROUP2)
-            .subscribe();
-    }
-
-    @Bean
-    public Consumer<byte[]> exceptionConsumer(PulsarClient pulsarClient, @Qualifier("pulsarPublishableExceptionListener")
-        PulsarMessageListener pulsarPublishableExceptionListener) throws PulsarClientException {
-        return pulsarClient.newConsumer().messageListener(pulsarPublishableExceptionListener)
-            .topic(exceptionTopic)
-            .subscriptionType(SubscriptionType.Key_Shared)
-            .subscriptionName(Constants.DEFAULT_CONSUMER_GROUP3)
             .subscribe();
     }
 

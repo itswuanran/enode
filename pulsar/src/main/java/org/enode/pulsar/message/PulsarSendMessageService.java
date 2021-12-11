@@ -2,15 +2,14 @@ package org.enode.pulsar.message;
 
 import org.apache.pulsar.client.api.Producer;
 import org.enodeframework.common.exception.IORuntimeException;
+import org.enodeframework.common.utils.Assert;
 import org.enodeframework.queue.QueueMessage;
 import org.enodeframework.queue.SendMessageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -21,35 +20,34 @@ public class PulsarSendMessageService implements SendMessageService {
 
     private static final Logger logger = LoggerFactory.getLogger(PulsarSendMessageService.class);
 
-    private final Map<String, Producer<byte[]>> producers;
+    private final Map<String, Producer<byte[]>> producerMap;
 
     public PulsarSendMessageService(List<Producer<byte[]>> producers) {
-        this.producers = Optional.ofNullable(producers).orElse(new ArrayList<>())
-            .stream().collect(Collectors.toMap(Producer::getTopic, y -> y));
-        if (this.producers.isEmpty()) {
-            throw new IllegalArgumentException("producers can not empty.");
-        }
+        Assert.nonEmpty(producers, "Pulsar producers");
+        this.producerMap = producers.stream().collect(Collectors.toMap(Producer::getTopic, producer -> producer));
     }
 
     @Override
     public CompletableFuture<Boolean> sendMessageAsync(QueueMessage queueMessage) {
-        Producer<byte[]> producer = producers.get(queueMessage.getTopic());
+        Producer<byte[]> producer = producerMap.get(queueMessage.getTopic());
         if (producer == null) {
-            logger.error("can not find pulsar producer for topic [{}]", queueMessage.getTopic());
-            return CompletableFuture.completedFuture(false);
+            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            future.completeExceptionally(new IORuntimeException(String.format("No producer for topic: [%s]", queueMessage.getTopic())));
+            logger.error("No pulsar producer for topic [{}]", queueMessage.getTopic());
+            return future;
         }
         return producer.newMessage()
             .key(queueMessage.getRouteKey())
-            .value(queueMessage.getBody().getBytes())
+            .value(queueMessage.getBodyAndType().getBytes())
             .orderingKey(queueMessage.getKey().getBytes())
             .sendAsync()
             .exceptionally(throwable -> {
-                logger.error("Enode message async send has exception, message: {}, routingKey: {}", queueMessage.getBody(), queueMessage.getRouteKey(), throwable);
+                logger.error("Async send message has exception, message: {}", queueMessage, throwable);
                 throw new IORuntimeException(throwable);
             })
-            .thenApply(x -> {
+            .thenApply(messageId -> {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Enode message async send success, sendResult: {}, message: {}", x, queueMessage.getBody());
+                    logger.debug("Async send message success, sendResult: {}, message: {}", messageId, queueMessage);
                 }
                 return true;
             });

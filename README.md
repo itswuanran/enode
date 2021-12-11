@@ -7,6 +7,20 @@
 1. 对象的状态可以表现出来被别人看到，但是必须是只读的，没有人可以直接去修改一个对象的状态，它的状态必须是由它自己的行为导致自己的状态的改变。
 2. 对象的行为就是对象所具有的某种功能。对象的行为本质上应该是对某个消息的主动响应，这里强调的是主动，就是说对象的行为不可以被别人使用，而只能自己主动的去表现出该行为。
 
+## 使用约束
+- **一个**命令只修改**一个**聚合根
+- **聚合间**只能通过**领域消息**交互
+- 聚合内**强一致性**
+- 聚合间**最终一致性**
+
+## `Saga`的两种模式
+- 编排（`Choreography`）
+参与者（子事务）之间的调用、分配、决策和排序，通过交换事件进行进行。是一种去中心化的模式，参与者之间通过消息机制进行沟通，通过监听器的方式监听其他参与者发出的消息，从而执行后续的逻辑处理。
+> `enode`中使用的就是这种模式
+
+- 控制（`Orchestration`）
+提供一个控制类，方便参与者之间的协调工作。事务执行的命令从控制类发起，按照逻辑顺序请求`Saga`的参与者，从参与者那里接受到反馈以后，控制类在发起向其他参与者的调用。所有`Saga`的参与者都围绕这个控制类进行沟通和协调工作。
+> [`Apache ServiceComb`](https://servicecomb.apache.org/) 使用的是这种模式
 ## 框架特色
 
 - 实现`CQRS`架构，解决`CQRS`架构的`C`端的高并发写的问题，以及`CQ`两端数据同步的顺序性保证和幂等性，支持`C`端完成后立即返回`Command`的结果，也支持`CQ`两端都完成后才返回`Command`的结果
@@ -67,12 +81,10 @@ public class App {
 ```properties
 # enode eventstore (memory, mysql, tidb, pg, mongo)
 spring.enode.eventstore=mongo
-# enode messagequeue (kafka, rocketmq, ons)
+# enode messagequeue (kafka, pulsar, rocketmq, ons)
 spring.enode.mq=kafka
 spring.enode.mq.topic.command=EnodeBankCommandTopic
 spring.enode.mq.topic.event=EnodeBankEventTopic
-spring.enode.mq.topic.application=EnodeBankApplicationMessageTopic
-spring.enode.mq.topic.exception=EnodeBankExceptionTopic
 ```
 
 ### `kafka bean`配置
@@ -107,12 +119,6 @@ private String commandTopic;
 @Value("${spring.enode.mq.topic.event}")
 private String eventTopic;
 
-@Value("${spring.enode.mq.topic.application}")
-private String applicationTopic;
-
-@Value("${spring.enode.mq.topic.exception}")
-private String exceptionTopic;
-
 @Bean
 public ConsumerFactory<String, String> consumerFactory() {
     Map<String, Object> props = new HashMap<>();
@@ -140,26 +146,6 @@ public KafkaMessageListenerContainer<String, String> domainEventListenerContaine
     ContainerProperties properties = new ContainerProperties(eventTopic);
     properties.setGroupId(Constants.DEFAULT_PRODUCER_GROUP);
     properties.setMessageListener(domainEventListener);
-    properties.setMissingTopicsFatal(false);
-    properties.setAckMode(ContainerProperties.AckMode.MANUAL);
-    return new KafkaMessageListenerContainer<>(consumerFactory, properties);
-}
-
-@Bean
-public KafkaMessageListenerContainer<String, String> applicationMessageListenerContainer(KafkaMessageListener applicationMessageListener, ConsumerFactory<String, String> consumerFactory) {
-    ContainerProperties properties = new ContainerProperties(applicationTopic);
-    properties.setGroupId(Constants.DEFAULT_PRODUCER_GROUP);
-    properties.setMessageListener(applicationMessageListener);
-    properties.setMissingTopicsFatal(false);
-    properties.setAckMode(ContainerProperties.AckMode.MANUAL);
-    return new KafkaMessageListenerContainer<>(consumerFactory, properties);
-}
-
-@Bean
-public KafkaMessageListenerContainer<String, String> publishableExceptionListenerContainer(KafkaMessageListener publishableExceptionListener, ConsumerFactory<String, String> consumerFactory) {
-    ContainerProperties properties = new ContainerProperties(exceptionTopic);
-    properties.setGroupId(Constants.DEFAULT_PRODUCER_GROUP);
-    properties.setMessageListener(publishableExceptionListener);
     properties.setMissingTopicsFatal(false);
     properties.setAckMode(ContainerProperties.AckMode.MANUAL);
     return new KafkaMessageListenerContainer<>(consumerFactory, properties);
@@ -223,6 +209,11 @@ public class DbConfig {
 ```
 
 ### 事件表新建
+#### 表的含义
+`event_stream` 表中存储的是每个聚合根和对应版本的领域事件历史记录
+`published_version` 表中存储的每个聚合根当前的消费进度（版本）
+
+注意有两个唯一索引，这个是实现幂等的常用思路，因为我们认为大部分情况下不会出现重复写问题
 
 #### `MySQL` & `TiDB`
 

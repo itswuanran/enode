@@ -3,7 +3,6 @@ package org.enodeframework.queue.command
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.RemovalCause
-import com.google.common.cache.RemovalNotification
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.AsyncResult
 import io.vertx.core.eventbus.Message
@@ -41,7 +40,7 @@ class DefaultCommandResultProcessor constructor(
     private val completionSourceTimeout: Int
 ) : AbstractVerticle(), CommandResultProcessor {
     private val scanExpireCommandTaskName: String =
-        "CleanTimeoutCommandTask_" + SystemClock.now() + Random().nextInt(10000)
+        "CleanTimeoutCommandTask_" + SystemClock.now() + Random().nextInt(5000)
     private val commandTaskDict: Cache<String, CommandTaskCompletionSource>
     private val commandExecutedMessageLocalQueue: BlockingQueue<CommandResult>
     private val domainEventHandledMessageLocalQueue: BlockingQueue<DomainEventHandledMessage>
@@ -234,11 +233,12 @@ class DefaultCommandResultProcessor constructor(
 
     init {
         commandTaskDict = CacheBuilder.newBuilder()
-            .removalListener { notification: RemovalNotification<String, CommandTaskCompletionSource> ->
+            .removalListener<String, CommandTaskCompletionSource> { notification ->
                 if (notification.cause == RemovalCause.EXPIRED) {
-                    processTimeoutCommand(notification.key, notification.value)
+                    processTimeoutCommand(notification.key!!, notification.value)
                 }
-            }.expireAfterWrite(completionSourceTimeout.toLong(), TimeUnit.MILLISECONDS).build()
+            }.expireAfterWrite(completionSourceTimeout.toLong(), TimeUnit.MILLISECONDS)
+            .build()
         commandExecutedMessageLocalQueue = LinkedBlockingQueue()
         domainEventHandledMessageLocalQueue = LinkedBlockingQueue()
         commandExecutedMessageWorker = Worker("ProcessExecutedCommandMessage") {

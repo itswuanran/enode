@@ -5,6 +5,7 @@ import org.enodeframework.common.utils.Assert;
 import org.enodeframework.eventing.DomainEventStream;
 import org.enodeframework.eventing.EventSerializer;
 import org.enodeframework.messaging.MessagePublisher;
+import org.enodeframework.queue.MessageTypeCode;
 import org.enodeframework.queue.QueueMessage;
 import org.enodeframework.queue.SendMessageService;
 
@@ -43,6 +44,7 @@ public class DefaultDomainEventPublisher implements MessagePublisher<DomainEvent
         queueMessage.setTopic(topic);
         queueMessage.setTag(tag);
         queueMessage.setBody(data);
+        queueMessage.setType(MessageTypeCode.DomainEventMessage.getValue());
         queueMessage.setRouteKey(routeKey);
         queueMessage.setKey(String.format("%s_evt_agg_%s", message.getId(), message.getAggregateRootId()));
         return queueMessage;

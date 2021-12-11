@@ -31,33 +31,33 @@ public class RocketMQSendMessageService implements SendMessageService {
 
     @Override
     public CompletableFuture<Boolean> sendMessageAsync(QueueMessage queueMessage) {
-        CompletableFuture<Boolean> promise = new CompletableFuture<>();
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
         Message message = this.covertToProducerRecord(queueMessage);
         try {
             producer.send(message, new SelectMessageQueueByHash(), queueMessage.getRouteKey(), new SendCallback() {
                 @Override
                 public void onSuccess(SendResult result) {
                     if (logger.isDebugEnabled()) {
-                        logger.debug("Enode message async send success, sendResult: {}, message: {}", result, new String(message.getBody()));
+                        logger.debug("Async send message success, sendResult: {}, message: {}", result, queueMessage);
                     }
-                    promise.complete(true);
+                    future.complete(true);
                 }
 
                 @Override
                 public void onException(Throwable ex) {
-                    promise.completeExceptionally(new IORuntimeException(ex));
-                    logger.error("Enode message async send has exception, message: {}, routingKey: {}", message, queueMessage.getRouteKey(), ex);
+                    future.completeExceptionally(new IORuntimeException(ex));
+                    logger.error("Async send message has exception, message: {}", queueMessage, ex);
                 }
             });
         } catch (MQClientException | RemotingException | InterruptedException ex) {
-            promise.completeExceptionally(new IORuntimeException(ex));
-            logger.error("Enode message async send has exception, message: {}, routingKey: {}", message, queueMessage.getRouteKey(), ex);
+            future.completeExceptionally(new IORuntimeException(ex));
+            logger.error("Async send message has exception, message: {}", queueMessage, ex);
         }
-        return promise;
+        return future;
     }
 
     private Message covertToProducerRecord(QueueMessage queueMessage) {
-        Message message = new Message(queueMessage.getTopic(), queueMessage.getTag(), queueMessage.getKey(), queueMessage.getBody().getBytes(StandardCharsets.UTF_8));
+        Message message = new Message(queueMessage.getTopic(), queueMessage.getTag(), queueMessage.getKey(), queueMessage.getBodyAndType().getBytes(StandardCharsets.UTF_8));
         return message;
     }
 }

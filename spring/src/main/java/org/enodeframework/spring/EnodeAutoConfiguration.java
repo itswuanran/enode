@@ -76,23 +76,11 @@ public class EnodeAutoConfiguration {
     @Value("${spring.enode.mq.topic.event:}")
     private String eventTopic;
 
-    @Value("${spring.enode.mq.topic.application:}")
-    private String applicationTopic;
-
-    @Value("${spring.enode.mq.topic.exception:}")
-    private String exceptionTopic;
-
     @Value("${spring.enode.mq.tag.command:*}")
     private String commandTag;
 
     @Value("${spring.enode.mq.tag.event:*}")
     private String eventTag;
-
-    @Value("${spring.enode.mq.tag.application:*}")
-    private String applicationTag;
-
-    @Value("${spring.enode.mq.tag.exception:*}")
-    private String exceptionTag;
 
     @Value("${spring.enode.server.port:2019}")
     private int port;
@@ -253,13 +241,14 @@ public class EnodeAutoConfiguration {
     }
 
     @Bean(name = "defaultApplicationMessagePublisher")
-    public DefaultApplicationMessagePublisher defaultApplicationMessagePublisher(SendMessageService sendMessageService, SerializeService serializeService) {
-        return new DefaultApplicationMessagePublisher(applicationTopic, applicationTag, sendMessageService, serializeService);
+    public DefaultApplicationMessagePublisher defaultApplicationMessagePublisher(SendMessageService sendMessageService, SerializeService serializeService, TypeNameProvider typeNameProvider
+    ) {
+        return new DefaultApplicationMessagePublisher(eventTopic, eventTopic, sendMessageService, serializeService, typeNameProvider);
     }
 
     @Bean(name = "defaultPublishableExceptionPublisher")
-    public DefaultPublishableExceptionPublisher defaultPublishableExceptionPublisher(SendMessageService sendMessageService, SerializeService serializeService) {
-        return new DefaultPublishableExceptionPublisher(exceptionTopic, eventTag, sendMessageService, serializeService);
+    public DefaultPublishableExceptionPublisher defaultPublishableExceptionPublisher(SendMessageService sendMessageService, SerializeService serializeService, TypeNameProvider typeNameProvider) {
+        return new DefaultPublishableExceptionPublisher(eventTopic, eventTag, sendMessageService, serializeService, typeNameProvider);
     }
 
     @Bean(name = "defaultCommandMessageHandler")

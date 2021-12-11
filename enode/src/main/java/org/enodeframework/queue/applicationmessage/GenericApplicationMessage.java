@@ -1,20 +1,15 @@
 package org.enodeframework.queue.applicationmessage;
 
+import java.io.Serializable;
+
 /**
  * @author anruence@gmail.com
  */
-public class GenericApplicationMessage {
+public class GenericApplicationMessage implements Serializable {
 
     private String applicationMessageData;
+
     private String applicationMessageType;
-
-    public GenericApplicationMessage() {
-    }
-
-    public GenericApplicationMessage(String applicationMessageData, String applicationMessageType) {
-        this.applicationMessageData = applicationMessageData;
-        this.applicationMessageType = applicationMessageType;
-    }
 
     public String getApplicationMessageData() {
         return applicationMessageData;

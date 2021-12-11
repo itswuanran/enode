@@ -24,9 +24,8 @@ public class DefaultApplicationMessageHandler implements MessageHandler {
 
     @Override
     public void handle(QueueMessage queueMessage, MessageContext context) {
-        logger.info("Received application message: {}", serializeService.serialize(queueMessage));
-        String msg = queueMessage.getBody();
-        GenericApplicationMessage appDataMessage = serializeService.deserialize(msg, GenericApplicationMessage.class);
+        logger.info("Received application message: {}", queueMessage);
+        GenericApplicationMessage appDataMessage = serializeService.deserialize(queueMessage.getBody(), GenericApplicationMessage.class);
         Class<?> applicationMessageType = typeNameProvider.getType(appDataMessage.getApplicationMessageType());
         ApplicationMessage message = (ApplicationMessage) serializeService.deserialize(appDataMessage.getApplicationMessageData(), applicationMessageType);
         messageDispatcher.dispatchMessageAsync(message).whenComplete((x, y) -> {

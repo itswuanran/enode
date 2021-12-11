@@ -1,12 +1,13 @@
 package org.enodeframework.queue.publishableexceptions;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
 
 /**
  * @author anruence@gmail.com
  */
-public class GenericPublishableExceptionMessage {
+public class GenericPublishableExceptionMessage implements Serializable {
     private String uniqueId;
     private String exceptionType;
     private Date timestamp;

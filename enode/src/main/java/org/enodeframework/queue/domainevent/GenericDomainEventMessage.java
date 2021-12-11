@@ -1,12 +1,13 @@
 package org.enodeframework.queue.domainevent;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
 
 /**
  * @author anruence@gmail.com
  */
-public class GenericDomainEventMessage {
+public class GenericDomainEventMessage implements Serializable {
     private String id;
     private String aggregateRootId;
     private String aggregateRootTypeName;

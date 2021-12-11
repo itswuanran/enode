@@ -2,8 +2,10 @@ package org.enodeframework.queue.applicationmessage;
 
 import org.enodeframework.common.serializing.SerializeService;
 import org.enodeframework.common.utils.Assert;
+import org.enodeframework.infrastructure.TypeNameProvider;
 import org.enodeframework.messaging.ApplicationMessage;
 import org.enodeframework.messaging.MessagePublisher;
+import org.enodeframework.queue.MessageTypeCode;
 import org.enodeframework.queue.QueueMessage;
 import org.enodeframework.queue.SendMessageService;
 
@@ -19,18 +21,23 @@ public class DefaultApplicationMessagePublisher implements MessagePublisher<Appl
 
     private final SerializeService serializeService;
 
-    public DefaultApplicationMessagePublisher(String topic, String tag, SendMessageService producer, SerializeService serializeService) {
+    private final TypeNameProvider typeNameProvider;
+
+    public DefaultApplicationMessagePublisher(String topic, String tag, SendMessageService producer, SerializeService serializeService, TypeNameProvider typeNameProvider) {
         this.topic = topic;
         this.tag = tag;
         this.producer = producer;
         this.serializeService = serializeService;
+        this.typeNameProvider = typeNameProvider;
     }
 
     protected QueueMessage createApplicationMessage(ApplicationMessage message) {
         Assert.nonNull(topic, "topic");
         String appMessageData = serializeService.serialize(message);
-        GenericApplicationMessage appDataMessage = new GenericApplicationMessage(appMessageData, message.getClass().getName());
-        String data = serializeService.serialize(appDataMessage);
+        GenericApplicationMessage applicationMessage = new GenericApplicationMessage();
+        applicationMessage.setApplicationMessageData(appMessageData);
+        applicationMessage.setApplicationMessageType(typeNameProvider.getTypeName(message.getClass()));
+        String data = serializeService.serialize(applicationMessage);
         String routeKey = message.getId();
         QueueMessage queueMessage = new QueueMessage();
         queueMessage.setBody(data);
@@ -38,6 +45,7 @@ public class DefaultApplicationMessagePublisher implements MessagePublisher<Appl
         queueMessage.setKey(message.getId());
         queueMessage.setTopic(topic);
         queueMessage.setTag(tag);
+        queueMessage.setType(MessageTypeCode.ApplicationMessage.getValue());
         return queueMessage;
     }
 

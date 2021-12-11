@@ -28,23 +28,23 @@ public class OnsSendMessageService implements SendMessageService {
 
     @Override
     public CompletableFuture<Boolean> sendMessageAsync(QueueMessage queueMessage) {
-        CompletableFuture<Boolean> promise = new CompletableFuture<>();
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
         Message message = OnsTool.covertToProducerRecord(queueMessage);
         producer.sendAsync(message, new SendCallback() {
             @Override
             public void onSuccess(SendResult result) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Enode message async send success, sendResult: {}, message: {}", result, message);
+                    logger.debug("Async send message success, sendResult: {}, message: {}", result, message);
                 }
-                promise.complete(true);
+                future.complete(true);
             }
 
             @Override
             public void onException(OnExceptionContext onExceptionContext) {
-                promise.completeExceptionally(new IORuntimeException(onExceptionContext.getException()));
-                logger.error("Enode message async send has exception, message: {}, routingKey: {}", message, message.getShardingKey(), onExceptionContext.getException());
+                future.completeExceptionally(new IORuntimeException(onExceptionContext.getException()));
+                logger.error("Async send message has exception, message: {}, routingKey: {}", message, message.getShardingKey(), onExceptionContext.getException());
             }
         });
-        return promise;
+        return future;
     }
 }

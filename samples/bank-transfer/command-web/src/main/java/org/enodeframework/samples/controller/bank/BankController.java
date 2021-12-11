@@ -35,7 +35,8 @@ public class BankController {
         String account3 = "INVALID-" + IdGenerator.id();
         //创建两个银行账户
         //每个账户都存入1000元，这里要等到事件执行完成才算是存入成功，否则有可能在下面操作转账记录聚合根时，出现余额为0的情况
-        CompletableFuture<CommandResult> future1 = commandBus.executeAsync(new CreateAccountCommand(account1, "account1"), CommandReturnType.EventHandled).thenCompose(x -> {
+        CompletableFuture<CommandResult> future1 = commandBus.executeAsync(new CreateAccountCommand(account1, "account1"), CommandReturnType.EventHandled)
+            .thenCompose(x -> {
             return (commandBus.executeAsync(new StartDepositTransactionCommand(IdGenerator.id(), account1, 1000), CommandReturnType.EventHandled));
         });
         CompletableFuture<CommandResult> future2 = commandBus.executeAsync(new CreateAccountCommand(account2, "account2"), CommandReturnType.EventHandled).thenCompose(x -> {
