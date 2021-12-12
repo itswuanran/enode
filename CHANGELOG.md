@@ -4,6 +4,7 @@
 
 - 删除application和exception消息的消费者，统一集成到event的topic
 - 获取类名时修改为使用TypeNameProvider
+- 删除聚合根的Handler
 
 ### 1.1.1
 

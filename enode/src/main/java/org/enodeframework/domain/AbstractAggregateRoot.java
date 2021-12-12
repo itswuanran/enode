@@ -18,17 +18,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * @param <TAggregateRootId>
  */
 public abstract class AbstractAggregateRoot<TAggregateRootId> implements AggregateRoot {
-    /**
-     * dynamic inject through ApplicationContext instance
-     */
-    private final AggregateRootInternalHandlerProvider aggregateRootInternalHandlerProvider;
     private final List<DomainEventMessage<?>> emptyEvents = new ArrayList<>();
     protected TAggregateRootId id;
     protected int version;
     private Queue<DomainEventMessage<?>> uncommittedEvents = new ConcurrentLinkedQueue<>();
 
     protected AbstractAggregateRoot() {
-        aggregateRootInternalHandlerProvider = DefaultObjectContainer.resolve(AggregateRootInternalHandlerProvider.class);
     }
 
     protected AbstractAggregateRoot(TAggregateRootId id) {
@@ -65,7 +60,7 @@ public abstract class AbstractAggregateRoot<TAggregateRootId> implements Aggrega
     }
 
     private void handleEvent(DomainEventMessage<?> domainEvent) {
-        Action2<AggregateRoot, DomainEventMessage<?>> handler = aggregateRootInternalHandlerProvider.getInternalEventHandler(getClass(), (Class<? extends DomainEventMessage<?>>) domainEvent.getClass());
+        Action2<AggregateRoot, DomainEventMessage<?>> handler = DefaultObjectContainer.resolve(AggregateRootInternalHandlerProvider.class).getInternalEventHandler(getClass(), (Class<? extends DomainEventMessage<?>>) domainEvent.getClass());
         if (this.id == null && domainEvent.getVersion() == 1) {
             this.id = (TAggregateRootId) domainEvent.getAggregateRootId();
         }

@@ -18,7 +18,7 @@ import java.util.*
  */
 class DefaultAggregateRootInternalHandlerProvider : AggregateRootInternalHandlerProvider, AssemblyInitializer {
 
-    private val AGGREGATE_ROOT_HANDLER_DICT: MutableMap<Class<*>, MutableMap<Class<*>, Action2<AggregateRoot, DomainEventMessage<*>>>> =
+    private val aggregateRootInternalHandlerMap: MutableMap<Class<*>, MutableMap<Class<*>, Action2<AggregateRoot, DomainEventMessage<*>>>> =
         HashMap()
 
     override fun initialize(componentTypes: Set<Class<*>>) {
@@ -50,13 +50,13 @@ class DefaultAggregateRootInternalHandlerProvider : AggregateRootInternalHandler
         Arrays.stream(type.declaredMethods).filter { method: Method ->
             method.name.startsWith(SysProperties.AGGREGATE_ROOT_HANDLE_METHOD_NAME)
                     && method.parameterTypes.size == 1 && DomainEventMessage::class.java.isAssignableFrom(method.parameterTypes[0])
-        }.forEach { method: Method ->
+        }.forEach { method ->
             registerInternalHandler(aggregateRootType, method.parameterTypes[0], method)
         }
     }
 
     private fun registerInternalHandler(aggregateRootType: Class<*>, eventType: Class<*>, method: Method) {
-        val eventHandlerDic = AGGREGATE_ROOT_HANDLER_DICT.computeIfAbsent(aggregateRootType) { HashMap() }
+        val eventHandlerDic = aggregateRootInternalHandlerMap.computeIfAbsent(aggregateRootType) { HashMap() }
         method.isAccessible = true
         val methodHandle = MethodHandles.lookup().unreflect(method)
         eventHandlerDic[eventType] =
@@ -71,14 +71,14 @@ class DefaultAggregateRootInternalHandlerProvider : AggregateRootInternalHandler
     ): Action2<AggregateRoot, DomainEventMessage<*>> {
         var currentAggregateType = aggregateRootType
         while (true) {
-            val handler = AGGREGATE_ROOT_HANDLER_DICT[currentAggregateType]?.get(eventType)
+            val handler = aggregateRootInternalHandlerMap[currentAggregateType]?.get(eventType)
             if (handler != null) {
                 return handler
             }
-            currentAggregateType = if (currentAggregateType.superclass != null
+            if (currentAggregateType.superclass != null
                 && listOf(*currentAggregateType.superclass.interfaces).contains(AggregateRoot::class.java)
             ) {
-                currentAggregateType.superclass as Class<out AggregateRoot>
+                currentAggregateType = currentAggregateType.superclass as Class<out AggregateRoot>
             } else {
                 break
             }

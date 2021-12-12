@@ -39,7 +39,7 @@
 
 `enode`是一个基于【`DDD`】【`CQRS`】【`ES`】【`EDA`】【`In-Memory`】架构风格的应用框架，实现了`CQRS`架构面临的大部分技术问题，让开发者可以专注于业务逻辑和业务流程的开发，而无需关心纯技术问题。
 
-![](enode-architecture.svg)
+![](enode-arch.jpg)
 
 ## 发版记录
 [CHANGELOG](CHANGELOG.md)
