@@ -1,8 +1,8 @@
 package org.enodeframework.messaging.impl
 
 import com.google.common.collect.Lists
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asCompletableFuture
 import org.enodeframework.common.function.Action4
@@ -23,8 +23,10 @@ class DefaultMessageDispatcher(
     private val messageHandlerProvider: MessageHandlerProvider,
     private val twoMessageHandlerProvider: TwoMessageHandlerProvider,
     private val threeMessageHandlerProvider: ThreeMessageHandlerProvider,
-    private val serializeService: SerializeService
+    private val serializeService: SerializeService,
+    private val coroutineDispatcher: CoroutineDispatcher,
 ) : MessageDispatcher {
+
     override fun dispatchMessageAsync(message: Message): CompletableFuture<Boolean> {
         return dispatchMessages(Lists.newArrayList(message))
     }
@@ -178,8 +180,9 @@ class DefaultMessageDispatcher(
         retryTimes: Int
     ) {
         val message = singleMessageDispatching.message
+
         IOHelper.tryAsyncActionRecursivelyWithoutResult("HandleSingleMessageAsync", {
-            CoroutineScope(Dispatchers.IO).async {
+            CoroutineScope(coroutineDispatcher).async {
                 handlerProxy.handleAsync(message)
             }.asCompletableFuture()
         }, {
@@ -208,7 +211,7 @@ class DefaultMessageDispatcher(
         val message1 = messages[0]
         val message2 = messages[1]
         IOHelper.tryAsyncActionRecursively("HandleTwoMessageAsync", {
-            CoroutineScope(Dispatchers.IO).async {
+            CoroutineScope(coroutineDispatcher).async {
                 handlerProxy.handleAsync(message1, message2)
             }.asCompletableFuture()
         }, {
@@ -238,7 +241,7 @@ class DefaultMessageDispatcher(
         val message2 = messages[1]
         val message3 = messages[2]
         IOHelper.tryAsyncActionRecursively("HandleThreeMessageAsync", {
-            CoroutineScope(Dispatchers.IO).async {
+            CoroutineScope(coroutineDispatcher).async {
                 handlerProxy.handleAsync(message1, message2, message3)
             }.asCompletableFuture()
         }, {

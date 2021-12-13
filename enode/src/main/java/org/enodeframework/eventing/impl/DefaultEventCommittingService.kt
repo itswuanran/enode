@@ -1,5 +1,6 @@
 package org.enodeframework.eventing.impl
 
+import kotlinx.coroutines.CoroutineDispatcher
 import org.enodeframework.commanding.CommandResult
 import org.enodeframework.commanding.CommandStatus
 import org.enodeframework.commanding.ProcessingCommand
@@ -20,16 +21,19 @@ class DefaultEventCommittingService(
     private val eventStore: EventStore,
     private val serializeService: SerializeService,
     private val domainEventPublisher: MessagePublisher<DomainEventStream>,
+    private val coroutineDispatcher: CoroutineDispatcher,
     private val eventMailBoxCount: Int
 ) : EventCommittingService {
+
     private val eventCommittingContextMailBoxList: MutableList<EventCommittingContextMailBox>
 
     constructor(
         memoryCache: MemoryCache,
         eventStore: EventStore,
         serializeService: SerializeService,
-        domainEventPublisher: MessagePublisher<DomainEventStream>
-    ) : this(memoryCache, eventStore, serializeService, domainEventPublisher, 4)
+        domainEventPublisher: MessagePublisher<DomainEventStream>,
+        coroutineDispatcher: CoroutineDispatcher
+    ) : this(memoryCache, eventStore, serializeService, domainEventPublisher, coroutineDispatcher, 4)
 
     override fun commitDomainEventAsync(eventCommittingContext: EventCommittingContext) {
         val eventMailboxIndex = getEventMailBoxIndex(eventCommittingContext.eventStream.aggregateRootId)
@@ -38,8 +42,7 @@ class DefaultEventCommittingService(
     }
 
     override fun publishDomainEventAsync(
-        processingCommand: ProcessingCommand,
-        eventStream: DomainEventStream
+        processingCommand: ProcessingCommand, eventStream: DomainEventStream
     ): CompletableFuture<Boolean> {
         // 这里取出event时，没有合并command的信息
         eventStream.mergeItems(processingCommand.items)
@@ -70,15 +73,13 @@ class DefaultEventCommittingService(
             return
         }
         IOHelper.tryAsyncActionRecursively("BatchPersistEventAsync", {
-            eventStore.batchAppendAsync(
-                committingContexts.map { obj: EventCommittingContext -> obj.eventStream }
-            )
+            eventStore.batchAppendAsync(committingContexts.map { obj: EventCommittingContext -> obj.eventStream })
         }, { result: EventAppendResult? ->
             val eventMailBox = committingContexts.first().mailBox
             if (result == null) {
                 logger.error(
                     "Batch persist events success, but the persist result is null, the current event committing mailbox should be pending, mailboxNumber: {}",
-                    eventMailBox.number
+                    eventMailBox.getNumber()
                 )
                 return@tryAsyncActionRecursively
             }
@@ -86,8 +87,7 @@ class DefaultEventCommittingService(
             //针对持久化成功的聚合根，正常发布这些聚合根的事件到Q端
             if (result.successAggregateRootIdList.size > 0) {
                 for (aggregateRootId in result.successAggregateRootIdList) {
-                    committingContexts
-                        .filter { x: EventCommittingContext -> x.eventStream.aggregateRootId == aggregateRootId }
+                    committingContexts.filter { x: EventCommittingContext -> x.eventStream.aggregateRootId == aggregateRootId }
                         .forEach { eventCommittingContext ->
                             val context = EventAppendContext()
                             context.success = true
@@ -99,7 +99,7 @@ class DefaultEventCommittingService(
                 if (logger.isDebugEnabled) {
                     logger.debug(
                         "Batch persist events success, mailboxNumber: {}, result: {}",
-                        eventMailBox.number,
+                        eventMailBox.getNumber(),
                         serializeService.serialize(result.successAggregateRootIdList)
                     )
                 }
@@ -107,8 +107,7 @@ class DefaultEventCommittingService(
             //针对持久化出现重复的命令ID，在命令MailBox中标记为已重复，在事件MailBox中清除对应聚合根产生的事件，且重新发布这些命令对应的领域事件到Q端
             if (result.duplicateCommandAggregateRootIdList.isNotEmpty()) {
                 for ((key, value) in result.duplicateCommandAggregateRootIdList) {
-                    committingContexts
-                        .filter { x: EventCommittingContext -> key == x.eventStream.aggregateRootId }
+                    committingContexts.filter { x: EventCommittingContext -> key == x.eventStream.aggregateRootId }
                         .firstOrNull { eventCommittingContext: EventCommittingContext ->
                             val context = EventAppendContext()
                             context.duplicateCommandIdList = value
@@ -118,15 +117,14 @@ class DefaultEventCommittingService(
                 }
                 logger.warn(
                     "Batch persist events has duplicate commandIds, mailboxNumber: {}, result: {}",
-                    eventMailBox.number,
+                    eventMailBox.getNumber(),
                     serializeService.serialize(result.duplicateCommandAggregateRootIdList)
                 )
             }
             //针对持久化出现版本冲突的聚合根，则自动处理每个聚合根的冲突
             if (result.duplicateEventAggregateRootIdList.size > 0) {
                 for (aggregateRootId in result.duplicateEventAggregateRootIdList) {
-                    committingContexts
-                        .filter { x: EventCommittingContext -> x.eventStream.aggregateRootId == aggregateRootId }
+                    committingContexts.filter { x: EventCommittingContext -> x.eventStream.aggregateRootId == aggregateRootId }
                         .firstOrNull { eventCommittingContext ->
                             val context = EventAppendContext()
                             context.duplicateCommandIdList = ArrayList()
@@ -136,7 +134,7 @@ class DefaultEventCommittingService(
                 }
                 logger.warn(
                     "Batch persist events duplicated, mailboxNumber: {}, result: {}",
-                    eventMailBox.number,
+                    eventMailBox.getNumber(),
                     serializeService.serialize(result.duplicateEventAggregateRootIdList)
                 )
             }
@@ -154,9 +152,7 @@ class DefaultEventCommittingService(
     }
 
     private fun processDuplicateAggregateRootRecursively(
-        index: Int,
-        contexts: List<EventAppendContext>,
-        eventMailBox: EventCommittingContextMailBox
+        index: Int, contexts: List<EventAppendContext>, eventMailBox: EventCommittingContextMailBox
     ) {
         if (contexts.isEmpty()) {
             return
@@ -170,8 +166,7 @@ class DefaultEventCommittingService(
         val duplicateCommandIdList = context.duplicateCommandIdList
         if (context.success) {
             publishDomainEventAsync(
-                eventCommittingContext.processingCommand,
-                eventCommittingContext.eventStream
+                eventCommittingContext.processingCommand, eventCommittingContext.eventStream
             ).whenComplete { _, _ ->
                 processDuplicateAggregateRootRecursively(index + 1, contexts, eventMailBox)
             }
@@ -183,9 +178,7 @@ class DefaultEventCommittingService(
             }
         } else {
             resetCommandMailBoxConsumingSequence(
-                eventCommittingContext,
-                eventCommittingContext.processingCommand.sequence,
-                duplicateCommandIdList
+                eventCommittingContext, eventCommittingContext.processingCommand.sequence, duplicateCommandIdList
             ).whenComplete { _, _ ->
                 processDuplicateAggregateRootRecursively(index + 1, contexts, eventMailBox)
             }
@@ -193,9 +186,7 @@ class DefaultEventCommittingService(
     }
 
     private fun resetCommandMailBoxConsumingSequence(
-        context: EventCommittingContext,
-        consumingSequence: Long,
-        duplicateCommandIdList: List<String>?
+        context: EventCommittingContext, consumingSequence: Long, duplicateCommandIdList: List<String>?
     ): CompletableFuture<Boolean> {
         val commandMailBox = context.processingCommand.mailBox
         val eventMailBox = context.mailBox
@@ -222,8 +213,7 @@ class DefaultEventCommittingService(
     }
 
     private fun handleFirstEventDuplicationAsync(
-        context: EventCommittingContext,
-        retryTimes: Int
+        context: EventCommittingContext, retryTimes: Int
     ): CompletableFuture<Boolean> {
         val future = CompletableFuture<Boolean>()
         IOHelper.tryAsyncActionRecursively("FindFirstEventByVersion", {
@@ -235,9 +225,7 @@ class DefaultEventCommittingService(
                 //有可能事件持久化成功了，但那时正好机器断电了，则发布事件都没有做；
                 if (context.processingCommand.message.id == result.commandId) {
                     resetCommandMailBoxConsumingSequence(
-                        context,
-                        context.processingCommand.sequence + 1,
-                        null
+                        context, context.processingCommand.sequence + 1, null
                     ).whenComplete { _, _ ->
                         publishDomainEventAsync(context.processingCommand, result).whenComplete { _, _ ->
                             future.complete(true)
@@ -254,9 +242,7 @@ class DefaultEventCommittingService(
                     )
                     logger.error(errorMessage)
                     resetCommandMailBoxConsumingSequence(
-                        context,
-                        context.processingCommand.sequence + 1,
-                        null
+                        context, context.processingCommand.sequence + 1, null
                     ).whenComplete { _, _ ->
                         val commandResult = CommandResult(
                             CommandStatus.Failed,
@@ -279,9 +265,7 @@ class DefaultEventCommittingService(
                 )
                 logger.error(errorMessage)
                 resetCommandMailBoxConsumingSequence(
-                    context,
-                    context.processingCommand.sequence + 1,
-                    null
+                    context, context.processingCommand.sequence + 1, null
                 ).whenComplete { _, _ ->
                     val commandResult = CommandResult(
                         CommandStatus.Failed,
@@ -290,8 +274,11 @@ class DefaultEventCommittingService(
                         "Duplicate aggregate creation, but we cannot find the existing eventstream from eventstore.",
                         String::class.java.name
                     )
-                    completeCommand(context.processingCommand, commandResult)
-                        .whenComplete { _, _ -> future.complete(true) }
+                    completeCommand(context.processingCommand, commandResult).whenComplete { _, _ ->
+                        future.complete(
+                            true
+                        )
+                    }
                 }
             }
         }, {
@@ -301,9 +288,7 @@ class DefaultEventCommittingService(
     }
 
     private fun publishDomainEventAsync(
-        processingCommand: ProcessingCommand,
-        eventStream: DomainEventStream,
-        retryTimes: Int
+        processingCommand: ProcessingCommand, eventStream: DomainEventStream, retryTimes: Int
     ): CompletableFuture<Boolean> {
         val future = CompletableFuture<Boolean>()
         IOHelper.tryAsyncActionRecursivelyWithoutResult("PublishDomainEventAsync", {
@@ -330,8 +315,7 @@ class DefaultEventCommittingService(
     }
 
     private fun completeCommand(
-        processingCommand: ProcessingCommand,
-        commandResult: CommandResult
+        processingCommand: ProcessingCommand, commandResult: CommandResult
     ): CompletableFuture<Boolean> {
         return processingCommand.mailBox.completeMessage(processingCommand, commandResult)
     }
@@ -343,12 +327,12 @@ class DefaultEventCommittingService(
     init {
         eventCommittingContextMailBoxList = ArrayList()
         for (i in 0 until eventMailBoxCount) {
-            val mailBox = EventCommittingContextMailBox(i, 1000) { x: List<EventCommittingContext> ->
-                batchPersistEventAsync(
-                    x,
-                    0
-                )
-            }
+            val mailBox =
+                EventCommittingContextMailBox(i, 1000, coroutineDispatcher) { x: List<EventCommittingContext> ->
+                    batchPersistEventAsync(
+                        x, 0
+                    )
+                }
             eventCommittingContextMailBoxList.add(mailBox)
         }
     }

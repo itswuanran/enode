@@ -1,6 +1,7 @@
 package org.enodeframework.spring;
 
 import com.google.common.collect.Maps;
+import kotlinx.coroutines.Dispatchers;
 import org.enodeframework.commanding.CommandHandlerProvider;
 import org.enodeframework.commanding.CommandProcessor;
 import org.enodeframework.commanding.ProcessingCommandHandler;
@@ -112,7 +113,7 @@ public class EnodeAutoConfiguration {
 
     @Bean(name = "defaultProcessingEventProcessor", initMethod = "start", destroyMethod = "stop")
     public DefaultProcessingEventProcessor defaultProcessingEventProcessor(ScheduleService scheduleService, SerializeService serializeService, MessageDispatcher messageDispatcher, PublishedVersionStore publishedVersionStore) {
-        return new DefaultProcessingEventProcessor(scheduleService, serializeService, messageDispatcher, publishedVersionStore);
+        return new DefaultProcessingEventProcessor(scheduleService, serializeService, messageDispatcher, publishedVersionStore, Dispatchers.getIO());
     }
 
     @Bean(name = "defaultEventSerializer")
@@ -133,7 +134,7 @@ public class EnodeAutoConfiguration {
         ThreeMessageHandlerProvider threeMessageHandlerProvider,
         SerializeService serializeService
     ) {
-        return new DefaultMessageDispatcher(typeNameProvider, messageHandlerProvider, twoMessageHandlerProvider, threeMessageHandlerProvider, serializeService);
+        return new DefaultMessageDispatcher(typeNameProvider, messageHandlerProvider, twoMessageHandlerProvider, threeMessageHandlerProvider, serializeService, Dispatchers.getIO());
     }
 
     @Bean(name = "defaultRepository")
@@ -191,7 +192,7 @@ public class EnodeAutoConfiguration {
         @Qualifier(value = "defaultApplicationMessagePublisher") MessagePublisher<ApplicationMessage> applicationMessagePublisher,
         @Qualifier(value = "defaultPublishableExceptionPublisher") MessagePublisher<DomainExceptionMessage> publishableExceptionPublisher,
         SerializeService serializeService) {
-        return new DefaultProcessingCommandHandler(eventStore, commandHandlerProvider, typeNameProvider, eventService, memoryCache, applicationMessagePublisher, publishableExceptionPublisher, serializeService);
+        return new DefaultProcessingCommandHandler(eventStore, commandHandlerProvider, typeNameProvider, eventService, memoryCache, applicationMessagePublisher, publishableExceptionPublisher, serializeService, Dispatchers.getIO());
     }
 
     @Bean(name = "defaultEventCommittingService")
@@ -200,7 +201,7 @@ public class EnodeAutoConfiguration {
         EventStore eventStore,
         SerializeService serializeService,
         @Qualifier("defaultDomainEventPublisher") MessagePublisher<DomainEventStream> domainEventPublisher) {
-        return new DefaultEventCommittingService(memoryCache, eventStore, serializeService, domainEventPublisher);
+        return new DefaultEventCommittingService(memoryCache, eventStore, serializeService, domainEventPublisher, Dispatchers.getIO());
     }
 
     @Bean(name = "defaultSerializeService")
@@ -211,7 +212,7 @@ public class EnodeAutoConfiguration {
 
     @Bean(name = "defaultCommandProcessor", initMethod = "start", destroyMethod = "stop")
     public DefaultCommandProcessor defaultCommandProcessor(ProcessingCommandHandler processingCommandHandler, ScheduleService scheduleService) {
-        return new DefaultCommandProcessor(processingCommandHandler, scheduleService);
+        return new DefaultCommandProcessor(processingCommandHandler, scheduleService, Dispatchers.getIO());
     }
 
     @Bean(name = "snapshotOnlyAggregateStorage")

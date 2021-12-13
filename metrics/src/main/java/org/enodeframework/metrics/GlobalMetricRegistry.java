@@ -113,7 +113,7 @@ public class GlobalMetricRegistry {
      * @param commandBusName the name under which the commandBus should be registered to the registry
      * @return a {@link MessageMonitor} to monitor the behavior of a CommandBus
      */
-    public MessageMonitor<? super CommandMessage> registerCommandBus(String commandBusName) {
+    public MessageMonitor<? super CommandMessage<?>> registerCommandBus(String commandBusName) {
         return registerDefaultHandlerMessageMonitor(commandBusName);
     }
 

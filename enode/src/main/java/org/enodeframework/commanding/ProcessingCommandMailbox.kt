@@ -1,7 +1,7 @@
 package org.enodeframework.commanding
 
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import org.enodeframework.common.extensions.SystemClock
 import org.enodeframework.common.io.Task
@@ -16,7 +16,10 @@ import java.util.concurrent.atomic.AtomicLong
  * @author anruence@gmail.com
  */
 class ProcessingCommandMailbox(
-    var aggregateRootId: String, private val messageHandler: ProcessingCommandHandler, private val batchSize: Int
+    var aggregateRootId: String,
+    private val messageHandler: ProcessingCommandHandler,
+    private val coroutineDispatcher: CoroutineDispatcher,
+    private val batchSize: Int
 ) {
     private val lockObj = Any()
     private val asyncLockObj = Any()
@@ -84,7 +87,8 @@ class ProcessingCommandMailbox(
                     consumingSequence.get()
                 )
             }
-            CoroutineScope(Dispatchers.IO).async { processMessages() }
+            CoroutineScope(coroutineDispatcher).async { processMessages() }
+            return
         }
     }
 

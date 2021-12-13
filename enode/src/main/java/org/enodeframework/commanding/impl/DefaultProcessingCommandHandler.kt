@@ -1,6 +1,7 @@
 package org.enodeframework.commanding.impl
 
 import com.google.common.base.Strings
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -37,6 +38,7 @@ class DefaultProcessingCommandHandler(
     private val applicationMessagePublisher: MessagePublisher<ApplicationMessage>,
     private val exceptionPublisher: MessagePublisher<DomainExceptionMessage>,
     private val serializeService: SerializeService,
+    private val coroutineDispatcher: CoroutineDispatcher
 ) : ProcessingCommandHandler {
     override fun handleAsync(processingCommand: ProcessingCommand): CompletableFuture<Boolean> {
         val command = processingCommand.message
@@ -106,7 +108,7 @@ class DefaultProcessingCommandHandler(
         val taskSource = CompletableFuture<Boolean>()
         IOHelper.tryAsyncActionRecursivelyWithoutResult("HandleCommandAsync", {
             commandContext.clear()
-            CoroutineScope(Dispatchers.IO).async {
+            CoroutineScope(coroutineDispatcher).async {
                 commandHandler.handleAsync(commandContext, command)
             }.asCompletableFuture()
         }, {

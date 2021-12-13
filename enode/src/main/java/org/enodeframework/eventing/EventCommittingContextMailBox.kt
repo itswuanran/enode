@@ -1,19 +1,23 @@
 package org.enodeframework.eventing
 
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import org.enodeframework.common.exception.DuplicateEventStreamException
 import org.enodeframework.common.extensions.SystemClock
 import org.enodeframework.common.function.Action1
 import org.enodeframework.common.io.Task
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 
 class EventCommittingContextMailBox(
-    val number: Int, private val batchSize: Int, handleEventAction: Action1<List<EventCommittingContext>>
+    private val number: Int,
+    private val batchSize: Int,
+    private val coroutineDispatcher: CoroutineDispatcher,
+    handleEventAction: Action1<List<EventCommittingContext>>
 ) {
     private val lockObj = Any()
     private val asyncLockObj = Any()
@@ -26,6 +30,10 @@ class EventCommittingContextMailBox(
 
     private fun totalUnHandledMessageCount(): Long {
         return messageQueue.count().toLong()
+    }
+
+    fun getNumber() {
+        number
     }
 
     /**
@@ -69,7 +77,8 @@ class EventCommittingContextMailBox(
             if (logger.isDebugEnabled) {
                 logger.debug("{} start run, mailboxNumber: {}", javaClass.name, number)
             }
-            CoroutineScope(Dispatchers.IO).async { processMessages() }
+            CoroutineScope(coroutineDispatcher).async { processMessages() }
+            return
         }
     }
 
@@ -135,7 +144,7 @@ class EventCommittingContextMailBox(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(EventCommittingContextMailBox::class.java)
+        val logger: Logger = LoggerFactory.getLogger(EventCommittingContextMailBox::class.java)
         private const val ONE_BYTE: Byte = 1
     }
 

@@ -1,7 +1,7 @@
 package org.enodeframework.eventing
 
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import org.enodeframework.common.exception.MailBoxProcessException
 import org.enodeframework.common.extensions.SystemClock
@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class ProcessingEventMailBox(
     val aggregateRootTypeName: String,
     val aggregateRootId: String,
+    private val coroutineDispatcher: CoroutineDispatcher,
     private var handleProcessingEventAction: Action1<ProcessingEvent>
 ) {
     private val lockObj = Any()
@@ -35,10 +36,10 @@ class ProcessingEventMailBox(
                 logger.warn(
                     "{} invalid waiting message removed, aggregateRootType: {}, aggregateRootId: {}, commandId: {}, eventVersion: {}, eventStreamId: {}, eventTypes: {}, eventIds: {}, nextExpectingEventVersion: {}",
                     javaClass.name,
-                    processingEvent.message.getAggregateRootTypeName(),
-                    processingEvent.message.getAggregateRootId(),
+                    processingEvent.message.aggregateRootTypeName,
+                    processingEvent.message.aggregateRootId,
                     processingEvent.message.commandId,
-                    processingEvent.message.getVersion(),
+                    processingEvent.message.version,
                     processingEvent.message.id,
                     processingEvent.message.events.joinToString("|") { x: DomainEventMessage<*> -> x.javaClass.name },
                     processingEvent.message.events.joinToString("|") { obj: DomainEventMessage<*> -> obj.id },
@@ -178,7 +179,8 @@ class ProcessingEventMailBox(
             if (logger.isDebugEnabled) {
                 logger.debug("{} start run, aggregateRootId: {}", javaClass.name, aggregateRootId)
             }
-            CoroutineScope(Dispatchers.IO).async { processMessage() }
+            CoroutineScope(coroutineDispatcher).async { processMessage() }
+            return
         }
     }
 

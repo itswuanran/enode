@@ -1,5 +1,7 @@
 package org.enodeframework.common.utils;
 
+import com.google.common.base.Strings;
+
 import java.util.Collection;
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -11,15 +13,21 @@ public class Assert {
         // utility class
     }
 
+    public static void nonNullOrEmpty(String value, String message) {
+        if (Strings.isNullOrEmpty(value)) {
+            throw new IllegalArgumentException(String.format("%s must not be null or empty.", message));
+        }
+    }
+
     public static <T> void nonNull(T expression, String message) {
         if (expression == null) {
-            throw new IllegalArgumentException(String.format("%s should not be null.", message));
+            throw new IllegalArgumentException(String.format("%s must not be null.", message));
         }
     }
 
     public static <T> void nonEmpty(Collection<T> expression, String message) {
         if (expression == null || expression.isEmpty()) {
-            throw new IllegalArgumentException(String.format("%s should not be empty.", message));
+            throw new IllegalArgumentException(String.format("%s must not be null or empty.", message));
         }
     }
 
@@ -42,9 +50,7 @@ public class Assert {
      * @param messageSupplier Supplier of the exception message if the expression evaluates to false
      */
     public static void isTrue(boolean expression, Supplier<String> messageSupplier) {
-        if (!expression) {
-            throw new IllegalArgumentException(messageSupplier.get());
-        }
+        state(expression, messageSupplier);
     }
 
     /**
@@ -54,9 +60,7 @@ public class Assert {
      * @param messageSupplier Supplier of the exception message if the expression evaluates to true
      */
     public static void isFalse(boolean expression, Supplier<String> messageSupplier) {
-        if (expression) {
-            throw new IllegalArgumentException(messageSupplier.get());
-        }
+        state(!expression, messageSupplier);
     }
 
     /**
@@ -98,9 +102,7 @@ public class Assert {
      * @throws X if the {@code value} asserts to {@code false} by the {@code assertion}
      */
     @SuppressWarnings("RedundantThrows") // Throws signature required for correct compilation
-    public static <T, X extends Throwable> void assertThat(T value,
-                                                           Predicate<T> assertion,
-                                                           Supplier<? extends X> exceptionSupplier) throws X {
+    public static <T, X extends Throwable> void assertThat(T value, Predicate<T> assertion, Supplier<? extends X> exceptionSupplier) throws X {
         if (!assertion.test(value)) {
             throw exceptionSupplier.get();
         }
@@ -118,8 +120,7 @@ public class Assert {
      *                          {@code exceptionSupplier}
      * @throws X if the {@code value} equals {@code null}
      */
-    public static <T, X extends Throwable> void assertNonNull(T value,
-                                                              Supplier<? extends X> exceptionSupplier) throws X {
+    public static <T, X extends Throwable> void assertNonNull(T value, Supplier<? extends X> exceptionSupplier) throws X {
         assertThat(value, Objects::nonNull, exceptionSupplier);
     }
 }

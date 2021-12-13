@@ -11,7 +11,7 @@
     </parent>
     <artifactId>enode-mongo</artifactId>
     <name>${project.artifactId}</name>
-    <description>enodeframework eventstore mongo driver</description>
+    <description>MongoDB driver for enodeframework.</description>
     <packaging>jar</packaging>
     <dependencies>
         <dependency>

@@ -2,6 +2,7 @@ package org.enodeframework.eventing.impl
 
 import com.google.common.base.Strings
 import com.google.common.collect.Lists
+import kotlinx.coroutines.CoroutineDispatcher
 import org.enodeframework.common.extensions.SystemClock
 import org.enodeframework.common.io.IOHelper.tryAsyncActionRecursively
 import org.enodeframework.common.io.IOHelper.tryAsyncActionRecursivelyWithoutResult
@@ -21,7 +22,8 @@ class DefaultProcessingEventProcessor(
     private val scheduleService: ScheduleService,
     private val serializeService: SerializeService,
     private val messageDispatcher: MessageDispatcher,
-    private val publishedVersionStore: PublishedVersionStore
+    private val publishedVersionStore: PublishedVersionStore,
+    private val coroutineDispatcher: CoroutineDispatcher
 ) : ProcessingEventProcessor {
     private val scanInactiveMailBoxTaskName: String =
         "CleanInactiveProcessingEventMailBoxes_" + SystemClock.now() + Random().nextInt(10000)
@@ -84,7 +86,9 @@ class DefaultProcessingEventProcessor(
 
     private fun buildProcessingEventMailBox(processingMessage: ProcessingEvent): ProcessingEventMailBox {
         return ProcessingEventMailBox(
-            processingMessage.message.getAggregateRootTypeName(), processingMessage.message.getAggregateRootId()
+            processingMessage.message.aggregateRootTypeName,
+            processingMessage.message.aggregateRootId,
+            coroutineDispatcher
         ) { y: ProcessingEvent -> dispatchProcessingMessageAsync(y, 0) }
     }
 

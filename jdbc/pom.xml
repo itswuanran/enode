@@ -11,7 +11,7 @@
     </parent>
     <artifactId>enode-jdbc</artifactId>
     <name>${project.artifactId}</name>
-    <description>enodeframework eventstore jdbc driver</description>
+    <description>JDBC driver for enodeframework.</description>
     <packaging>jar</packaging>
     <dependencies>
         <dependency>

@@ -1,39 +1,40 @@
 package org.enodeframework.commanding.impl
 
-import com.google.common.base.Strings
+import kotlinx.coroutines.CoroutineDispatcher
 import org.enodeframework.commanding.CommandProcessor
 import org.enodeframework.commanding.ProcessingCommand
 import org.enodeframework.commanding.ProcessingCommandHandler
 import org.enodeframework.commanding.ProcessingCommandMailbox
 import org.enodeframework.common.io.Task
 import org.enodeframework.common.scheduling.ScheduleService
+import org.enodeframework.common.utils.Assert
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
-import java.util.function.Consumer
 
 /**
  * @author anruence@gmail.com
  */
 class DefaultCommandProcessor(
-    private val processingCommandHandler: ProcessingCommandHandler, private val scheduleService: ScheduleService
+    private val processingCommandHandler: ProcessingCommandHandler,
+    private val scheduleService: ScheduleService,
+    private val coroutineDispatcher: CoroutineDispatcher
 ) : CommandProcessor {
     private val mailboxDict: ConcurrentMap<String, ProcessingCommandMailbox>
     private val taskName: String
-    var aggregateRootMaxInactiveSeconds = 3600 * 24 * 3
-    var commandMailBoxPersistenceMaxBatchSize = 1000
-    var scanExpiredAggregateIntervalMilliseconds = 5000
+    private var aggregateRootMaxInactiveSeconds = 3600 * 24 * 3
+    private var commandMailBoxPersistenceMaxBatchSize = 1000
+    private var scanExpiredAggregateIntervalMilliseconds = 5000
     override fun process(processingCommand: ProcessingCommand) {
         val aggregateRootId = processingCommand.message.getAggregateRootIdAsString()
-        require(!Strings.isNullOrEmpty(aggregateRootId)) {
-            String.format(
-                "aggregateRootId of command cannot be null or empty, commandId: %s", processingCommand.message.id
-            )
-        }
+        Assert.nonNullOrEmpty(
+            aggregateRootId,
+            String.format("aggregateRootId of command, commandId: %s", processingCommand.message.id)
+        )
         var mailbox = mailboxDict.computeIfAbsent(aggregateRootId) { x: String ->
             ProcessingCommandMailbox(
-                x, processingCommandHandler, commandMailBoxPersistenceMaxBatchSize
+                x, processingCommandHandler, coroutineDispatcher, commandMailBoxPersistenceMaxBatchSize
             )
         }
         var mailboxTryUsingCount = 0L
@@ -51,7 +52,7 @@ class DefaultCommandProcessor(
         if (mailbox.isRemoved()) {
             mailbox = mailboxDict.computeIfAbsent(aggregateRootId) { x: String ->
                 ProcessingCommandMailbox(
-                    x, processingCommandHandler, commandMailBoxPersistenceMaxBatchSize
+                    x, processingCommandHandler, coroutineDispatcher, commandMailBoxPersistenceMaxBatchSize
                 )
             }
         }
@@ -77,8 +78,8 @@ class DefaultCommandProcessor(
     }
 
     private fun cleanInactiveMailbox() {
-        val inactiveList: List<Map.Entry<String, ProcessingCommandMailbox>> = mailboxDict.entries
-            .filter { entry -> isMailBoxAllowRemove(entry.value) }
+        val inactiveList: List<Map.Entry<String, ProcessingCommandMailbox>> =
+            mailboxDict.entries.filter { entry -> isMailBoxAllowRemove(entry.value) }
         inactiveList.forEach { entry: Map.Entry<String, ProcessingCommandMailbox> ->
             if (isMailBoxAllowRemove(entry.value)) {
                 val removed = mailboxDict.remove(entry.key)

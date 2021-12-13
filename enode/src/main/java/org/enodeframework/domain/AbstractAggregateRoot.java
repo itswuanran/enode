@@ -7,7 +7,7 @@ import org.enodeframework.common.utils.Assert;
 import org.enodeframework.eventing.DomainEventMessage;
 import org.enodeframework.eventing.DomainEventStream;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * @param <TAggregateRootId>
  */
 public abstract class AbstractAggregateRoot<TAggregateRootId> implements AggregateRoot {
-    private final List<DomainEventMessage<?>> emptyEvents = new ArrayList<>();
+    private final List<DomainEventMessage<?>> emptyEvents = Collections.emptyList();
     protected TAggregateRootId id;
     protected int version;
     private Queue<DomainEventMessage<?>> uncommittedEvents = new ConcurrentLinkedQueue<>();
@@ -77,12 +77,12 @@ public abstract class AbstractAggregateRoot<TAggregateRootId> implements Aggrega
         uncommittedEvents.add(domainEvent);
     }
 
-    private void verifyEvent(DomainEventStream eventStream) {
-        if (eventStream.getVersion() > 1 && !eventStream.getAggregateRootId().equals(this.getUniqueId())) {
-            throw new UnsupportedOperationException(String.format("Invalid domain event stream, aggregateRootId:%s, expected aggregateRootId:%s, type:%s", eventStream.getAggregateRootId(), this.getUniqueId(), this.getClass().getName()));
+    private void verifyEvent(DomainEventStream domainEventStream) {
+        if (domainEventStream.getVersion() > 1 && !domainEventStream.getAggregateRootId().equals(this.getUniqueId())) {
+            throw new UnsupportedOperationException(String.format("Invalid domain event stream, aggregateRootId:%s, expected aggregateRootId:%s, type:%s", domainEventStream.getAggregateRootId(), this.getUniqueId(), this.getClass().getName()));
         }
-        if (eventStream.getVersion() != this.getVersion() + 1) {
-            throw new UnsupportedOperationException(String.format("Invalid domain event stream, version:%d, expected version:%d, current aggregateRoot type:%s, id:%s", eventStream.getVersion(), this.getVersion(), this.getClass().getName(), this.getUniqueId()));
+        if (domainEventStream.getVersion() != this.getVersion() + 1) {
+            throw new UnsupportedOperationException(String.format("Invalid domain event stream, version:%d, expected version:%d, current aggregateRoot type:%s, id:%s", domainEventStream.getVersion(), this.getVersion(), this.getClass().getName(), this.getUniqueId()));
         }
     }
 
@@ -114,11 +114,11 @@ public abstract class AbstractAggregateRoot<TAggregateRootId> implements Aggrega
     }
 
     @Override
-    public void replayEvents(List<DomainEventStream> eventStreams) {
-        if (eventStreams == null || eventStreams.isEmpty()) {
+    public void replayEvents(List<DomainEventStream> domainEventStreams) {
+        if (domainEventStreams == null || domainEventStreams.isEmpty()) {
             return;
         }
-        eventStreams.forEach(eventStream -> {
+        domainEventStreams.forEach(eventStream -> {
             verifyEvent(eventStream);
             eventStream.getEvents().forEach(this::handleEvent);
             this.version = eventStream.getVersion();
