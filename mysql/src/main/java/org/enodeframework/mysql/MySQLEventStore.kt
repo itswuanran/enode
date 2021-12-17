@@ -136,7 +136,7 @@ class MySQLEventStore(
         private const val INSERT_EVENT_SQL =
             "INSERT INTO %s (aggregate_root_id, aggregate_root_type_name, command_id, version, gmt_create, events) VALUES (?, ?, ?, ?, ?, ?)"
         private const val SELECT_MANY_BY_VERSION_SQL =
-            "SELECT * FROM %s WHERE aggregate_root_id = ? AND version >= ? AND Version <= ? ORDER BY version"
+            "SELECT * FROM %s WHERE aggregate_root_id = ? AND version >= ? AND version <= ? ORDER BY version"
         private const val SELECT_ONE_BY_VERSION_SQL = "SELECT * FROM %s WHERE aggregate_root_id = ? AND version = ?"
         private const val SELECT_ONE_BY_COMMAND_ID_SQL =
             "SELECT * FROM %s WHERE aggregate_root_id = ? AND command_id = ?"

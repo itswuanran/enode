@@ -44,7 +44,14 @@ class PgAddDomainEventsHandler(private val configuration: EventStoreConfiguratio
             future.complete(appendResult)
             return
         }
-        val throwable = ar.cause()
+        val ex = ar.cause()
+        var throwable = ex
+        if (ex is PgException) {
+            throwable = ex;
+        }
+        if (ex.cause is PgException) {
+            throwable = ex.cause
+        }
         if (throwable is PgException) {
             if (code == throwable.code && throwable.message?.contains(configuration.eventVersionUkName) == true) {
                 val appendResult = AggregateEventAppendResult()

@@ -7,7 +7,6 @@ interface EventStore {
      * Batch append the given event streams to the event store async.
      */
     fun batchAppendAsync(eventStreams: List<DomainEventStream>): CompletableFuture<EventAppendResult>
-
     /**
      * Find a single event stream by aggregateRootId and version async.
      */

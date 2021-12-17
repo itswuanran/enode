@@ -36,7 +36,20 @@ class MongoAddDomainEventsHandler(private val configuration: EventStoreConfigura
             future.complete(appendResult)
             return
         }
-        val throwable = ar.cause()
+        val ex = ar.cause()
+        var throwable = ex
+        if (ex is MongoWriteException) {
+            throwable = ex;
+        }
+        if (ex.cause is MongoWriteException) {
+            throwable = ex.cause
+        }
+        if (ex is MongoBulkWriteException) {
+            throwable = ex;
+        }
+        if (ex.cause is MongoBulkWriteException) {
+            throwable = ex.cause
+        }
         var sqlCode = 0
         var message = ""
         if (throwable is MongoWriteException) {

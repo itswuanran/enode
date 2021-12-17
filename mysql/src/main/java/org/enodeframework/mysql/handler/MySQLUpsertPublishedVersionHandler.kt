@@ -37,7 +37,14 @@ class MySQLUpsertPublishedVersionHandler(private val publishedUkName: String, pr
             future.complete(ar.result().rowCount())
             return
         }
-        val throwable = ar.cause()
+        val ex = ar.cause()
+        var throwable = ex
+        if (ex is MySQLException) {
+            throwable = ex;
+        }
+        if (ex.cause is MySQLException) {
+            throwable = ex.cause
+        }
         if (throwable is MySQLException) {
             if (code == throwable.sqlState && throwable.message?.contains(publishedUkName) == true) {
                 future.complete(1)
