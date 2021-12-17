@@ -1,5 +1,6 @@
 package org.enodeframework.mongo.handler
 
+import com.mongodb.MongoBulkWriteException
 import com.mongodb.MongoWriteException
 import io.vertx.core.AsyncResult
 import io.vertx.core.Handler
@@ -27,7 +28,20 @@ class MongoAddPublishedVersionHandler(
             future.complete(1)
             return
         }
-        val throwable = ar.cause()
+        val ex = ar.cause()
+        var throwable = ex
+        if (ex is MongoWriteException) {
+            throwable = ex;
+        }
+        if (ex.cause is MongoWriteException) {
+            throwable = ex.cause
+        }
+        if (ex is MongoBulkWriteException) {
+            throwable = ex;
+        }
+        if (ex.cause is MongoBulkWriteException) {
+            throwable = ex.cause
+        }
         if (throwable is MongoWriteException) {
             if (throwable.code == code && throwable.message?.contains(publishedUkName) == true) {
                 future.complete(1)

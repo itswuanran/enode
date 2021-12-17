@@ -22,7 +22,6 @@ class PgUpsertPublishedVersionHandler(private val publishedUkName: String, priva
     var future = CompletableFuture<Int>()
 
     override fun handle(ar: AsyncResult<RowSet<Row>>) {
-
         if (ar.succeeded()) {
             if (ar.result().rowCount() == 0) {
                 future.completeExceptionally(
@@ -33,7 +32,14 @@ class PgUpsertPublishedVersionHandler(private val publishedUkName: String, priva
             future.complete(ar.result().rowCount())
             return
         }
-        val throwable = ar.cause()
+        val ex = ar.cause()
+        var throwable = ex
+        if (ex is PgException) {
+            throwable = ex;
+        }
+        if (ex.cause is PgException) {
+            throwable = ex.cause
+        }
         if (throwable is PgException) {
             if (code == throwable.code && throwable.message?.contains(publishedUkName) == true) {
                 future.complete(1)

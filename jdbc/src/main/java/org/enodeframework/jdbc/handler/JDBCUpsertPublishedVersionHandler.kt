@@ -51,7 +51,14 @@ class JDBCUpsertPublishedVersionHandler(
             future.complete(ar.result().rowCount())
             return
         }
-        val throwable = ar.cause()
+        val ex = ar.cause()
+        var throwable = ex
+        if (ex is SQLException) {
+            throwable = ex;
+        }
+        if (ex.cause is SQLException) {
+            throwable = ex.cause
+        }
         if (throwable is SQLException) {
             if (code == throwable.sqlState && throwable.message?.contains(configuration.publishedUkName) == true) {
                 future.complete(1)

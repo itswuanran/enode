@@ -1,6 +1,6 @@
 package org.enodeframework.mongo.handler
 
-import com.mongodb.MongoServerException
+import com.mongodb.MongoException
 import io.vertx.core.AsyncResult
 import io.vertx.core.Handler
 import io.vertx.ext.mongo.MongoClientUpdateResult
@@ -24,7 +24,7 @@ class MongoUpdatePublishedVersionHandler(private val msg: String) : Handler<Asyn
             return
         }
         val throwable = ar.cause()
-        if (throwable is MongoServerException) {
+        if (throwable is MongoException) {
             logger.error("Update aggregate published version has sql exception. {}", msg, throwable)
             future.completeExceptionally(IORuntimeException(msg, throwable))
             return
