@@ -23,20 +23,11 @@ class MongoFindPublishedVersionHandler(private val msg: String) : Handler<AsyncR
             return
         }
         val throwable = ar.cause()
+        logger.error("Get aggregate published version has exception. {}", msg, throwable)
         if (throwable is MongoServerException) {
-            logger.error(
-                "Get aggregate published version has sql exception. aggregateRootId: {}",
-                msg,
-                throwable
-            )
             future.completeExceptionally(IORuntimeException(throwable))
             return
         }
-        logger.error(
-            "Get aggregate published version has unknown exception. aggregateRootId: {}",
-            msg,
-            throwable
-        )
         future.completeExceptionally(PublishedVersionStoreException(throwable))
         return
     }

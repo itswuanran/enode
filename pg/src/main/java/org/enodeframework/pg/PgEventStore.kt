@@ -4,7 +4,7 @@ import io.vertx.pgclient.PgPool
 import io.vertx.sqlclient.Tuple
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.common.serializing.SerializeService
-import org.enodeframework.configurations.EventStoreConfiguration
+import org.enodeframework.configurations.EventStoreOptions
 import org.enodeframework.eventing.*
 import org.enodeframework.pg.handler.PgAddDomainEventsHandler
 import org.enodeframework.pg.handler.PgFindDomainEventsHandler
@@ -14,16 +14,16 @@ import java.util.concurrent.CompletableFuture
 /**
  * @author anruence@gmail.com
  */
-class PgEventStore(
+open class PgEventStore(
     pgPool: PgPool,
-    configuration: EventStoreConfiguration,
+    options: EventStoreOptions,
     eventSerializer: EventSerializer,
     serializeService: SerializeService
 ) : EventStore {
 
     private val eventSerializer: EventSerializer
     private val serializeService: SerializeService
-    private val configuration: EventStoreConfiguration
+    private val options: EventStoreOptions
     private val pgPool: PgPool
 
     override fun batchAppendAsync(eventStreams: List<DomainEventStream>): CompletableFuture<EventAppendResult> {
@@ -67,8 +67,8 @@ class PgEventStore(
     private fun batchAppendAggregateEvents(
         aggregateRootId: String, eventStreamList: List<DomainEventStream>
     ): CompletableFuture<AggregateEventAppendResult> {
-        val sql = String.format(INSERT_EVENT_SQL, configuration.eventTableName)
-        val handler = PgAddDomainEventsHandler(configuration)
+        val sql = String.format(INSERT_EVENT_SQL, options.eventTableName)
+        val handler = PgAddDomainEventsHandler(options, aggregateRootId)
         val tuples = eventStreamList.map { domainEventStream ->
             Tuple.of(
                 domainEventStream.aggregateRootId,
@@ -98,7 +98,7 @@ class PgEventStore(
     ): CompletableFuture<List<DomainEventStream>> {
         val handler =
             PgFindDomainEventsHandler(eventSerializer, serializeService, "$aggregateRootId#$minVersion#$maxVersion")
-        val sql = String.format(SELECT_MANY_BY_VERSION_SQL, configuration.eventTableName)
+        val sql = String.format(SELECT_MANY_BY_VERSION_SQL, options.eventTableName)
         val resultSet = pgPool.preparedQuery(sql).execute(Tuple.of(aggregateRootId, minVersion, maxVersion))
         resultSet.onComplete(handler)
         return handler.future
@@ -112,7 +112,7 @@ class PgEventStore(
 
     private fun findByVersion(aggregateRootId: String, version: Int): CompletableFuture<DomainEventStream?> {
         val handler = PgFindDomainEventsHandler(eventSerializer, serializeService, "$aggregateRootId#$version")
-        val sql = String.format(SELECT_ONE_BY_VERSION_SQL, configuration.eventTableName)
+        val sql = String.format(SELECT_ONE_BY_VERSION_SQL, options.eventTableName)
         pgPool.preparedQuery(sql).execute(Tuple.of(aggregateRootId, version)).onComplete(handler)
         return handler.future.thenApply { x -> x.firstOrNull() }
     }
@@ -125,7 +125,7 @@ class PgEventStore(
 
     private fun findByCommandId(aggregateRootId: String, commandId: String): CompletableFuture<DomainEventStream?> {
         val handler = PgFindDomainEventsHandler(eventSerializer, serializeService, "$aggregateRootId#$commandId")
-        val sql = String.format(SELECT_ONE_BY_COMMAND_ID_SQL, configuration.eventTableName)
+        val sql = String.format(SELECT_ONE_BY_COMMAND_ID_SQL, options.eventTableName)
         pgPool.preparedQuery(sql).execute(Tuple.of(aggregateRootId, commandId)).onComplete(handler)
         return handler.future.thenApply { x -> x.firstOrNull() }
     }
@@ -144,6 +144,6 @@ class PgEventStore(
         this.pgPool = pgPool
         this.eventSerializer = eventSerializer
         this.serializeService = serializeService
-        this.configuration = configuration
+        this.options = options
     }
 }

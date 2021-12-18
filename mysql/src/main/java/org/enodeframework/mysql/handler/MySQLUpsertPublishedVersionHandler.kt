@@ -17,9 +17,7 @@ class MySQLUpsertPublishedVersionHandler(private val publishedUkName: String, pr
         private val logger = LoggerFactory.getLogger(MySQLUpsertPublishedVersionHandler::class.java)
     }
 
-    private val code: String = "23000"
-
-    var future = CompletableFuture<Int>()
+    val future = CompletableFuture<Int>()
 
     override fun handle(ar: AsyncResult<RowSet<Row>>) {
 
@@ -45,16 +43,15 @@ class MySQLUpsertPublishedVersionHandler(private val publishedUkName: String, pr
         if (ex.cause is MySQLException) {
             throwable = ex.cause
         }
+        logger.error("Upsert aggregate published version has exception. {}", msg, throwable)
+        if (throwable.message?.contains(publishedUkName) == true) {
+            future.complete(1)
+            return
+        }
         if (throwable is MySQLException) {
-            if (code == throwable.sqlState && throwable.message?.contains(publishedUkName) == true) {
-                future.complete(1)
-                return
-            }
-            logger.error("Upsert aggregate published version has sql exception. {}", msg, throwable)
             future.completeExceptionally(IORuntimeException(msg, throwable))
             return
         }
-        logger.error("Upsert aggregate published version has unknown exception. {}", msg, throwable)
         future.completeExceptionally(PublishedVersionStoreException(msg, throwable))
         return
     }

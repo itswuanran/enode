@@ -5,7 +5,7 @@ import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 
-@ContextConfiguration(initializers = UnionTest.KafkaMongoInitializer.class)
+@ContextConfiguration(initializers = UnionTest.KafkaPgInitializer.class)
 public class UnionTest extends EnodeCoreTest {
 
     static class RocketMQMySQLInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
@@ -57,7 +57,7 @@ public class UnionTest extends EnodeCoreTest {
         }
     }
 
-    static class KafkapgInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+    static class KafkaPgInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
         @Override
         public void initialize(ConfigurableApplicationContext applicationContext) {
             TestPropertyValues.of("spring.enode.eventstore=pg").applyTo(applicationContext);

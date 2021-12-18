@@ -4,7 +4,7 @@ import io.vertx.mysqlclient.MySQLPool
 import io.vertx.sqlclient.Tuple
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.common.serializing.SerializeService
-import org.enodeframework.configurations.EventStoreConfiguration
+import org.enodeframework.configurations.EventStoreOptions
 import org.enodeframework.eventing.*
 import org.enodeframework.mysql.handler.MySQLAddDomainEventsHandler
 import org.enodeframework.mysql.handler.MySQLFindDomainEventsHandler
@@ -18,14 +18,14 @@ import java.util.concurrent.CompletableFuture
 
 class MySQLEventStore(
     sqlClient: MySQLPool,
-    configuration: EventStoreConfiguration,
+    configuration: EventStoreOptions,
     eventSerializer: EventSerializer,
     serializeService: SerializeService
 ) : EventStore {
 
     private val eventSerializer: EventSerializer
     private val serializeService: SerializeService
-    private val configuration: EventStoreConfiguration
+    private val configuration: EventStoreOptions
     private val sqlClient: MySQLPool
 
     override fun batchAppendAsync(eventStreams: List<DomainEventStream>): CompletableFuture<EventAppendResult> {
@@ -70,7 +70,7 @@ class MySQLEventStore(
         aggregateRootId: String, eventStreamList: List<DomainEventStream>
     ): CompletableFuture<AggregateEventAppendResult> {
         val sql = String.format(INSERT_EVENT_SQL, configuration.eventTableName)
-        val handler = MySQLAddDomainEventsHandler(configuration)
+        val handler = MySQLAddDomainEventsHandler(configuration, aggregateRootId)
         val tuples = eventStreamList.map { domainEventStream ->
             Tuple.of(
                 domainEventStream.aggregateRootId,

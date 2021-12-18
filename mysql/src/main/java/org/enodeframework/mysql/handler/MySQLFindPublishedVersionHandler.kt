@@ -16,7 +16,7 @@ class MySQLFindPublishedVersionHandler(private val msg: String) : Handler<AsyncR
         private val logger = LoggerFactory.getLogger(MySQLFindPublishedVersionHandler::class.java)
     }
 
-    var future = CompletableFuture<Int>()
+    val future = CompletableFuture<Int>()
 
     override fun handle(ar: AsyncResult<RowSet<Row>>) {
         if (ar.succeeded()) {
@@ -24,17 +24,11 @@ class MySQLFindPublishedVersionHandler(private val msg: String) : Handler<AsyncR
             return
         }
         val throwable = ar.cause()
+        logger.error("Get aggregate published version has sql exception. msg: {}", msg, throwable)
         if (throwable is MySQLException) {
-            logger.error(
-                "Get aggregate published version has sql exception. msg: {}", msg, throwable
-            )
             future.completeExceptionally(IORuntimeException(msg, throwable))
             return
         }
-        logger.error(
-            "Get aggregate published version has unknown exception. msg: {}", msg, throwable
-        )
         future.completeExceptionally(PublishedVersionStoreException(msg, throwable))
-        return
     }
 }

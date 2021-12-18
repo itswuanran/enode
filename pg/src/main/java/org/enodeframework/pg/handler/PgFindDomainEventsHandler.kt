@@ -26,7 +26,7 @@ class PgFindDomainEventsHandler(
         private val logger = LoggerFactory.getLogger(PgFindDomainEventsHandler::class.java)
     }
 
-    var future = CompletableFuture<List<DomainEventStream>>()
+    val future = CompletableFuture<List<DomainEventStream>>()
 
     override fun handle(ar: AsyncResult<RowSet<Row>>) {
         if (ar.succeeded()) {
@@ -36,16 +36,11 @@ class PgFindDomainEventsHandler(
             return
         }
         val throwable = ar.cause()
+        logger.error("Find event has exception, msg: {}", msg, throwable)
         if (throwable is PgException) {
-            logger.error(
-                "Find event has sql exception, msg: {}", msg, throwable
-            )
             future.completeExceptionally(IORuntimeException(msg, throwable))
             return
         }
-        logger.error(
-            "Find event by has unknown exception, msg: {}", msg, throwable
-        )
         future.completeExceptionally(EventStoreException(msg, throwable))
         return
     }

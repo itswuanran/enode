@@ -24,16 +24,11 @@ class PgFindPublishedVersionHandler(private val msg: String) : Handler<AsyncResu
             return
         }
         val throwable = ar.cause()
+        logger.error("Get aggregate published version has exception. msg: {}", msg, throwable)
         if (throwable is PgException) {
-            logger.error(
-                "Get aggregate published version has sql exception. msg: {}", msg, throwable
-            )
             future.completeExceptionally(IORuntimeException(msg, throwable))
             return
         }
-        logger.error(
-            "Get aggregate published version has unknown exception. msg: {}", msg, throwable
-        )
         future.completeExceptionally(PublishedVersionStoreException(msg, throwable))
         return
     }

@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory
 import java.sql.SQLException
 import java.util.concurrent.CompletableFuture
 
-class JDBCFindDomainEventsHandler(
+open class JDBCFindDomainEventsHandler(
     private val eventSerializer: EventSerializer,
     private val serializeService: SerializeService,
     private val msg: String
@@ -36,16 +36,11 @@ class JDBCFindDomainEventsHandler(
             return
         }
         val throwable = ar.cause()
+        logger.error("Find event has exception, msg: {}", msg, throwable)
         if (throwable is SQLException) {
-            logger.error(
-                "Find event has sql exception, msg: {}", msg, throwable
-            )
             future.completeExceptionally(IORuntimeException(msg, throwable))
             return
         }
-        logger.error(
-            "Find event by has unknown exception, msg: {}", msg, throwable
-        )
         future.completeExceptionally(EventStoreException(msg, throwable))
         return
     }

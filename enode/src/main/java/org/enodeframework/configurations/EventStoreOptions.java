@@ -2,16 +2,21 @@ package org.enodeframework.configurations;
 
 import io.vertx.core.json.JsonObject;
 
+import java.util.regex.Pattern;
+
 /**
  * 可以将EventStore的元数据全部配置化
  *
  * @author anruence@gmail.com
  */
-public class EventStoreConfiguration {
-    /**
-     * 数据库类型
-     */
-    private String dbType;
+public class EventStoreOptions {
+
+    public static final Pattern MYSQL_PATTERN = Pattern.compile("^Duplicate entry '.*-(.*)' for key");
+
+    public static final Pattern PG_PATTERN = Pattern.compile("=\\(.*, (.*)\\) already exists.");
+
+    public static final Pattern MONGO_PATTERN = Pattern.compile("\\{.+?commandId: \"(.+?)\" }$");
+
     /**
      * MongoDB 为应用创建的database名称
      */
@@ -36,71 +41,61 @@ public class EventStoreConfiguration {
      * 聚合根已发布事件表的聚合根已发布版本唯一索引的默认名称；默认为：uk_processor_name_aggregate_root_id_version
      */
     private String publishedUkName;
-
+    /**
+     * 解析CommandId的正则表达式
+     */
+    private Pattern commandIdPattern;
     /**
      * 事件表的元数据
      */
     private JsonObject eventMeta;
-
     /**
      * 发布版本表的元数据
      */
     private JsonObject publishedVersionMeta;
 
-    public static EventStoreConfiguration jdbc() {
-        EventStoreConfiguration configuration = new EventStoreConfiguration();
-        configuration.setDbName("enode");
-        configuration.setDbType(DbType.MySQL.name());
-        configuration.setEventTableName("event_stream");
-        configuration.setPublishedTableName("published_version");
-        configuration.setEventVersionUkName("uk_aggregate_root_id_version");
-        configuration.setEventCommandIdUkName("uk_aggregate_root_id_command_id");
-        configuration.setPublishedUkName("uk_processor_name_aggregate_root_id");
-        return configuration;
+    public static EventStoreOptions pgMysql() {
+        return pg();
     }
 
-    public static EventStoreConfiguration mysql() {
-        EventStoreConfiguration configuration = new EventStoreConfiguration();
-        configuration.setDbName("enode");
-        configuration.setDbType(DbType.MySQL.name());
-        configuration.setEventTableName("event_stream");
-        configuration.setPublishedTableName("published_version");
-        configuration.setEventVersionUkName("uk_aggregate_root_id_version");
-        configuration.setEventCommandIdUkName("uk_aggregate_root_id_command_id");
-        configuration.setPublishedUkName("uk_processor_name_aggregate_root_id");
-        return configuration;
+    public static EventStoreOptions jdbcMysql() {
+        return mysql();
     }
 
-    public static EventStoreConfiguration mongo() {
-        EventStoreConfiguration configuration = new EventStoreConfiguration();
-        configuration.setDbName("enode");
-        configuration.setDbType(DbType.Mongo.name());
-        configuration.setEventTableName("event_stream");
-        configuration.setPublishedTableName("published_version");
-        configuration.setEventVersionUkName("aggregateRootId_1_version_1");
-        configuration.setEventCommandIdUkName("aggregateRootId_1_commandId_1");
-        configuration.setPublishedUkName("processorName_1_aggregateRootId_1");
-        return configuration;
+    public static EventStoreOptions mysql() {
+        EventStoreOptions option = new EventStoreOptions();
+        option.setDbName("enode");
+        option.setCommandIdPattern(MYSQL_PATTERN);
+        option.setEventTableName("event_stream");
+        option.setPublishedTableName("published_version");
+        option.setEventVersionUkName("uk_aggregate_root_id_version");
+        option.setEventCommandIdUkName("uk_aggregate_root_id_command_id");
+        option.setPublishedUkName("uk_processor_name_aggregate_root_id");
+        return option;
     }
 
-    public static EventStoreConfiguration pg() {
-        EventStoreConfiguration configuration = new EventStoreConfiguration();
-        configuration.setDbName("enode");
-        configuration.setDbType(DbType.Pg.name());
-        configuration.setEventTableName("event_stream");
-        configuration.setPublishedTableName("published_version");
-        configuration.setEventVersionUkName("uk_aggregate_root_id_version");
-        configuration.setEventCommandIdUkName("uk_aggregate_root_id_command_id");
-        configuration.setPublishedUkName("uk_processor_name_aggregate_root_id");
-        return configuration;
+    public static EventStoreOptions mongo() {
+        EventStoreOptions option = new EventStoreOptions();
+        option.setDbName("enode");
+        option.setCommandIdPattern(MONGO_PATTERN);
+        option.setEventTableName("event_stream");
+        option.setPublishedTableName("published_version");
+        option.setEventVersionUkName("aggregateRootId_1_version_1");
+        option.setEventCommandIdUkName("aggregateRootId_1_commandId_1");
+        option.setPublishedUkName("processorName_1_aggregateRootId_1");
+        return option;
     }
 
-    public String getDbType() {
-        return dbType;
-    }
-
-    public void setDbType(String dbType) {
-        this.dbType = dbType;
+    public static EventStoreOptions pg() {
+        EventStoreOptions option = new EventStoreOptions();
+        option.setDbName("enode");
+        option.setCommandIdPattern(PG_PATTERN);
+        option.setEventTableName("event_stream");
+        option.setPublishedTableName("published_version");
+        option.setEventVersionUkName("uk_aggregate_root_id_version");
+        option.setEventCommandIdUkName("uk_aggregate_root_id_command_id");
+        option.setPublishedUkName("uk_processor_name_aggregate_root_id");
+        return option;
     }
 
     public String getDbName() {
@@ -149,6 +144,14 @@ public class EventStoreConfiguration {
 
     public void setPublishedUkName(String publishedUkName) {
         this.publishedUkName = publishedUkName;
+    }
+
+    public Pattern getCommandIdPattern() {
+        return commandIdPattern;
+    }
+
+    public void setCommandIdPattern(Pattern commandIdPattern) {
+        this.commandIdPattern = commandIdPattern;
     }
 
     public JsonObject getEventMeta() {

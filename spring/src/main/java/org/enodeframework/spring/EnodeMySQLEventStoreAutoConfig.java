@@ -2,7 +2,7 @@ package org.enodeframework.spring;
 
 import io.vertx.mysqlclient.MySQLPool;
 import org.enodeframework.common.serializing.SerializeService;
-import org.enodeframework.configurations.EventStoreConfiguration;
+import org.enodeframework.configurations.EventStoreOptions;
 import org.enodeframework.eventing.EventSerializer;
 import org.enodeframework.mysql.MySQLEventStore;
 import org.enodeframework.mysql.MySQLPublishedVersionStore;
@@ -15,13 +15,13 @@ public class EnodeMySQLEventStoreAutoConfig {
 
     @Bean
     public MySQLEventStore mysqlEventStore(@Qualifier("enodeMySQLPool") MySQLPool pool, EventSerializer eventSerializer, SerializeService serializeService) {
-        MySQLEventStore eventStore = new MySQLEventStore(pool, EventStoreConfiguration.mysql(), eventSerializer, serializeService);
+        MySQLEventStore eventStore = new MySQLEventStore(pool, EventStoreOptions.mysql(), eventSerializer, serializeService);
         return eventStore;
     }
 
     @Bean
     public MySQLPublishedVersionStore mysqlPublishedVersionStore(@Qualifier("enodeMySQLPool") MySQLPool pool) {
-        MySQLPublishedVersionStore publishedVersionStore = new MySQLPublishedVersionStore(pool, EventStoreConfiguration.mysql());
+        MySQLPublishedVersionStore publishedVersionStore = new MySQLPublishedVersionStore(pool, EventStoreOptions.mysql());
         return publishedVersionStore;
     }
 }

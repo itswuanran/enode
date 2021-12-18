@@ -25,7 +25,7 @@ class MongoFindDomainEventsHandler(
         private val logger = LoggerFactory.getLogger(MongoEventStore::class.java)
     }
 
-    var future = CompletableFuture<List<DomainEventStream>>()
+    val future = CompletableFuture<List<DomainEventStream>>()
 
     override fun handle(ar: AsyncResult<List<JsonObject>>) {
         if (ar.succeeded()) {

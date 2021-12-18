@@ -40,16 +40,15 @@ class PgUpsertPublishedVersionHandler(private val publishedUkName: String, priva
         if (ex.cause is PgException) {
             throwable = ex.cause
         }
+        if (throwable.message?.contains(publishedUkName) == true) {
+            future.complete(1)
+            return
+        }
+        logger.error("Upsert aggregate published version has exception. {}", msg, throwable)
         if (throwable is PgException) {
-            if (code == throwable.code && throwable.message?.contains(publishedUkName) == true) {
-                future.complete(1)
-                return
-            }
-            logger.error("Upsert aggregate published version has sql exception. {}", msg, throwable)
             future.completeExceptionally(IORuntimeException(msg, throwable))
             return
         }
-        logger.error("Upsert aggregate published version has unknown exception. {}", msg, throwable)
         future.completeExceptionally(PublishedVersionStoreException(msg, throwable))
         return
     }

@@ -3,7 +3,7 @@ package org.enodeframework.pg
 import io.vertx.pgclient.PgPool
 import io.vertx.sqlclient.Tuple
 import org.enodeframework.common.io.IOHelper
-import org.enodeframework.configurations.EventStoreConfiguration
+import org.enodeframework.configurations.EventStoreOptions
 import org.enodeframework.eventing.PublishedVersionStore
 import org.enodeframework.pg.handler.PgFindPublishedVersionHandler
 import org.enodeframework.pg.handler.PgUpsertPublishedVersionHandler
@@ -13,8 +13,8 @@ import java.util.concurrent.CompletableFuture
 /**
  * @author anruence@gmail.com
  */
-class PgPublishedVersionStore(
-    private val sqlClient: PgPool, private val configuration: EventStoreConfiguration
+open class PgPublishedVersionStore(
+    private val sqlClient: PgPool, private val configuration: EventStoreOptions
 ) : PublishedVersionStore {
 
     override fun updatePublishedVersionAsync(

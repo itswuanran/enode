@@ -4,7 +4,7 @@ import io.vertx.core.AbstractVerticle
 import io.vertx.jdbcclient.JDBCPool
 import io.vertx.sqlclient.Tuple
 import org.enodeframework.common.io.IOHelper
-import org.enodeframework.configurations.EventStoreConfiguration
+import org.enodeframework.configurations.EventStoreOptions
 import org.enodeframework.eventing.PublishedVersionStore
 import org.enodeframework.jdbc.handler.JDBCFindPublishedVersionHandler
 import org.enodeframework.jdbc.handler.JDBCUpsertPublishedVersionHandler
@@ -15,8 +15,8 @@ import javax.sql.DataSource
 /**
  * @author anruence@gmail.com
  */
-class JDBCPublishedVersionStore(
-    dataSource: DataSource, private val configuration: EventStoreConfiguration
+open class JDBCPublishedVersionStore(
+    dataSource: DataSource, private val options: EventStoreOptions
 ) : AbstractVerticle(), PublishedVersionStore {
 
     private lateinit var sqlClient: JDBCPool
@@ -55,9 +55,9 @@ class JDBCPublishedVersionStore(
         processorName: String, aggregateRootTypeName: String, aggregateRootId: String, publishedVersion: Int
     ): CompletableFuture<Int> {
         val handler = JDBCUpsertPublishedVersionHandler(
-            configuration, "$processorName#$aggregateRootTypeName#$aggregateRootId#$publishedVersion"
+            options, "$processorName#$aggregateRootTypeName#$aggregateRootId#$publishedVersion"
         )
-        val sql = String.format(UPDATE_SQL, configuration.publishedTableName)
+        val sql = String.format(UPDATE_SQL, options.publishedTableName)
         val tuple = Tuple.of(
             publishedVersion, LocalDateTime.now(), processorName, aggregateRootId, publishedVersion - 1
         )
@@ -69,9 +69,9 @@ class JDBCPublishedVersionStore(
         processorName: String, aggregateRootTypeName: String, aggregateRootId: String, publishedVersion: Int
     ): CompletableFuture<Int> {
         val handler = JDBCUpsertPublishedVersionHandler(
-            configuration, "$processorName#$aggregateRootTypeName#$aggregateRootId#$publishedVersion"
+            options, "$processorName#$aggregateRootTypeName#$aggregateRootId#$publishedVersion"
         )
-        val sql = String.format(INSERT_SQL, configuration.publishedTableName)
+        val sql = String.format(INSERT_SQL, options.publishedTableName)
         val tuple = Tuple.of(processorName, aggregateRootTypeName, aggregateRootId, 1, LocalDateTime.now())
         sqlClient.preparedQuery(sql).execute(tuple).onComplete(handler)
         return handler.future
@@ -89,7 +89,7 @@ class JDBCPublishedVersionStore(
         processorName: String, aggregateRootTypeName: String, aggregateRootId: String
     ): CompletableFuture<Int> {
         val handler = JDBCFindPublishedVersionHandler("$aggregateRootId#$processorName#$aggregateRootTypeName")
-        val sql = String.format(SELECT_SQL, configuration.publishedTableName)
+        val sql = String.format(SELECT_SQL, options.publishedTableName)
         sqlClient.preparedQuery(sql).execute(Tuple.of(processorName, aggregateRootId)).onComplete(handler)
         return handler.future
     }
