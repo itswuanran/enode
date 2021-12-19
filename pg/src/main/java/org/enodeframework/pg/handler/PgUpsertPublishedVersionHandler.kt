@@ -17,9 +17,7 @@ class PgUpsertPublishedVersionHandler(private val publishedUkName: String, priva
         private val logger = LoggerFactory.getLogger(PgUpsertPublishedVersionHandler::class.java)
     }
 
-    private val code: String = "23505"
-
-    var future = CompletableFuture<Int>()
+    val future = CompletableFuture<Int>()
 
     override fun handle(ar: AsyncResult<RowSet<Row>>) {
         if (ar.succeeded()) {

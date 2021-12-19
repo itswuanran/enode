@@ -16,7 +16,7 @@ class PgFindPublishedVersionHandler(private val msg: String) : Handler<AsyncResu
         private val logger = LoggerFactory.getLogger(PgFindPublishedVersionHandler::class.java)
     }
 
-    var future = CompletableFuture<Int>()
+    val future = CompletableFuture<Int>()
 
     override fun handle(ar: AsyncResult<RowSet<Row>>) {
         if (ar.succeeded()) {

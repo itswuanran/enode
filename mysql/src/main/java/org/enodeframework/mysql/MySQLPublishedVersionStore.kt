@@ -13,7 +13,7 @@ import java.util.concurrent.CompletableFuture
 /**
  * @author anruence@gmail.com
  */
-class MySQLPublishedVersionStore(
+open class MySQLPublishedVersionStore(
     private val client: MySQLPool,
     private val options: EventStoreOptions
 ) : PublishedVersionStore {

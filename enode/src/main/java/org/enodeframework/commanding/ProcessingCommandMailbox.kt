@@ -24,7 +24,7 @@ class ProcessingCommandMailbox(
     private val lockObj = Any()
     private val asyncLockObj = Any()
     private var messageDict: ConcurrentHashMap<Long, ProcessingCommand> = ConcurrentHashMap()
-    private var duplicateCommandIdDict: ConcurrentHashMap<String, Byte> = ConcurrentHashMap()
+    private var duplicateCommandIdDict: LinkedHashSet<String> = LinkedHashSet()
     private val isUsing = AtomicInteger(0)
     private val isRemoved = AtomicInteger(0)
     private var lastActiveTime: Date
@@ -151,7 +151,7 @@ class ProcessingCommandMailbox(
     }
 
     fun addDuplicateCommandId(commandId: String) {
-        duplicateCommandIdDict.putIfAbsent(commandId, 1.toByte())
+        duplicateCommandIdDict.add(commandId)
     }
 
     fun resetConsumingSequence(consumingSequence: Long) {
@@ -167,11 +167,25 @@ class ProcessingCommandMailbox(
         }
     }
 
+    private fun checkContains(value: String, commandId: String): Boolean {
+        if (value.length < commandId.length) {
+            return false
+        }
+        if (value.length == commandId.length) {
+            return value == commandId
+        }
+        // 减少误判率
+        if (value.length > 32 && commandId.length >= 8) {
+            return value.contains(commandId)
+        }
+        return false;
+    }
+
     fun completeMessage(message: ProcessingCommand, result: CommandResult): CompletableFuture<Boolean> {
         try {
             val removed = messageDict.remove(message.sequence)
             if (removed != null) {
-                duplicateCommandIdDict.remove(message.message.id)
+                duplicateCommandIdDict.removeIf { x -> checkContains(x, message.message.id) }
                 lastActiveTime = Date()
                 return message.completeAsync(result)
             }
@@ -216,7 +230,7 @@ class ProcessingCommandMailbox(
         }
         val message = getMessage(consumingSequence.get())
         if (message != null) {
-            if (duplicateCommandIdDict.containsKey(message.message.id)) {
+            if (duplicateCommandIdDict.any { x -> checkContains(x, message.message.id) }) {
                 message.isDuplicated = true
             }
             messageHandler.handleAsync(message).whenComplete { _, _ ->

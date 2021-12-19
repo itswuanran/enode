@@ -2,6 +2,7 @@ package org.enodeframework.configurations;
 
 import io.vertx.core.json.JsonObject;
 
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -15,7 +16,24 @@ public class EventStoreOptions {
 
     public static final Pattern PG_PATTERN = Pattern.compile("=\\(.*, (.*)\\) already exists.");
 
+    /**
+     * E11000 duplicate key error collection: enode.event_stream index: aggregateRootId_1_commandId_1 dup key: { aggregateRootId: "5ee8b610d7671114741829c7", commandId: "5ee8b61bd7671114741829cf" }
+     */
     public static final Pattern MONGO_PATTERN = Pattern.compile("\\{.+?commandId: \"(.+?)\" }$");
+
+    public String parseDuplicatedId(String message) {
+        if (commandIdPattern == null) {
+            return "";
+        }
+        Matcher matcher = commandIdPattern.matcher(message);
+        if (!matcher.find()) {
+            return "";
+        }
+        if (matcher.groupCount() == 0) {
+            return "";
+        }
+        return matcher.group(1);
+    }
 
     /**
      * MongoDB 为应用创建的database名称

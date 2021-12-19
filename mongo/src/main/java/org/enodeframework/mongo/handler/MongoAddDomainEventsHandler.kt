@@ -20,8 +20,7 @@ import java.util.concurrent.CompletableFuture
 class MongoAddDomainEventsHandler(
     private val options: EventStoreOptions,
     private val msg: String,
-) :
-    Handler<AsyncResult<MongoClientBulkWriteResult>> {
+) : Handler<AsyncResult<MongoClientBulkWriteResult>> {
     companion object {
         private val logger = LoggerFactory.getLogger(MongoEventStore::class.java)
     }
@@ -55,12 +54,14 @@ class MongoAddDomainEventsHandler(
         if (message.contains(options.eventCommandIdUkName)) {
             val appendResult = AggregateEventAppendResult()
             appendResult.eventAppendStatus = EventAppendStatus.DuplicateCommand
-            val commandId = getDuplicatedId(message)
+            val commandId = options.parseDuplicatedId(message)
             if (!Strings.isNullOrEmpty(commandId)) {
                 appendResult.duplicateCommandIds = Lists.newArrayList(commandId)
-                future.complete(appendResult)
-                return
+            } else {
+                appendResult.duplicateCommandIds = Lists.newArrayList(message)
             }
+            future.complete(appendResult)
+            return
         }
         logger.error("Batch append event has exception. {}", msg, throwable)
         if (throwable is MongoServerException) {
@@ -68,18 +69,5 @@ class MongoAddDomainEventsHandler(
         }
         future.completeExceptionally(EventStoreException(msg, throwable))
         return
-    }
-
-    /**
-     * E11000 duplicate key error collection: enode.event_stream index: aggregateRootId_1_commandId_1 dup key: { aggregateRootId: "5ee8b610d7671114741829c7", commandId: "5ee8b61bd7671114741829cf" }
-     */
-    private fun getDuplicatedId(message: String): String {
-        val matcher = options.commandIdPattern.matcher(message)
-        if (matcher.find()) {
-            if (matcher.groupCount() == 1) {
-                return matcher.group(1)
-            }
-        }
-        return ""
     }
 }
