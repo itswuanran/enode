@@ -9,10 +9,10 @@ import java.util.*
 /**
  * @author anruence@gmail.com
  */
-object DateUtil {
+object EventStoreUtil {
 
     @JvmStatic
-    fun parseDate(value: Any): Date {
+    fun toDate(value: Any): Date {
         if (value is LocalDateTime) {
             return Date.from(value.atZone(ZoneId.systemDefault()).toInstant());
         }

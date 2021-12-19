@@ -3,7 +3,7 @@ package org.enodeframework.configurations;
 /**
  * @author anruence@gmail.com
  */
-public class ConfigurationSetting {
+public class MailBoxOptions {
     /**
      * 处理领域事件的处理器的名字，默认为DefaultEventHandler
      */
@@ -25,7 +25,7 @@ public class ConfigurationSetting {
      */
     private int eventMailBoxPersistenceMaxBatchSize;
 
-    public ConfigurationSetting() {
+    public MailBoxOptions() {
         domainEventStreamMessageHandlerName = "DefaultEventProcessor";
         scanExpiredAggregateIntervalMilliseconds = 5000;
         aggregateRootMaxInactiveSeconds = 3600 * 24 * 3;

@@ -10,7 +10,7 @@ import io.vertx.sqlclient.RowSet
 import org.enodeframework.common.exception.EventStoreException
 import org.enodeframework.common.exception.IORuntimeException
 import org.enodeframework.common.serializing.SerializeService
-import org.enodeframework.common.utils.DateUtil
+import org.enodeframework.common.utils.EventStoreUtil
 import org.enodeframework.eventing.DomainEventStream
 import org.enodeframework.eventing.EventSerializer
 import org.slf4j.LoggerFactory
@@ -46,13 +46,11 @@ class PgFindDomainEventsHandler(
     }
 
     private fun convertFrom(record: JsonObject): DomainEventStream {
-        val gmtCreate = record.getValue("gmt_create")
-        val date = DateUtil.parseDate(gmtCreate)
         return DomainEventStream(
             record.getString("command_id"),
             record.getString("aggregate_root_id"),
             record.getString("aggregate_root_type_name"),
-            date,
+            EventStoreUtil.toDate(record.getValue("gmt_create")),
             eventSerializer.deserialize(
                 serializeService.deserialize(
                     record.getString("events"), MutableMap::class.java

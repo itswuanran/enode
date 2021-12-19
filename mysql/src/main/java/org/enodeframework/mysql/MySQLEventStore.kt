@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture
  * @author anruence@gmail.com
  */
 
-class MySQLEventStore(
+open class MySQLEventStore(
     sqlClient: MySQLPool,
     configuration: EventStoreOptions,
     eventSerializer: EventSerializer,
