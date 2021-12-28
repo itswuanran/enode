@@ -136,7 +136,7 @@ class DefaultMemoryCache(
         return aggregateStorage.getAsync(aggregateRootType, aggregateRootId).thenApply { aggregateRoot: T ->
             resetAggregateRootCache(aggregateRootType, aggregateRootId, aggregateRoot)
             aggregateRoot
-        }.exceptionally { ex: Throwable? ->
+        }.exceptionally { ex ->
             logger.error(
                 "Refresh aggregate from event store has unknown exception, aggregateRootTypeName:{}, aggregateRootId:{}",
                 typeNameProvider.getTypeName(aggregateRootType),

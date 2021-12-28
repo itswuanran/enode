@@ -51,6 +51,7 @@ public class ConnectionHolder {
     void connect() {
         URI info = ReplyUtil.toURI(remoteNodeAddress).orElseThrow(
             () -> new ReplyAddressException(String.format("Parse remoteNodeAddress: %s  failed, please check.", remoteNodeAddress)));
+
         eventBus.client().connect(info.getPort(), info.getHost())
             .onComplete(ar -> {
                 if (ar.succeeded()) {
@@ -122,9 +123,7 @@ public class ConnectionHolder {
     private synchronized void connected(NetSocket socket) {
         this.socket = socket;
         connected = true;
-        socket.exceptionHandler(err -> {
-            close(err);
-        });
+        socket.exceptionHandler(this::close);
         socket.closeHandler(v -> close());
         socket.handler(data -> {
             // Got a pong back

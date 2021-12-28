@@ -6,7 +6,6 @@ import org.enodeframework.commanding.CommandMessage;
 import org.enodeframework.commanding.CommandResult;
 import org.enodeframework.commanding.CommandReturnType;
 import org.enodeframework.commanding.CommandStatus;
-import org.enodeframework.test.async.ManualResetEvent;
 import org.enodeframework.common.io.Task;
 import org.enodeframework.common.utils.IdGenerator;
 import org.enodeframework.domain.AggregateRoot;
@@ -14,6 +13,7 @@ import org.enodeframework.eventing.DomainEventMessage;
 import org.enodeframework.eventing.DomainEventStream;
 import org.enodeframework.eventing.EventAppendResult;
 import org.enodeframework.eventing.ProcessingEvent;
+import org.enodeframework.test.async.ManualResetEvent;
 import org.enodeframework.test.command.AggregateThrowExceptionCommand;
 import org.enodeframework.test.command.AsyncHandlerBaseCommand;
 import org.enodeframework.test.command.AsyncHandlerChildCommand;
@@ -415,8 +415,6 @@ public class EnodeCoreTest extends AbstractTest {
         Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
         commandResult = Task.await(commandService.executeAsync(command));
         Assert.assertNotNull(commandResult);
-
-
         Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
     }
 
@@ -460,8 +458,6 @@ public class EnodeCoreTest extends AbstractTest {
         command.aggregateRootId = (IdGenerator.id());
         commandResult = Task.await(commandService.executeAsync(command));
         Assert.assertNotNull(commandResult);
-
-
         Assert.assertEquals(CommandStatus.NothingChanged, commandResult.getStatus());
     }
 

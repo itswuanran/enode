@@ -5,7 +5,7 @@ import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 
-@ContextConfiguration(initializers = UnionTest.KafkaPgInitializer.class)
+@ContextConfiguration(initializers = UnionTest.KafkaMySQLInitializer.class)
 public class UnionTest extends EnodeCoreTest {
 
     static class RocketMQMySQLInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {

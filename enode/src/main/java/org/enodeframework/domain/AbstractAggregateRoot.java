@@ -9,6 +9,7 @@ import org.enodeframework.eventing.DomainEventStream;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -78,17 +79,17 @@ public abstract class AbstractAggregateRoot<TAggregateRootId> implements Aggrega
     }
 
     private void verifyEvent(DomainEventStream domainEventStream) {
-        if (domainEventStream.getVersion() > 1 && !domainEventStream.getAggregateRootId().equals(this.getUniqueId())) {
-            throw new UnsupportedOperationException(String.format("Invalid domain event stream, aggregateRootId:%s, expected aggregateRootId:%s, type:%s", domainEventStream.getAggregateRootId(), this.getUniqueId(), this.getClass().getName()));
+        if (domainEventStream.getVersion() > 1 && !domainEventStream.getAggregateRootId().equals(this.id)) {
+            throw new UnsupportedOperationException(String.format("Invalid domain event stream, aggregateRootId:%s, expected aggregateRootId:%s, type:%s", domainEventStream.getAggregateRootId(), this.id, this.getClass().getName()));
         }
         if (domainEventStream.getVersion() != this.getVersion() + 1) {
-            throw new UnsupportedOperationException(String.format("Invalid domain event stream, version:%d, expected version:%d, current aggregateRoot type:%s, id:%s", domainEventStream.getVersion(), this.getVersion(), this.getClass().getName(), this.getUniqueId()));
+            throw new UnsupportedOperationException(String.format("Invalid domain event stream, version:%d, expected version:%d, current aggregateRoot type:%s, id:%s", domainEventStream.getVersion(), this.getVersion(), this.getClass().getName(), this.id));
         }
     }
 
     @Override
     public String getUniqueId() {
-        return id.toString();
+        return Objects.toString(id, "");
     }
 
     @Override

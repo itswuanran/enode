@@ -25,8 +25,9 @@ open class MySQLEventStore(
 
     private val eventSerializer: EventSerializer
     private val serializeService: SerializeService
-    private val configuration: EventStoreOptions
+    private val options: EventStoreOptions
     private val sqlClient: MySQLPool
+    private val num: Int = 200
 
     override fun batchAppendAsync(eventStreams: List<DomainEventStream>): CompletableFuture<EventAppendResult> {
         val future = CompletableFuture<EventAppendResult>()
@@ -69,8 +70,8 @@ open class MySQLEventStore(
     private fun batchAppendAggregateEvents(
         aggregateRootId: String, eventStreamList: List<DomainEventStream>
     ): CompletableFuture<AggregateEventAppendResult> {
-        val sql = String.format(INSERT_EVENT_SQL, configuration.eventTableName)
-        val handler = MySQLAddDomainEventsHandler(configuration, aggregateRootId)
+        val sql = String.format(INSERT_EVENT_SQL, options.eventTableName)
+        val handler = MySQLAddDomainEventsHandler(options, aggregateRootId)
         val tuples = eventStreamList.map { domainEventStream ->
             Tuple.of(
                 domainEventStream.aggregateRootId,
@@ -78,7 +79,7 @@ open class MySQLEventStore(
                 domainEventStream.commandId,
                 domainEventStream.version,
                 domainEventStream.timestamp.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(),
-                serializeService.serialize(eventSerializer.serialize(domainEventStream.getEvents()))
+                serializeService.serialize(eventSerializer.serialize(domainEventStream.events))
             )
         }
         sqlClient.withTransaction { client ->
@@ -98,12 +99,54 @@ open class MySQLEventStore(
     private fun queryAggregateEvents(
         aggregateRootId: String, aggregateRootTypeName: String, minVersion: Int, maxVersion: Int
     ): CompletableFuture<List<DomainEventStream>> {
-        val handler =
-            MySQLFindDomainEventsHandler(eventSerializer, serializeService, "$aggregateRootId#$minVersion#$maxVersion")
-        val sql = String.format(SELECT_MANY_BY_VERSION_SQL, configuration.eventTableName)
-        val resultSet = sqlClient.preparedQuery(sql).execute(Tuple.of(aggregateRootId, minVersion, maxVersion))
+        val stepVersion = (minVersion + num - 1).coerceAtMost(maxVersion)
+        return queryAggregateEventsInBatches(
+            aggregateRootId, aggregateRootTypeName, minVersion, stepVersion, minVersion, maxVersion
+        )
+    }
+
+    private fun queryAggregateEventsInBatches(
+        aggregateRootId: String,
+        aggregateRootTypeName: String,
+        currMinVersion: Int,
+        currMaxVersion: Int,
+        minVersion: Int,
+        maxVersion: Int
+    ): CompletableFuture<List<DomainEventStream>> {
+        val handler = MySQLFindDomainEventsHandler(
+            eventSerializer, serializeService, "$aggregateRootId#$currMinVersion#$currMaxVersion"
+        )
+        val sql = String.format(SELECT_MANY_BY_VERSION_SQL, options.eventTableName)
+        val resultSet = sqlClient.preparedQuery(sql).execute(Tuple.of(aggregateRootId, currMinVersion, currMaxVersion))
         resultSet.onComplete(handler)
-        return handler.future
+        return handler.future.thenCompose { eventStreams ->
+            eventStreamHandleAsync(
+                eventStreams, aggregateRootId, aggregateRootTypeName, currMaxVersion, minVersion, maxVersion
+            )
+        }.thenApply { values -> values.sortedBy { y -> y.version } }
+    }
+
+    private fun eventStreamHandleAsync(
+        domainEventStreams: List<DomainEventStream>,
+        aggregateRootId: String,
+        aggregateRootTypeName: String,
+        currMaxVersion: Int,
+        minVersion: Int,
+        maxVersion: Int
+    ): CompletableFuture<List<DomainEventStream>> {
+        // 一般有多大版本，召回的数量就有多少，如果不相等说明已经召回到最后一页
+        if (domainEventStreams.size < currMaxVersion - minVersion + 1 || currMaxVersion == maxVersion) {
+            return CompletableFuture.completedFuture(domainEventStreams)
+        }
+        return queryAggregateEventsInBatches(
+            aggregateRootId, aggregateRootTypeName, currMaxVersion + 1, currMaxVersion + num, minVersion, maxVersion
+        ).thenApply { values ->
+            if (values == null || values.isEmpty()) {
+                return@thenApply domainEventStreams
+            }
+            values.toMutableList().addAll(domainEventStreams)
+            return@thenApply values
+        }
     }
 
     override fun findAsync(aggregateRootId: String, version: Int): CompletableFuture<DomainEventStream?> {
@@ -114,7 +157,7 @@ open class MySQLEventStore(
 
     private fun findByVersion(aggregateRootId: String, version: Int): CompletableFuture<DomainEventStream?> {
         val handler = MySQLFindDomainEventsHandler(eventSerializer, serializeService, "$aggregateRootId#$version")
-        val sql = String.format(SELECT_ONE_BY_VERSION_SQL, configuration.eventTableName)
+        val sql = String.format(SELECT_ONE_BY_VERSION_SQL, options.eventTableName)
         sqlClient.preparedQuery(sql).execute(Tuple.of(aggregateRootId, version)).onComplete(handler)
         return handler.future.thenApply { x -> x.firstOrNull() }
     }
@@ -127,7 +170,7 @@ open class MySQLEventStore(
 
     private fun findByCommandId(aggregateRootId: String, commandId: String): CompletableFuture<DomainEventStream?> {
         val handler = MySQLFindDomainEventsHandler(eventSerializer, serializeService, "$aggregateRootId#$commandId")
-        val sql = String.format(SELECT_ONE_BY_COMMAND_ID_SQL, configuration.eventTableName)
+        val sql = String.format(SELECT_ONE_BY_COMMAND_ID_SQL, options.eventTableName)
         sqlClient.preparedQuery(sql).execute(Tuple.of(aggregateRootId, commandId)).onComplete(handler)
         return handler.future.thenApply { x -> x.firstOrNull() }
     }
@@ -146,6 +189,6 @@ open class MySQLEventStore(
         this.sqlClient = sqlClient
         this.eventSerializer = eventSerializer
         this.serializeService = serializeService
-        this.configuration = configuration
+        this.options = configuration
     }
 }
