@@ -7,8 +7,6 @@ import org.enodeframework.common.container.DefaultObjectContainer;
 import org.enodeframework.common.io.Task;
 import org.enodeframework.domain.MemoryCache;
 import org.enodeframework.test.command.AggregateThrowExceptionCommand;
-import org.enodeframework.test.command.AsyncHandlerBaseCommand;
-import org.enodeframework.test.command.AsyncHandlerChildCommand;
 import org.enodeframework.test.command.BaseCommand;
 import org.enodeframework.test.command.ChangeInheritTestAggregateTitleCommand;
 import org.enodeframework.test.command.ChangeMultipleAggregatesCommand;
@@ -140,15 +138,5 @@ public class TestCommandHandler {
     @Subscribe
     public void handleAsync(CommandContext context, NotCheckAsyncHandlerExistWithResultCommand command) {
         context.setApplicationMessage(new TestApplicationMessage(command.getAggregateRootId()));
-    }
-
-    @Subscribe
-    public void handleAsync(CommandContext context, AsyncHandlerBaseCommand command) {
-
-    }
-
-    @Subscribe
-    public void handleAsync(CommandContext context, AsyncHandlerChildCommand command) {
-
     }
 }

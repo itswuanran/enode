@@ -11,11 +11,11 @@ import org.enodeframework.infrastructure.MethodInvocation
 import org.enodeframework.infrastructure.ObjectProxy
 import org.enodeframework.messaging.MessageHandlerData
 import org.reflections.ReflectionUtils
+import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
 import java.lang.invoke.MethodType
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
-import java.util.function.Consumer
 import kotlin.reflect.jvm.kotlinFunction
 
 abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface, THandlerSource> :
@@ -24,8 +24,21 @@ abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface, THandlerSou
     private val messageHandlerDict: MutableMap<TKey, MessageHandlerData<THandlerProxyInterface>> = HashMap()
     private val lookup = MethodHandles.lookup()
 
+    private val logger = LoggerFactory.getLogger(this.javaClass);
+
+    /**
+     * handlerDict中注册的key
+     */
     protected abstract fun getKey(method: Method): TKey
+
+    /**
+     * 代理执行的类型
+     */
     protected abstract fun getHandlerProxyImplementationType(): Class<out THandlerProxyInterface>
+
+    /**
+     * 判定执行类型是否匹配
+     */
     protected abstract fun isHandlerSourceMatchKey(handlerSource: THandlerSource, key: TKey): Boolean
 
     /**
@@ -118,16 +131,21 @@ abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface, THandlerSou
                 handlerType, method.name, MethodType.methodType(method.returnType, method.parameterTypes)
             )
             val key = this.getKey(method)
-            // 针对command，只允许一个处理器
             val handlers = handlerDict.computeIfAbsent(key) { ArrayList() }
             val handlerProxy = this.getHandlerProxyImplementationType().getDeclaredConstructor().newInstance()
             handlerProxy.setInnerObject(DefaultObjectContainer.resolve(handlerType))
             handlerProxy.setMethod(method)
             handlerProxy.setMethodHandle(handleMethod)
             handlers.add(handlerProxy)
+            // 针对command，只允许一个处理器
             if (isHandleRegisterOnce() && handlers.size > 1) {
-                throw HandlerRegisterException("${method.name}#${method.parameterTypes.joinToString("#")}")
+                throw HandlerRegisterException("${method.name}#${method.parameterTypes.joinToString(",")}")
             }
+            logger.info(
+                "Handler register success. {} => {}",
+                key,
+                "${handlerType.name}#${method.name}#${method.parameterTypes.joinToString(",")}"
+            )
         }
     }
 }

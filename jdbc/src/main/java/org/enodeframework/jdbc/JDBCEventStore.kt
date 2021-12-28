@@ -28,6 +28,7 @@ open class JDBCEventStore(
     private val options: EventStoreOptions
     private val dataSource: DataSource
     private lateinit var sqlClient: JDBCPool
+    private val num: Int = 200
 
     override fun start() {
         super.start()
@@ -110,12 +111,54 @@ open class JDBCEventStore(
     private fun queryAggregateEvents(
         aggregateRootId: String, aggregateRootTypeName: String, minVersion: Int, maxVersion: Int
     ): CompletableFuture<List<DomainEventStream>> {
-        val handler =
-            JDBCFindDomainEventsHandler(eventSerializer, serializeService, "$aggregateRootId#$minVersion#$maxVersion")
+        val stepVersion = (minVersion + num - 1).coerceAtMost(maxVersion)
+        return queryAggregateEventsInBatches(
+            aggregateRootId, aggregateRootTypeName, minVersion, stepVersion, minVersion, maxVersion
+        )
+    }
+
+    private fun queryAggregateEventsInBatches(
+        aggregateRootId: String,
+        aggregateRootTypeName: String,
+        currMinVersion: Int,
+        currMaxVersion: Int,
+        minVersion: Int,
+        maxVersion: Int
+    ): CompletableFuture<List<DomainEventStream>> {
+        val handler = JDBCFindDomainEventsHandler(
+            eventSerializer, serializeService, "$aggregateRootId#$currMinVersion#$currMaxVersion"
+        )
         val sql = String.format(SELECT_MANY_BY_VERSION_SQL, options.eventTableName)
-        val resultSet = sqlClient.preparedQuery(sql).execute(Tuple.of(aggregateRootId, minVersion, maxVersion))
+        val resultSet = sqlClient.preparedQuery(sql).execute(Tuple.of(aggregateRootId, currMinVersion, currMaxVersion))
         resultSet.onComplete(handler)
-        return handler.future
+        return handler.future.thenCompose { eventStreams ->
+            eventStreamHandleAsync(
+                eventStreams, aggregateRootId, aggregateRootTypeName, currMaxVersion, minVersion, maxVersion
+            )
+        }.thenApply { values -> values.sortedBy { y -> y.version } }
+    }
+
+    private fun eventStreamHandleAsync(
+        domainEventStreams: List<DomainEventStream>,
+        aggregateRootId: String,
+        aggregateRootTypeName: String,
+        currMaxVersion: Int,
+        minVersion: Int,
+        maxVersion: Int
+    ): CompletableFuture<List<DomainEventStream>> {
+        // 一般有多大版本，召回的数量就有多少，如果不相等说明已经召回到最后一页
+        if (domainEventStreams.size < currMaxVersion - minVersion + 1 || currMaxVersion == maxVersion) {
+            return CompletableFuture.completedFuture(domainEventStreams)
+        }
+        return queryAggregateEventsInBatches(
+            aggregateRootId, aggregateRootTypeName, currMaxVersion + 1, currMaxVersion + num, minVersion, maxVersion
+        ).thenApply { values ->
+            if (values == null || values.isEmpty()) {
+                return@thenApply domainEventStreams
+            }
+            values.toMutableList().addAll(domainEventStreams)
+            return@thenApply values
+        }
     }
 
     override fun findAsync(aggregateRootId: String, version: Int): CompletableFuture<DomainEventStream?> {
