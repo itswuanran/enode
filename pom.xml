@@ -47,7 +47,7 @@
         <rocketmq.version>4.9.2</rocketmq.version>
         <ons.version>2.0.1.Final</ons.version>
         <pulsar.version>2.9.1</pulsar.version>
-        <mysql.version>8.0.27</mysql.version>
+        <mysql.version>8.0.28</mysql.version>
         <reflections.version>0.10.2</reflections.version>
         <vertx.version>4.2.3</vertx.version>
         <opentelemetry.version>1.9.1</opentelemetry.version>
