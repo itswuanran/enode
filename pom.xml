@@ -41,7 +41,7 @@
         <kotlinx-coroutines.version>1.6.4</kotlinx-coroutines.version>
         <slfj4.version>1.7.36</slfj4.version>
         <guava.version>31.1-jre</guava.version>
-        <jackson.version>2.13.4</jackson.version>
+        <jackson.version>2.13.4.1</jackson.version>
         <junit.version>4.13.2</junit.version>
         <jmh.version>1.35</jmh.version>
         <rocketmq.version>4.9.4</rocketmq.version>
