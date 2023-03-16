@@ -7,8 +7,6 @@ import org.enodeframework.queue.SendMessageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.SendResult;
-import org.springframework.util.concurrent.ListenableFutureCallback;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -21,30 +19,24 @@ public class KafkaSendMessageService implements SendMessageService {
 
     private final KafkaTemplate<String, String> producer;
 
+
     public KafkaSendMessageService(KafkaTemplate<String, String> producer) {
         this.producer = producer;
     }
 
     @Override
     public CompletableFuture<Boolean> sendMessageAsync(QueueMessage queueMessage) {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
         ProducerRecord<String, String> message = this.covertToProducerRecord(queueMessage);
-        producer.send(message).addCallback(new ListenableFutureCallback<SendResult<String, String>>() {
-            @Override
-            public void onFailure(Throwable throwable) {
+        return producer.send(message).handle((result, throwable) -> {
+            if (throwable != null) {
                 logger.error("Async send message has exception, message: {}", queueMessage, throwable);
-                future.completeExceptionally(new IORuntimeException(throwable));
+                throw new IORuntimeException(throwable);
             }
-
-            @Override
-            public void onSuccess(SendResult<String, String> result) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Async send message success, sendResult: {}, message: {}", result, queueMessage);
-                }
-                future.complete(true);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Async send message success, sendResult: {}, message: {}", result, queueMessage);
             }
+            return true;
         });
-        return future;
     }
 
     private ProducerRecord<String, String> covertToProducerRecord(QueueMessage queueMessage) {
