@@ -1,6 +1,5 @@
 package org.enodeframework.common.exception;
 
-import org.enodeframework.common.exception.EnodeException;
 import org.enodeframework.domain.AggregateRoot;
 
 public class AggregateRootReferenceChangedException extends EnodeException {

@@ -62,7 +62,7 @@ class ProcessingEventMailBox(
                     javaClass.name,
                     aggregateRootId,
                     aggregateRootTypeName,
-                    nextProcessingEvent.message.getVersion()
+                    nextProcessingEvent.message.version
                 )
             }
         }
@@ -113,14 +113,14 @@ class ProcessingEventMailBox(
         synchronized(lockObj) {
             processingEvent.mailbox = this
             processingEventQueue.add(processingEvent)
-            nextExpectingEventVersion = processingEvent.message.getVersion() + 1
+            nextExpectingEventVersion = processingEvent.message.version + 1
             if (logger.isDebugEnabled) {
                 logger.debug("{} enqueued new message, aggregateRootType: {}, aggregateRootId: {}, commandId: {}, eventVersion: {}, eventStreamId: {}, eventTypes: {}, eventIds: {}",
                     javaClass.name,
-                    processingEvent.message.getAggregateRootTypeName(),
-                    processingEvent.message.getAggregateRootId(),
+                    processingEvent.message.aggregateRootTypeName,
+                    processingEvent.message.aggregateRootId,
                     processingEvent.message.commandId,
-                    processingEvent.message.getVersion(),
+                    processingEvent.message.version,
                     processingEvent.message.id,
                     processingEvent.message.events.joinToString("|") { x: DomainEventMessage<*> -> x.javaClass.name },
                     processingEvent.message.events.joinToString("|") { x: DomainEventMessage<*> -> x.id })
@@ -140,15 +140,15 @@ class ProcessingEventMailBox(
                 )
             }
             val eventStream = processingEvent.message
-            if (nextExpectingEventVersion == null || eventStream.getVersion() > this.nextExpectingEventVersion!!) {
-                if (waitingProcessingEventDict.putIfAbsent(eventStream.getVersion(), processingEvent) == null) {
+            if (nextExpectingEventVersion == null || eventStream.version > this.nextExpectingEventVersion!!) {
+                if (waitingProcessingEventDict.putIfAbsent(eventStream.version, processingEvent) == null) {
                     logger.warn(
                         "{} waiting message added, aggregateRootType: {}, aggregateRootId: {}, commandId: {}, eventVersion: {}, eventStreamId: {}, eventTypes: {}, eventIds: {}, nextExpectingEventVersion: {}",
                         javaClass.name,
-                        eventStream.getAggregateRootTypeName(),
-                        eventStream.getAggregateRootId(),
+                        eventStream.aggregateRootTypeName,
+                        eventStream.aggregateRootId,
                         eventStream.commandId,
-                        eventStream.getVersion(),
+                        eventStream.version,
                         eventStream.id,
                         processingEvent.message.events.joinToString("|") { x: DomainEventMessage<*> -> x.javaClass.name },
                         processingEvent.message.events.joinToString("|") { x: DomainEventMessage<*> -> x.id },
@@ -156,7 +156,7 @@ class ProcessingEventMailBox(
                     )
                 }
                 return EnqueueMessageResult.AddToWaitingList
-            } else if (eventStream.getVersion() == nextExpectingEventVersion) {
+            } else if (eventStream.version == nextExpectingEventVersion) {
                 enqueueEventStream(processingEvent)
                 tryEnqueueValidWaitingMessage()
                 lastActiveTime = Date()

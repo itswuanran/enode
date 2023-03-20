@@ -15,11 +15,17 @@ public class SnowFlake {
     private final static long START_STAMP = 1480166465631L;
 
     /**
-     * 每一部分占用的位数
+     * 序列号占用的位数
      */
-    private final static long SEQUENCE_BIT = 12; //序列号占用的位数
-    private final static long MACHINE_BIT = 5;   //机器标识占用的位数
-    private final static long DATACENTER_BIT = 5;//数据中心占用的位数
+    private final static long SEQUENCE_BIT = 12;
+    /**
+     * 机器标识占用的位数
+     */
+    private final static long MACHINE_BIT = 5;
+    /**
+     * 数据中心占用的位数
+     */
+    private final static long DATACENTER_BIT = 5;
 
     /**
      * 每一部分的最大值
@@ -34,11 +40,22 @@ public class SnowFlake {
     private final static long MACHINE_LEFT = SEQUENCE_BIT;
     private final static long DATACENTER_LEFT = SEQUENCE_BIT + MACHINE_BIT;
     private final static long TIMESTAMP_LEFT = DATACENTER_LEFT + DATACENTER_BIT;
-
-    private final long datacenterId;  //数据中心
-    private final long machineId;     //机器标识
-    private long sequence = 0L; //序列号
-    private long lastStamp = -1L;//上一次时间戳
+    /**
+     * 数据中心
+     */
+    private final long datacenterId;
+    /**
+     * 机器标识
+     */
+    private final long machineId;
+    /**
+     * 序列号
+     */
+    private long sequence = 0L;
+    /**
+     * 上一次时间戳
+     */
+    private long lastStamp = -1L;
 
     public SnowFlake() {
         this.datacenterId = getDatacenterId();
@@ -61,14 +78,10 @@ public class SnowFlake {
         machineId.append(datacenterId);
         String name = ManagementFactory.getRuntimeMXBean().getName();
         if (!Strings.isNullOrEmpty(name)) {
-            /*
-             *  jvm pid
-             */
+            // jvm pid
             machineId.append(name.split("@")[0]);
         }
-        /*
-         * mac + pid 的 hashcode 获取16个低位
-         */
+        // mac + pid 的 hashcode 获取16个低位
         return (machineId.toString().hashCode() & 0xffff) % (MAX_MACHINE_NUM + 1);
     }
 
@@ -104,23 +117,18 @@ public class SnowFlake {
             throw new IdGenerateException("Clock moved backwards. Refusing to generate id");
         }
         if (currStamp == lastStamp) {
-            //相同毫秒内，序列号自增
+            // 相同毫秒内，序列号自增
             sequence = (sequence + 1) & MAX_SEQUENCE;
-            //同一毫秒的序列数已经达到最大
+            // 同一毫秒的序列数已经达到最大
             if (sequence == 0L) {
                 currStamp = getNextMill();
             }
         } else {
-            //不同毫秒内，序列号置为0
+            // 不同毫秒内，序列号置为0
             sequence = 0L;
         }
-
         lastStamp = currStamp;
-
-        return (currStamp - START_STAMP) << TIMESTAMP_LEFT //时间戳部分
-            | datacenterId << DATACENTER_LEFT       //数据中心部分
-            | machineId << MACHINE_LEFT             //机器标识部分
-            | sequence;                             //序列号部分
+        return (currStamp - START_STAMP) << TIMESTAMP_LEFT | datacenterId << DATACENTER_LEFT | machineId << MACHINE_LEFT | sequence;
     }
 
     private long getNextMill() {

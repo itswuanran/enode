@@ -78,12 +78,12 @@ public class QueueMessage implements Serializable {
         return type;
     }
 
-    public String getBodyAndType() {
-        return body + "|" + type;
-    }
-
     public void setType(Character type) {
         this.type = type;
+    }
+
+    public String getBodyAndType() {
+        return body + "|" + type;
     }
 
     @Override

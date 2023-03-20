@@ -1,9 +1,9 @@
 package org.enodeframework.queue.command
 
+import io.vertx.core.net.SocketAddress
 import org.enodeframework.commanding.CommandMessage
 import org.enodeframework.commanding.CommandResult
 import org.enodeframework.commanding.CommandReturnType
-import java.net.InetSocketAddress
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -16,7 +16,7 @@ interface CommandResultProcessor {
         taskCompletionSource: CompletableFuture<CommandResult>
     )
 
-    fun getBindAddress(): InetSocketAddress
+    fun getBindAddress(): SocketAddress
 
     fun processFailedSendingCommand(command: CommandMessage<*>)
 }

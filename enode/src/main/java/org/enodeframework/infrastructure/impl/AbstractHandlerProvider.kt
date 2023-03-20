@@ -24,7 +24,7 @@ abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface, THandlerSou
     private val messageHandlerDict: MutableMap<TKey, MessageHandlerData<THandlerProxyInterface>> = HashMap()
     private val lookup = MethodHandles.lookup()
 
-    private val logger = LoggerFactory.getLogger(this.javaClass);
+    private val logger = LoggerFactory.getLogger(this.javaClass)
 
     /**
      * handlerDict中注册的key

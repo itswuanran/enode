@@ -178,7 +178,7 @@ class ProcessingCommandMailbox(
         if (value.length > 32 && commandId.length >= 8) {
             return value.contains(commandId)
         }
-        return false;
+        return false
     }
 
     fun completeMessage(message: ProcessingCommand, result: CommandResult): CompletableFuture<Boolean> {
