@@ -7,6 +7,8 @@ import io.vertx.core.AbstractVerticle
 import io.vertx.core.AsyncResult
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
+import io.vertx.core.net.NetServerOptions
+import io.vertx.core.net.SocketAddress
 import io.vertx.ext.bridge.BridgeOptions
 import io.vertx.ext.bridge.PermittedOptions
 import io.vertx.ext.eventbus.bridge.tcp.TcpEventBusBridge
@@ -22,8 +24,6 @@ import org.enodeframework.common.serializing.SerializeService
 import org.enodeframework.common.utils.ReplyUtil
 import org.enodeframework.queue.domainevent.DomainEventHandledMessage
 import org.slf4j.LoggerFactory
-import java.net.InetAddress
-import java.net.InetSocketAddress
 import java.util.*
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.CompletableFuture
@@ -36,7 +36,8 @@ import java.util.concurrent.TimeUnit
 class DefaultCommandResultProcessor constructor(
     private val scheduleService: ScheduleService,
     private val serializeService: SerializeService,
-    private val port: Int,
+    private val socketAddress: SocketAddress,
+    private val serverOptions: NetServerOptions,
     private val completionSourceTimeout: Int
 ) : AbstractVerticle(), CommandResultProcessor {
     private val scanExpireCommandTaskName: String =
@@ -46,24 +47,21 @@ class DefaultCommandResultProcessor constructor(
     private val domainEventHandledMessageLocalQueue: BlockingQueue<DomainEventHandledMessage>
     private val commandExecutedMessageWorker: Worker
     private val domainEventHandledMessageWorker: Worker
-    private lateinit var bindAddress: InetSocketAddress
     private lateinit var tcpEventBusBridge: TcpEventBusBridge
     private var started = false
 
-    private fun startServer(port: Int) {
-        bindAddress = InetSocketAddress(InetAddress.getLocalHost(), port)
-        val address = ReplyUtil.toUri(bindAddress)
-        val eb = vertx.eventBus()
-        eb.consumer(address) { msg: Message<JsonObject> ->
+    private fun startServer(socketAddress: SocketAddress) {
+        val address = ReplyUtil.toURI(socketAddress)
+        vertx.eventBus().consumer(address) { msg: Message<JsonObject> ->
             processRequestInternal(msg.body())
         }
         val bridgeOptions = BridgeOptions()
         bridgeOptions.addInboundPermitted(PermittedOptions().setAddress(address))
         bridgeOptions.addOutboundPermitted(PermittedOptions().setAddress(address))
-        tcpEventBusBridge =
-            TcpEventBusBridge.create(vertx, bridgeOptions).listen(port) { res: AsyncResult<TcpEventBusBridge> ->
+        tcpEventBusBridge = TcpEventBusBridge.create(vertx, bridgeOptions, serverOptions)
+            .listen(socketAddress.port()) { res: AsyncResult<TcpEventBusBridge> ->
                 if (!res.succeeded()) {
-                    logger.error("vertx netServer start failed. port: {}", port, res.cause())
+                    logger.error("vertx netServer start failed. addr: {}", socketAddress, res.cause())
                 }
             }
     }
@@ -95,7 +93,7 @@ class DefaultCommandResultProcessor constructor(
         if (started) {
             return
         }
-        startServer(port)
+        startServer(socketAddress)
         commandExecutedMessageWorker.start()
         domainEventHandledMessageWorker.start()
         scheduleService.startTask(
@@ -114,8 +112,8 @@ class DefaultCommandResultProcessor constructor(
         tcpEventBusBridge.close()
     }
 
-    override fun getBindAddress(): InetSocketAddress {
-        return bindAddress
+    override fun getBindAddress(): SocketAddress {
+        return socketAddress
     }
 
     private fun processRequestInternal(reply: JsonObject) {

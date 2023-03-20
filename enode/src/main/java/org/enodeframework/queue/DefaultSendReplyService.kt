@@ -12,14 +12,16 @@ import java.util.concurrent.CompletableFuture
 /**
  * @author anruence@gmail.com
  */
-class DefaultSendReplyService : AbstractVerticle(), SendReplyService {
+class DefaultSendReplyService(
+    private var options: VertxOptions
+) : AbstractVerticle(), SendReplyService {
     private var started = false
     private var stoped = false
     private lateinit var pointEventBus: PointToPointEventBus
 
     override fun start() {
         if (!started) {
-            pointEventBus = PointToPointEventBus(vertx, VertxOptions())
+            pointEventBus = PointToPointEventBus(vertx, options)
             started = true
         }
     }

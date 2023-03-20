@@ -14,6 +14,7 @@ package org.enodeframework.queue;
 import io.vertx.core.eventbus.EventBusOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.NetSocket;
+import io.vertx.core.net.SocketAddress;
 import io.vertx.core.net.impl.ConnectionBase;
 import io.vertx.ext.eventbus.bridge.tcp.impl.protocol.FrameHelper;
 import org.enodeframework.common.exception.ReplyAddressException;
@@ -21,7 +22,6 @@ import org.enodeframework.common.utils.ReplyUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
@@ -49,18 +49,18 @@ public class ConnectionHolder {
     }
 
     void connect() {
-        URI info = ReplyUtil.toURI(remoteNodeAddress).orElseThrow(
-            () -> new ReplyAddressException(String.format("Parse remoteNodeAddress: %s  failed, please check.", remoteNodeAddress)));
-
-        eventBus.client().connect(info.getPort(), info.getHost())
-            .onComplete(ar -> {
-                if (ar.succeeded()) {
-                    connected(ar.result());
-                } else {
-                    log.warn("Connecting to server " + remoteNodeAddress + " failed", ar.cause());
-                    close(ar.cause());
-                }
-            });
+        SocketAddress socketAddress = ReplyUtil.toSocketAddress(remoteNodeAddress);
+        if (socketAddress == null) {
+            throw new ReplyAddressException(String.format("Parse remoteNodeAddress: %s failed, please check.", remoteNodeAddress));
+        }
+        eventBus.client().connect(socketAddress).onComplete(ar -> {
+            if (ar.succeeded()) {
+                connected(ar.result());
+            } else {
+                log.warn("Connecting to server " + remoteNodeAddress + " failed", ar.cause());
+                close(ar.cause());
+            }
+        });
     }
 
     // TODO optimise this (contention on monitor)
