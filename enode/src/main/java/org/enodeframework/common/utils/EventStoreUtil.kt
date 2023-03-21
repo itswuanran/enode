@@ -14,10 +14,10 @@ object EventStoreUtil {
     @JvmStatic
     fun toDate(value: Any): Date {
         if (value is LocalDateTime) {
-            return Date.from(value.atZone(ZoneId.systemDefault()).toInstant());
+            return Date.from(value.atZone(ZoneId.systemDefault()).toInstant())
         }
         if (value is LocalDate) {
-            return Date.from(value.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+            return Date.from(value.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant())
         }
         if (value is Instant) {
             return Date.from(value)

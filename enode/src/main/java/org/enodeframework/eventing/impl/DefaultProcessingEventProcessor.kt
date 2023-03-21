@@ -43,7 +43,7 @@ class DefaultProcessingEventProcessor(
     private var processTryToRefreshAggregateIntervalMilliseconds = 1000
 
     override fun process(processingEvent: ProcessingEvent) {
-        val aggregateRootId = processingEvent.message.getAggregateRootId()
+        val aggregateRootId = processingEvent.message.aggregateRootId
         require(!Strings.isNullOrEmpty(aggregateRootId)) { "aggregateRootId of domain event stream cannot be null or empty, domainEventStreamId:" + processingEvent.message.id }
         var mailbox = mailboxDict.computeIfAbsent(aggregateRootId) { buildProcessingEventMailBox(processingEvent) }
         var mailboxTryUsingCount = 0L
@@ -155,8 +155,8 @@ class DefaultProcessingEventProcessor(
                     "sequence message [messageId:%s, messageType:%s, aggregateRootId:%s, aggregateRootVersion:%s]",
                     processingEvent.message.id,
                     processingEvent.message.javaClass.name,
-                    processingEvent.message.getAggregateRootId(),
-                    processingEvent.message.getVersion()
+                    processingEvent.message.aggregateRootId,
+                    processingEvent.message.version
                 )
             },
             null,
@@ -169,7 +169,7 @@ class DefaultProcessingEventProcessor(
         val message = processingEvent.message
         tryAsyncActionRecursivelyWithoutResult("UpdatePublishedVersionAsync", {
             publishedVersionStore.updatePublishedVersionAsync(
-                name, message.getAggregateRootTypeName(), message.getAggregateRootId(), message.getVersion()
+                name, message.aggregateRootTypeName, message.aggregateRootId, message.version
             )
         }, {
             if (logger.isDebugEnabled) {
@@ -183,8 +183,8 @@ class DefaultProcessingEventProcessor(
                 "DomainEventStreamMessage [messageId:%s, messageType:%s, aggregateRootId:%s, aggregateRootVersion:%s]",
                 message.id,
                 message.javaClass.name,
-                message.getAggregateRootId(),
-                message.getVersion()
+                message.aggregateRootId,
+                message.version
             )
         }, null, retryTimes, true
         )

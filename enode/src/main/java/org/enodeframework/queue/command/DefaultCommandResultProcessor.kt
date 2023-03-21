@@ -4,7 +4,6 @@ import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.RemovalCause
 import io.vertx.core.AbstractVerticle
-import io.vertx.core.AsyncResult
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
 import io.vertx.core.net.NetServerOptions
@@ -59,11 +58,11 @@ class DefaultCommandResultProcessor constructor(
         bridgeOptions.addInboundPermitted(PermittedOptions().setAddress(address))
         bridgeOptions.addOutboundPermitted(PermittedOptions().setAddress(address))
         tcpEventBusBridge = TcpEventBusBridge.create(vertx, bridgeOptions, serverOptions)
-            .listen(socketAddress.port()) { res: AsyncResult<TcpEventBusBridge> ->
-                if (!res.succeeded()) {
-                    logger.error("vertx netServer start failed. addr: {}", socketAddress, res.cause())
-                }
+        tcpEventBusBridge.listen(socketAddress.port()).onComplete { res ->
+            if (!res.succeeded()) {
+                logger.error("vertx netServer start failed. addr: {}", socketAddress, res.cause())
             }
+        }
     }
 
     override fun registerProcessingCommand(

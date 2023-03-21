@@ -3,7 +3,6 @@ package org.enodeframework.commanding.impl
 import com.google.common.base.Strings
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asCompletableFuture
 import org.enodeframework.commanding.*
@@ -58,6 +57,7 @@ class DefaultProcessingCommandHandler(
             HandlerFindStatus.Found -> {
                 return handleCommandInternal(processingCommand, findResult.findHandler as CommandHandlerProxy, 0)
             }
+
             HandlerFindStatus.TooManyHandlerData -> {
                 logger.error(
                     "Found more than one command handler data, commandType:{}, commandId:{}",
@@ -71,6 +71,7 @@ class DefaultProcessingCommandHandler(
                     "More than one command handler data found."
                 )
             }
+
             HandlerFindStatus.TooManyHandler -> {
                 logger.error(
                     "Found more than one command handler, commandType:{}, commandId:{}",
@@ -84,6 +85,7 @@ class DefaultProcessingCommandHandler(
                     "More than one command handler found."
                 )
             }
+
             HandlerFindStatus.NotFound -> {
                 val errorMessage = String.format(
                     "No command handler found of command. commandType:%s, commandId:%s",
@@ -93,6 +95,7 @@ class DefaultProcessingCommandHandler(
                 logger.error(errorMessage)
                 return completeCommand(processingCommand, CommandStatus.Failed, String::class.java.name, errorMessage)
             }
+
             else -> return Task.completedTask
         }
     }

@@ -1,6 +1,5 @@
 package org.enodeframework.queue.command
 
-import kotlinx.coroutines.future.asDeferred
 import org.enodeframework.commanding.CommandBus
 import org.enodeframework.commanding.CommandMessage
 import org.enodeframework.commanding.CommandResult
@@ -28,7 +27,7 @@ class DefaultCommandBus(
     }
 
     override suspend fun send(command: CommandMessage<*>): Boolean {
-        return sendAsync(command).asDeferred().await()
+        return sendAsync(command).await()
     }
 
     override fun executeAsync(command: CommandMessage<*>): CompletableFuture<CommandResult> {
@@ -56,11 +55,11 @@ class DefaultCommandBus(
     }
 
     override suspend fun execute(command: CommandMessage<*>): CommandResult {
-        return executeAsync(command).asDeferred().await()
+        return executeAsync(command).await()
     }
 
     override suspend fun execute(command: CommandMessage<*>, commandReturnType: CommandReturnType): CommandResult {
-        return executeAsync(command, commandReturnType).asDeferred().await()
+        return executeAsync(command, commandReturnType).await()
     }
 
     private fun buildCommandMessage(command: CommandMessage<*>, needReply: Boolean): QueueMessage {

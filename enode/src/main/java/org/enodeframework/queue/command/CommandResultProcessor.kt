@@ -4,7 +4,6 @@ import io.vertx.core.net.SocketAddress
 import org.enodeframework.commanding.CommandMessage
 import org.enodeframework.commanding.CommandResult
 import org.enodeframework.commanding.CommandReturnType
-import java.net.InetSocketAddress
 import java.util.concurrent.CompletableFuture
 
 /**

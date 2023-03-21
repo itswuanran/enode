@@ -196,7 +196,7 @@ public class ClassPathScanHandler {
             return;
         }
         File[] files = dir.listFiles(pathname -> filterClassFileByCustomization(pathname, recursive));
-        if (null == files || files.length == 0) {
+        if (null == files) {
             return;
         }
         for (File file : files) {

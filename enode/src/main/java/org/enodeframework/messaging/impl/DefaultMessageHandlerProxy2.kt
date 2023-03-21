@@ -1,6 +1,5 @@
 package org.enodeframework.messaging.impl
 
-import kotlinx.coroutines.future.asDeferred
 import org.enodeframework.messaging.Message
 import org.enodeframework.messaging.MessageHandlerProxy2
 import java.lang.invoke.MethodHandle
@@ -30,12 +29,12 @@ class DefaultMessageHandlerProxy2 : MessageHandlerProxy2 {
         if (methodParameterTypes[0].isAssignableFrom(message1.javaClass)) {
             val result = methodHandle.invoke(getInnerObject(), message1, message2)
             if (result is CompletionStage<*>) {
-                result.asDeferred().await()
+                result.await()
             }
         } else {
             val result = methodHandle.invoke(getInnerObject(), message2, message1)
             if (result is CompletionStage<*>) {
-                result.asDeferred().await()
+                result.await()
             }
         }
     }

@@ -22,7 +22,7 @@ public class DefaultPublishableExceptionPublisher implements MessagePublisher<Do
     private final SendMessageService sendMessageService;
 
     private final SerializeService serializeService;
-    
+
     private final TypeNameProvider typeNameProvider;
 
     public DefaultPublishableExceptionPublisher(String topic, String tag, SendMessageService sendMessageService, SerializeService serializeService, TypeNameProvider typeNameProvider) {

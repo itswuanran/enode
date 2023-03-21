@@ -48,12 +48,12 @@ public abstract class AbstractCommandMessage<TAggregateRootId> extends AbstractM
         return aggregateRootId;
     }
 
+    public void setAggregateRootId(TAggregateRootId aggregateRootId) {
+        this.aggregateRootId = aggregateRootId;
+    }
+
     @Override
     public String getAggregateRootIdAsString() {
         return Objects.toString(aggregateRootId, "");
-    }
-
-    public void setAggregateRootId(TAggregateRootId aggregateRootId) {
-        this.aggregateRootId = aggregateRootId;
     }
 }

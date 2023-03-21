@@ -1,6 +1,6 @@
 package org.enodeframework.commanding.impl
 
-import kotlinx.coroutines.future.asDeferred
+import kotlinx.coroutines.future.await
 import org.enodeframework.commanding.CommandContext
 import org.enodeframework.commanding.CommandHandlerProxy
 import org.enodeframework.commanding.CommandMessage
@@ -25,7 +25,7 @@ class DefaultCommandHandlerProxy : CommandHandlerProxy {
         }
         val result = methodHandle.invoke(getInnerObject(), context, command)
         if (result is CompletionStage<*>) {
-            result.asDeferred().await()
+            result.await()
         }
     }
 

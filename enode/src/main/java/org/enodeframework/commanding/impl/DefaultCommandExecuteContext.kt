@@ -1,7 +1,6 @@
 package org.enodeframework.commanding.impl
 
 import com.google.common.base.Strings
-import kotlinx.coroutines.future.asDeferred
 import org.enodeframework.commanding.CommandExecuteContext
 import org.enodeframework.commanding.CommandResult
 import org.enodeframework.common.exception.AggregateRootAlreadyExistException
@@ -48,7 +47,7 @@ class DefaultCommandExecuteContext(
     }
 
     override suspend fun add(aggregateRoot: AggregateRoot) {
-        addAsync(aggregateRoot).asDeferred().await()
+        addAsync(aggregateRoot).await()
     }
 
     private fun addInternal(aggregateRoot: AggregateRoot) {
@@ -100,11 +99,11 @@ class DefaultCommandExecuteContext(
     }
 
     override suspend fun <T : AggregateRoot> get(id: Any, firstFromCache: Boolean, aggregateRootType: Class<T>): T {
-        return getAsync(id, firstFromCache, aggregateRootType).asDeferred().await()
+        return getAsync(id, firstFromCache, aggregateRootType).await()
     }
 
     override suspend fun <T : AggregateRoot> get(id: Any, aggregateRootType: Class<T>): T {
-        return getAsync(id, aggregateRootType).asDeferred().await()
+        return getAsync(id, aggregateRootType).await()
     }
 
     override val trackedAggregateRoots: List<AggregateRoot>

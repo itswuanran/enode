@@ -60,7 +60,7 @@ class DefaultEventCommittingService(
     private fun getEventMailBoxIndex(aggregateRootId: String): Int {
         var hash = 23
         for (c in aggregateRootId.toCharArray()) {
-            hash = (hash shl 5) - hash + c.toInt()
+            hash = (hash shl 5) - hash + c.code
         }
         if (hash < 0) {
             hash = abs(hash)
