@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Measures the difference in message timestamps between the last ingested and the last processed message.
  */
-public class EventProcessorLatencyMonitor implements MessageMonitor<DomainEventMessage<?>>, MetricSet {
+public class EventProcessorLatencyMonitor implements MessageMonitor<DomainEventMessage>, MetricSet {
 
     private final Clock clock;
     private final AtomicLong processTime = new AtomicLong();
@@ -38,7 +38,7 @@ public class EventProcessorLatencyMonitor implements MessageMonitor<DomainEventM
     }
 
     @Override
-    public MonitorCallback onMessageIngested(DomainEventMessage<?> message) {
+    public MonitorCallback onMessageIngested(DomainEventMessage message) {
         if (message != null) {
             this.processTime.set(Duration.between(message.getTimestamp().toInstant(), clock.instant()).toMillis());
         }

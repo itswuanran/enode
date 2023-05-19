@@ -41,8 +41,8 @@ class ProcessingEventMailBox(
                     processingEvent.message.commandId,
                     processingEvent.message.version,
                     processingEvent.message.id,
-                    processingEvent.message.events.joinToString("|") { x: DomainEventMessage<*> -> x.javaClass.name },
-                    processingEvent.message.events.joinToString("|") { obj: DomainEventMessage<*> -> obj.id },
+                    processingEvent.message.events.joinToString("|") { x: DomainEventMessage -> x.javaClass.name },
+                    processingEvent.message.events.joinToString("|") { obj: DomainEventMessage -> obj.id },
                     version
                 )
             }
@@ -122,8 +122,8 @@ class ProcessingEventMailBox(
                     processingEvent.message.commandId,
                     processingEvent.message.version,
                     processingEvent.message.id,
-                    processingEvent.message.events.joinToString("|") { x: DomainEventMessage<*> -> x.javaClass.name },
-                    processingEvent.message.events.joinToString("|") { x: DomainEventMessage<*> -> x.id })
+                    processingEvent.message.events.joinToString("|") { x: DomainEventMessage -> x.javaClass.name },
+                    processingEvent.message.events.joinToString("|") { x: DomainEventMessage -> x.id })
             }
         }
     }
@@ -150,8 +150,8 @@ class ProcessingEventMailBox(
                         eventStream.commandId,
                         eventStream.version,
                         eventStream.id,
-                        processingEvent.message.events.joinToString("|") { x: DomainEventMessage<*> -> x.javaClass.name },
-                        processingEvent.message.events.joinToString("|") { x: DomainEventMessage<*> -> x.id },
+                        processingEvent.message.events.joinToString("|") { x: DomainEventMessage -> x.javaClass.name },
+                        processingEvent.message.events.joinToString("|") { x: DomainEventMessage -> x.id },
                         nextExpectingEventVersion
                     )
                 }
@@ -252,9 +252,7 @@ class ProcessingEventMailBox(
         return waitingProcessingEventDict.size
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(ProcessingEventMailBox::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(ProcessingEventMailBox::class.java)
 
     init {
         this.lastActiveTime = Date()

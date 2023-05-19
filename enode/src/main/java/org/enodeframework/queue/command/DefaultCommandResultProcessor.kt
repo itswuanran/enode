@@ -7,7 +7,6 @@ import io.vertx.core.AbstractVerticle
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
 import io.vertx.core.net.NetServerOptions
-import io.vertx.core.net.SocketAddress
 import io.vertx.ext.bridge.BridgeOptions
 import io.vertx.ext.bridge.PermittedOptions
 import io.vertx.ext.eventbus.bridge.tcp.TcpEventBusBridge
@@ -20,7 +19,6 @@ import org.enodeframework.common.extensions.SystemClock
 import org.enodeframework.common.scheduling.ScheduleService
 import org.enodeframework.common.scheduling.Worker
 import org.enodeframework.common.serializing.SerializeService
-import org.enodeframework.common.utils.ReplyUtil
 import org.enodeframework.queue.domainevent.DomainEventHandledMessage
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -32,10 +30,9 @@ import java.util.concurrent.TimeUnit
 /**
  * @author anruence@gmail.com
  */
-class DefaultCommandResultProcessor constructor(
+class DefaultCommandResultProcessor(
     private val scheduleService: ScheduleService,
     private val serializeService: SerializeService,
-    private val socketAddress: SocketAddress,
     private val serverOptions: NetServerOptions,
     private val completionSourceTimeout: Int
 ) : AbstractVerticle(), CommandResultProcessor {
@@ -49,8 +46,8 @@ class DefaultCommandResultProcessor constructor(
     private lateinit var tcpEventBusBridge: TcpEventBusBridge
     private var started = false
 
-    private fun startServer(socketAddress: SocketAddress) {
-        val address = ReplyUtil.toURI(socketAddress)
+    private fun startServer() {
+        val address = getBindAddress()
         vertx.eventBus().consumer(address) { msg: Message<JsonObject> ->
             processRequestInternal(msg.body())
         }
@@ -58,21 +55,21 @@ class DefaultCommandResultProcessor constructor(
         bridgeOptions.addInboundPermitted(PermittedOptions().setAddress(address))
         bridgeOptions.addOutboundPermitted(PermittedOptions().setAddress(address))
         tcpEventBusBridge = TcpEventBusBridge.create(vertx, bridgeOptions, serverOptions)
-        tcpEventBusBridge.listen(socketAddress.port()).onComplete { res ->
+        tcpEventBusBridge.listen(serverOptions.port).onComplete { res ->
             if (!res.succeeded()) {
-                logger.error("vertx netServer start failed. addr: {}", socketAddress, res.cause())
+                logger.error("vertx netServer start failed. addr: {}", address, res.cause())
             }
         }
     }
 
     override fun registerProcessingCommand(
-        command: CommandMessage<*>,
+        command: CommandMessage,
         commandReturnType: CommandReturnType,
         taskCompletionSource: CompletableFuture<CommandResult>
     ) {
         if (commandTaskDict.asMap().putIfAbsent(
                 command.id, CommandTaskCompletionSource(
-                    command.getAggregateRootIdAsString(),
+                    command.aggregateRootId,
                     commandReturnType,
                     taskCompletionSource
                 )
@@ -92,7 +89,7 @@ class DefaultCommandResultProcessor constructor(
         if (started) {
             return
         }
-        startServer(socketAddress)
+        startServer()
         commandExecutedMessageWorker.start()
         domainEventHandledMessageWorker.start()
         scheduleService.startTask(
@@ -111,8 +108,8 @@ class DefaultCommandResultProcessor constructor(
         tcpEventBusBridge.close()
     }
 
-    override fun getBindAddress(): SocketAddress {
-        return socketAddress
+    override fun getBindAddress(): String {
+        return String.format("enode://%s:%d", serverOptions.host, serverOptions.port)
     }
 
     private fun processRequestInternal(reply: JsonObject) {
@@ -187,13 +184,13 @@ class DefaultCommandResultProcessor constructor(
         }
     }
 
-    override fun processFailedSendingCommand(commandMessage: CommandMessage<*>) {
-        val commandTaskCompletionSource = commandTaskDict.asMap().remove(commandMessage.id)
+    override fun processFailedSendingCommand(command: CommandMessage) {
+        val commandTaskCompletionSource = commandTaskDict.asMap().remove(command.id)
         if (commandTaskCompletionSource != null) {
             val commandResult = CommandResult(
                 CommandStatus.Failed,
-                commandMessage.id,
-                commandMessage.getAggregateRootIdAsString(),
+                command.id,
+                command.aggregateRootId,
                 "Failed to send the command.",
                 String::class.java.name
             )
@@ -224,13 +221,11 @@ class DefaultCommandResultProcessor constructor(
         }
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(DefaultCommandResultProcessor::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(DefaultCommandResultProcessor::class.java)
 
     init {
         commandTaskDict = CacheBuilder.newBuilder()
-            .removalListener<String, CommandTaskCompletionSource> { notification ->
+            .removalListener { notification ->
                 if (notification.cause == RemovalCause.EXPIRED) {
                     processTimeoutCommand(notification.key!!, notification.value)
                 }

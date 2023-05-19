@@ -4,8 +4,8 @@ import org.enodeframework.annotation.Command
 import org.enodeframework.annotation.Event
 import org.enodeframework.annotation.Priority
 import org.enodeframework.annotation.Subscribe
-import org.enodeframework.common.container.DefaultObjectContainer
 import org.enodeframework.common.exception.HandlerRegisterException
+import org.enodeframework.common.extensions.ObjectContainer
 import org.enodeframework.infrastructure.AssemblyInitializer
 import org.enodeframework.infrastructure.MethodInvocation
 import org.enodeframework.infrastructure.ObjectProxy
@@ -58,9 +58,9 @@ abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface, THandlerSou
         return method.kotlinFunction?.isSuspend == true
     }
 
-    override fun initialize(componentTypes: Set<Class<*>>) {
+    override fun initialize(objectContainer: ObjectContainer, componentTypes: Set<Class<*>>) {
         componentTypes.filter { type: Class<*> -> isHandlerType(type) }
-            .forEach { handlerType: Class<*> -> registerHandler(handlerType) }
+            .forEach { handlerType: Class<*> -> registerHandler(objectContainer, handlerType) }
         initializeHandlerPriority()
     }
 
@@ -123,7 +123,7 @@ abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface, THandlerSou
         return method.isAnnotationPresent(Subscribe::class.java)
     }
 
-    private fun registerHandler(handlerType: Class<*>) {
+    private fun registerHandler(objectContainer: ObjectContainer, handlerType: Class<*>) {
         val handleMethods = ReflectionUtils.getMethods(handlerType, { method: Method -> isHandleMethodMatch(method) })
         handleMethods.forEach { method: Method ->
             // 反射Method转换为MethodHandle，提高效率
@@ -133,7 +133,7 @@ abstract class AbstractHandlerProvider<TKey, THandlerProxyInterface, THandlerSou
             val key = this.getKey(method)
             val handlers = handlerDict.computeIfAbsent(key) { ArrayList() }
             val handlerProxy = this.getHandlerProxyImplementationType().getDeclaredConstructor().newInstance()
-            handlerProxy.setInnerObject(DefaultObjectContainer.resolve(handlerType))
+            handlerProxy.setInnerObject(objectContainer.resolve(handlerType))
             handlerProxy.setMethod(method)
             handlerProxy.setMethodHandle(handleMethod)
             handlers.add(handlerProxy)

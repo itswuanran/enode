@@ -4,8 +4,13 @@ import io.vertx.mysqlclient.MySQLPool
 import io.vertx.sqlclient.Tuple
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.common.serializing.SerializeService
-import org.enodeframework.configurations.EventStoreOptions
-import org.enodeframework.eventing.*
+import org.enodeframework.eventing.AggregateEventAppendResult
+import org.enodeframework.eventing.BatchAggregateEventAppendResult
+import org.enodeframework.eventing.DomainEventStream
+import org.enodeframework.eventing.EventAppendResult
+import org.enodeframework.eventing.EventSerializer
+import org.enodeframework.eventing.EventStore
+import org.enodeframework.eventing.EventStoreConfiguration
 import org.enodeframework.mysql.handler.MySQLAddDomainEventsHandler
 import org.enodeframework.mysql.handler.MySQLFindDomainEventsHandler
 import java.time.ZoneId
@@ -18,14 +23,14 @@ import java.util.concurrent.CompletableFuture
 
 open class MySQLEventStore(
     sqlClient: MySQLPool,
-    configuration: EventStoreOptions,
+    configuration: EventStoreConfiguration,
     eventSerializer: EventSerializer,
     serializeService: SerializeService
 ) : EventStore {
 
     private val eventSerializer: EventSerializer
     private val serializeService: SerializeService
-    private val options: EventStoreOptions
+    private val options: EventStoreConfiguration
     private val sqlClient: MySQLPool
 
     override fun batchAppendAsync(eventStreams: List<DomainEventStream>): CompletableFuture<EventAppendResult> {

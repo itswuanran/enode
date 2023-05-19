@@ -1,6 +1,6 @@
 package org.enodeframework.spring;
 
-import org.enodeframework.common.container.ObjectContainer;
+import org.enodeframework.common.extensions.ObjectContainer;
 import org.springframework.context.ApplicationContext;
 
 /**
@@ -10,15 +10,19 @@ import org.springframework.context.ApplicationContext;
  */
 public class SpringObjectContainer implements ObjectContainer {
 
-    private final ApplicationContext applicationContext;
+    public static String[] BASE_PACKAGES;
+    private static ApplicationContext applicationContext;
 
     public SpringObjectContainer(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
+        SpringObjectContainer.applicationContext = applicationContext;
+    }
+
+    public static <TService> TService getBean(Class<TService> serviceType) {
+        return applicationContext.getBean(serviceType);
     }
 
     @Override
     public <TService> TService resolve(Class<TService> serviceType) {
         return applicationContext.getBean(serviceType);
     }
-
 }

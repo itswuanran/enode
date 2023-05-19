@@ -2,6 +2,7 @@ package org.enodeframework.mysql.handler
 
 import io.vertx.core.AsyncResult
 import io.vertx.core.Handler
+import io.vertx.mysqlclient.MySQLBatchException
 import io.vertx.mysqlclient.MySQLException
 import io.vertx.sqlclient.Row
 import io.vertx.sqlclient.RowSet
@@ -13,9 +14,7 @@ import java.util.concurrent.CompletableFuture
 class MySQLUpsertPublishedVersionHandler(private val publishedUkName: String, private val msg: String) :
     Handler<AsyncResult<RowSet<Row>>> {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(MySQLUpsertPublishedVersionHandler::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(MySQLUpsertPublishedVersionHandler::class.java)
 
     val future = CompletableFuture<Int>()
 
@@ -39,6 +38,9 @@ class MySQLUpsertPublishedVersionHandler(private val publishedUkName: String, pr
         var throwable = ex
         if (ex is MySQLException) {
             throwable = ex;
+        }
+        if (ex is MySQLBatchException) {
+            throwable = ex.iterationError.values.first()
         }
         if (ex.cause is MySQLException) {
             throwable = ex.cause

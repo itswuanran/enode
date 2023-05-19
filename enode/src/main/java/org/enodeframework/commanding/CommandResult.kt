@@ -25,7 +25,7 @@ class CommandResult {
     /**
      * Represents the command result data.
      */
-    var result: String? = ""
+    var result: String = ""
         private set
 
     /**
@@ -43,7 +43,7 @@ class CommandResult {
         status: CommandStatus,
         commandId: String,
         aggregateRootId: String,
-        result: String?,
+        result: String,
         resultType: String
     ) {
         this.status = status

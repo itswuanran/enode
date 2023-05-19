@@ -2,7 +2,7 @@ package org.enodeframework.samples.domain.note;
 
 import org.enodeframework.eventing.AbstractDomainEventMessage;
 
-public class NoteTitleChanged extends AbstractDomainEventMessage<String> {
+public class NoteTitleChanged extends AbstractDomainEventMessage {
     private String title;
 
     public NoteTitleChanged() {

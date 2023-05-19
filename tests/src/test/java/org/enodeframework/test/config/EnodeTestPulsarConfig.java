@@ -33,7 +33,7 @@ public class EnodeTestPulsarConfig {
 
     @Bean
     public Consumer<byte[]> commandConsumer(PulsarClient pulsarClient, @Qualifier("pulsarCommandListener")
-        PulsarMessageListener pulsarCommandListener) throws PulsarClientException {
+    PulsarMessageListener pulsarCommandListener) throws PulsarClientException {
         return pulsarClient.newConsumer().messageListener(pulsarCommandListener)
             .topic(commandTopic)
             .subscriptionType(SubscriptionType.Key_Shared)
@@ -43,7 +43,7 @@ public class EnodeTestPulsarConfig {
 
     @Bean
     public Consumer<byte[]> eventConsumer(PulsarClient pulsarClient, @Qualifier("pulsarDomainEventListener")
-        PulsarMessageListener pulsarDomainEventListener) throws PulsarClientException {
+    PulsarMessageListener pulsarDomainEventListener) throws PulsarClientException {
         return pulsarClient.newConsumer().messageListener(pulsarDomainEventListener)
             .topic(eventTopic)
             .subscriptionType(SubscriptionType.Key_Shared)

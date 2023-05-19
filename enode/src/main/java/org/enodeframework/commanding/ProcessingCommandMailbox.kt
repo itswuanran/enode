@@ -21,6 +21,7 @@ class ProcessingCommandMailbox(
     private val coroutineDispatcher: CoroutineDispatcher,
     private val batchSize: Int
 ) {
+    private val logger = LoggerFactory.getLogger(ProcessingCommandMailbox::class.java)
     private val lockObj = Any()
     private val asyncLockObj = Any()
     private var messageDict: ConcurrentHashMap<Long, ProcessingCommand> = ConcurrentHashMap()
@@ -272,9 +273,6 @@ class ProcessingCommandMailbox(
         isRunning = false
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(ProcessingCommandMailbox::class.java)
-    }
 
     init {
         lastActiveTime = Date()

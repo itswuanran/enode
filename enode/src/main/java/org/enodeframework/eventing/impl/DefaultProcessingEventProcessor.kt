@@ -9,7 +9,11 @@ import org.enodeframework.common.io.IOHelper.tryAsyncActionRecursivelyWithoutRes
 import org.enodeframework.common.io.Task.sleep
 import org.enodeframework.common.scheduling.ScheduleService
 import org.enodeframework.common.serializing.SerializeService
-import org.enodeframework.eventing.*
+import org.enodeframework.eventing.EnqueueMessageResult
+import org.enodeframework.eventing.ProcessingEvent
+import org.enodeframework.eventing.ProcessingEventMailBox
+import org.enodeframework.eventing.ProcessingEventProcessor
+import org.enodeframework.eventing.PublishedVersionStore
 import org.enodeframework.messaging.MessageDispatcher
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -23,8 +27,28 @@ class DefaultProcessingEventProcessor(
     private val serializeService: SerializeService,
     private val messageDispatcher: MessageDispatcher,
     private val publishedVersionStore: PublishedVersionStore,
-    private val coroutineDispatcher: CoroutineDispatcher
+    private val coroutineDispatcher: CoroutineDispatcher,
+    /**
+     * 处理领域事件的处理器的名字，默认为DefaultEventHandler
+     */
+    private val domainEventStreamMessageHandlerName: String = "DefaultEventProcessor"
 ) : ProcessingEventProcessor {
+    constructor(
+        scheduleService: ScheduleService,
+        serializeService: SerializeService,
+        messageDispatcher: MessageDispatcher,
+        publishedVersionStore: PublishedVersionStore,
+        coroutineDispatcher: CoroutineDispatcher
+    ) : this(
+        scheduleService,
+        serializeService,
+        messageDispatcher,
+        publishedVersionStore,
+        coroutineDispatcher,
+        "DefaultEventProcessor"
+    )
+
+    private val logger = LoggerFactory.getLogger(DefaultProcessingEventProcessor::class.java)
     private val scanInactiveMailBoxTaskName: String =
         "CleanInactiveProcessingEventMailBoxes_" + SystemClock.now() + Random().nextInt(10000)
     private val processTryToRefreshAggregateTaskName: String =
@@ -33,7 +57,8 @@ class DefaultProcessingEventProcessor(
     /**
      * The name of the processor
      */
-    override val name = "DefaultEventProcessor"
+    override val name = domainEventStreamMessageHandlerName
+
     private val toRefreshAggregateRootMailBoxDict: ConcurrentHashMap<String, ProcessingEventMailBox> =
         ConcurrentHashMap()
     private val mailboxDict: ConcurrentHashMap<String, ProcessingEventMailBox> = ConcurrentHashMap()
@@ -237,9 +262,4 @@ class DefaultProcessingEventProcessor(
     private fun isMailBoxAllowRemove(mailbox: ProcessingEventMailBox): Boolean {
         return (mailbox.isInactive(timeoutSeconds) && !mailbox.isRunning() && mailbox.getTotalUnHandledMessageCount() == 0 && mailbox.getWaitingMessageCount() == 0)
     }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(DefaultProcessingEventProcessor::class.java)
-    }
-
 }

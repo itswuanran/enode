@@ -9,6 +9,7 @@ import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.enodeframework.common.exception.IORuntimeException;
 import org.enodeframework.queue.QueueMessage;
+import org.enodeframework.queue.SendMessageResult;
 import org.enodeframework.queue.SendMessageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +22,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public class RocketMQSendMessageService implements SendMessageService {
 
-    private static final Logger logger = LoggerFactory.getLogger(RocketMQSendMessageService.class);
+    private final Logger logger = LoggerFactory.getLogger(RocketMQSendMessageService.class);
 
     private final MQProducer producer;
 
@@ -30,8 +31,8 @@ public class RocketMQSendMessageService implements SendMessageService {
     }
 
     @Override
-    public CompletableFuture<Boolean> sendMessageAsync(QueueMessage queueMessage) {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+    public CompletableFuture<SendMessageResult> sendMessageAsync(QueueMessage queueMessage) {
+        CompletableFuture<SendMessageResult> future = new CompletableFuture<>();
         Message message = this.covertToProducerRecord(queueMessage);
         try {
             producer.send(message, new SelectMessageQueueByHash(), queueMessage.getRouteKey(), new SendCallback() {
@@ -40,7 +41,7 @@ public class RocketMQSendMessageService implements SendMessageService {
                     if (logger.isDebugEnabled()) {
                         logger.debug("Async send message success, sendResult: {}, message: {}", result, queueMessage);
                     }
-                    future.complete(true);
+                    future.complete(new SendMessageResult(result.getMsgId(), result));
                 }
 
                 @Override

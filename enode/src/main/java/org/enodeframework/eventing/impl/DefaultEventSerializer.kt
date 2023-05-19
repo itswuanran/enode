@@ -12,15 +12,15 @@ class DefaultEventSerializer(
     private val typeNameProvider: TypeNameProvider,
     private val serializeService: SerializeService
 ) : EventSerializer {
-    override fun serialize(evnts: List<DomainEventMessage<*>>): Map<String, String> {
+    override fun serialize(evnts: List<DomainEventMessage>): Map<String, String> {
         return evnts.associateBy({ k -> typeNameProvider.getTypeName(k.javaClass) },
             { v -> serializeService.serialize(v) })
     }
 
-    override fun deserialize(data: Map<String, String>): List<DomainEventMessage<*>> {
+    override fun deserialize(data: Map<String, String>): List<DomainEventMessage> {
         return data.map { (key, value) ->
             val eventType = typeNameProvider.getType(key)
-            serializeService.deserialize(value, eventType) as DomainEventMessage<*>
+            serializeService.deserialize(value, eventType) as DomainEventMessage
         }
     }
 }

@@ -12,9 +12,7 @@ import java.util.concurrent.CompletableFuture
 
 open class JDBCFindPublishedVersionHandler(private val msg: String) : Handler<AsyncResult<RowSet<Row>>> {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(JDBCFindPublishedVersionHandler::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(JDBCFindPublishedVersionHandler::class.java)
 
     var future = CompletableFuture<Int>()
 

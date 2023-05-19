@@ -6,7 +6,6 @@ import org.enodeframework.commanding.CommandContext
 import org.enodeframework.test.command.AsyncHandlerBaseCommand
 import org.enodeframework.test.command.AsyncHandlerChildCommand
 import org.enodeframework.test.commandhandler.TestCommandHandler2
-import org.enodeframework.test.domain.TestAggregate
 import org.slf4j.LoggerFactory
 
 @Command

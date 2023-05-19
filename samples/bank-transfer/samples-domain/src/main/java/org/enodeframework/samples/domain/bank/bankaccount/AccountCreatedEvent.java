@@ -5,7 +5,7 @@ import org.enodeframework.eventing.AbstractDomainEventMessage;
 /**
  * 已开户
  */
-public class AccountCreatedEvent extends AbstractDomainEventMessage<String> {
+public class AccountCreatedEvent extends AbstractDomainEventMessage {
     /**
      * 账户拥有者
      */

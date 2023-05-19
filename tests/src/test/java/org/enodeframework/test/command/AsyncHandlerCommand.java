@@ -2,7 +2,7 @@ package org.enodeframework.test.command;
 
 import org.enodeframework.commanding.AbstractCommandMessage;
 
-public class AsyncHandlerCommand extends AbstractCommandMessage<String> {
+public class AsyncHandlerCommand extends AbstractCommandMessage {
     public boolean shouldGenerateApplicationMessage;
     public boolean shouldThrowException;
     public boolean shouldThrowIOException;

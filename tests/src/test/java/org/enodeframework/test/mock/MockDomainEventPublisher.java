@@ -4,10 +4,13 @@ import org.enodeframework.common.exception.EnodeException;
 import org.enodeframework.common.exception.IORuntimeException;
 import org.enodeframework.eventing.DomainEventStream;
 import org.enodeframework.messaging.MessagePublisher;
+import org.enodeframework.queue.SendMessageResult;
 
 import java.util.concurrent.CompletableFuture;
 
 public class MockDomainEventPublisher implements MessagePublisher<DomainEventStream> {
+    private static final CompletableFuture<SendMessageResult> successResultTask = CompletableFuture.completedFuture(new SendMessageResult("", ""));
+
     private int expectFailedCount = 0;
     private int currentFailedCount = 0;
     private FailedType failedType;
@@ -24,7 +27,7 @@ public class MockDomainEventPublisher implements MessagePublisher<DomainEventStr
     }
 
     @Override
-    public CompletableFuture<Boolean> publishAsync(DomainEventStream message) {
+    public CompletableFuture<SendMessageResult> publishAsync(DomainEventStream message) {
         if (currentFailedCount < expectFailedCount) {
             currentFailedCount++;
             if (failedType == FailedType.UnKnownException) {
@@ -34,6 +37,6 @@ public class MockDomainEventPublisher implements MessagePublisher<DomainEventStr
             } else if (failedType == FailedType.TaskIOException) {
             }
         }
-        return CompletableFuture.completedFuture(false);
+        return successResultTask;
     }
 }

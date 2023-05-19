@@ -2,7 +2,6 @@ package org.enodeframework.spring;
 
 import org.enodeframework.annotation.Command;
 import org.enodeframework.annotation.Event;
-import org.enodeframework.common.container.DefaultObjectContainer;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.EnvironmentAware;
@@ -84,7 +83,7 @@ public class EnodeBootstrapRegistrar implements ImportBeanDefinitionRegistrar, R
             }
         });
         String[] scanPackages = StringUtils.toStringArray(basePackages);
-        DefaultObjectContainer.BASE_PACKAGES = scanPackages;
+        SpringObjectContainer.BASE_PACKAGES = scanPackages;
         scanner.scan(scanPackages);
     }
 }

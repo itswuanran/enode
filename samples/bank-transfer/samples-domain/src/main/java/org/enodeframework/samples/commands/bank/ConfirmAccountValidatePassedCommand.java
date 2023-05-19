@@ -5,7 +5,7 @@ import org.enodeframework.commanding.AbstractCommandMessage;
 /**
  * 确认账户验证已通过
  */
-public class ConfirmAccountValidatePassedCommand extends AbstractCommandMessage<String> {
+public class ConfirmAccountValidatePassedCommand extends AbstractCommandMessage {
     /**
      * 账户ID
      */

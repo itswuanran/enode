@@ -7,5 +7,5 @@ interface CommandHandlerProxy : ObjectProxy, MethodInvocation {
     /**
      * Handle the given application command async. deal with aggregate in memory
      */
-    suspend fun handleAsync(context: CommandContext, command: CommandMessage<*>)
+    suspend fun handleAsync(context: CommandContext, command: CommandMessage)
 }

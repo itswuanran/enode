@@ -5,7 +5,7 @@ import org.enodeframework.commanding.AbstractCommandMessage;
 /**
  * 确认转入
  */
-public class ConfirmTransferInCommand extends AbstractCommandMessage<String> {
+public class ConfirmTransferInCommand extends AbstractCommandMessage {
     public ConfirmTransferInCommand() {
     }
 

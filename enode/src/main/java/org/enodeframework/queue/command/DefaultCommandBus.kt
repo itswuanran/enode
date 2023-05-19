@@ -7,9 +7,9 @@ import org.enodeframework.commanding.CommandResult
 import org.enodeframework.commanding.CommandReturnType
 import org.enodeframework.common.serializing.SerializeService
 import org.enodeframework.common.utils.Assert
-import org.enodeframework.common.utils.ReplyUtil
 import org.enodeframework.queue.MessageTypeCode
 import org.enodeframework.queue.QueueMessage
+import org.enodeframework.queue.SendMessageResult
 import org.enodeframework.queue.SendMessageService
 import java.util.concurrent.CompletableFuture
 
@@ -23,20 +23,20 @@ class DefaultCommandBus(
     private val sendMessageService: SendMessageService,
     private val serializeService: SerializeService,
 ) : CommandBus {
-    override fun sendAsync(command: CommandMessage<*>): CompletableFuture<Boolean> {
+    override fun sendAsync(command: CommandMessage): CompletableFuture<SendMessageResult> {
         return sendMessageService.sendMessageAsync(buildCommandMessage(command, false))
     }
 
-    override suspend fun send(command: CommandMessage<*>): Boolean {
+    override suspend fun send(command: CommandMessage): SendMessageResult {
         return sendAsync(command).await()
     }
 
-    override fun executeAsync(command: CommandMessage<*>): CompletableFuture<CommandResult> {
+    override fun executeAsync(command: CommandMessage): CompletableFuture<CommandResult> {
         return executeAsync(command, CommandReturnType.CommandExecuted)
     }
 
     override fun executeAsync(
-        command: CommandMessage<*>,
+        command: CommandMessage,
         commandReturnType: CommandReturnType
     ): CompletableFuture<CommandResult> {
         val taskCompletionSource = CompletableFuture<CommandResult>()
@@ -55,21 +55,21 @@ class DefaultCommandBus(
         return taskCompletionSource
     }
 
-    override suspend fun execute(command: CommandMessage<*>): CommandResult {
+    override suspend fun execute(command: CommandMessage): CommandResult {
         return executeAsync(command).await()
     }
 
-    override suspend fun execute(command: CommandMessage<*>, commandReturnType: CommandReturnType): CommandResult {
+    override suspend fun execute(command: CommandMessage, commandReturnType: CommandReturnType): CommandResult {
         return executeAsync(command, commandReturnType).await()
     }
 
-    private fun buildCommandMessage(command: CommandMessage<*>, needReply: Boolean): QueueMessage {
+    private fun buildCommandMessage(command: CommandMessage, needReply: Boolean): QueueMessage {
         Assert.nonNull(command.aggregateRootId, "aggregateRootId")
         Assert.nonNull(topic, "topic")
         val commandData = serializeService.serialize(command)
         val genericCommandMessage = GenericCommandMessage()
         if (needReply) {
-            genericCommandMessage.replyAddress = ReplyUtil.toURI(commandResultProcessor.getBindAddress())
+            genericCommandMessage.replyAddress = commandResultProcessor.getBindAddress()
         }
         genericCommandMessage.commandData = commandData
         genericCommandMessage.commandType = command.javaClass.name
@@ -79,8 +79,8 @@ class DefaultCommandBus(
         queueMessage.tag = tag
         queueMessage.body = messageData
         queueMessage.type = MessageTypeCode.CommandMessage.value
-        queueMessage.routeKey = command.getAggregateRootIdAsString()
-        val key = "${command.id}_cmd_agg_${command.getAggregateRootIdAsString()}"
+        queueMessage.routeKey = command.aggregateRootId
+        val key = "${command.id}_cmd_agg_${command.aggregateRootId}"
         queueMessage.key = key
         return queueMessage
     }

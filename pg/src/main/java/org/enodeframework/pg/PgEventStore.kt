@@ -4,8 +4,13 @@ import io.vertx.pgclient.PgPool
 import io.vertx.sqlclient.Tuple
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.common.serializing.SerializeService
-import org.enodeframework.configurations.EventStoreOptions
-import org.enodeframework.eventing.*
+import org.enodeframework.eventing.AggregateEventAppendResult
+import org.enodeframework.eventing.BatchAggregateEventAppendResult
+import org.enodeframework.eventing.DomainEventStream
+import org.enodeframework.eventing.EventAppendResult
+import org.enodeframework.eventing.EventSerializer
+import org.enodeframework.eventing.EventStore
+import org.enodeframework.eventing.EventStoreConfiguration
 import org.enodeframework.pg.handler.PgAddDomainEventsHandler
 import org.enodeframework.pg.handler.PgFindDomainEventsHandler
 import java.time.ZoneId
@@ -16,22 +21,19 @@ import java.util.concurrent.CompletableFuture
  */
 open class PgEventStore(
     pgPool: PgPool,
-    options: EventStoreOptions,
+    options: EventStoreConfiguration,
     eventSerializer: EventSerializer,
     serializeService: SerializeService
 ) : EventStore {
 
     private val eventSerializer: EventSerializer
     private val serializeService: SerializeService
-    private val options: EventStoreOptions
+    private val options: EventStoreConfiguration
     private val pgPool: PgPool
 
     override fun batchAppendAsync(eventStreams: List<DomainEventStream>): CompletableFuture<EventAppendResult> {
-        val future = CompletableFuture<EventAppendResult>()
-        val appendResult = EventAppendResult()
         if (eventStreams.isEmpty()) {
-            future.complete(appendResult)
-            return future
+            return CompletableFuture.completedFuture(EventAppendResult())
         }
         val eventStreamMap = eventStreams.distinct().groupBy { obj: DomainEventStream -> obj.aggregateRootId }
         val batchAggregateEventAppendResult = BatchAggregateEventAppendResult(eventStreamMap.keys.size)
@@ -76,7 +78,7 @@ open class PgEventStore(
                 domainEventStream.commandId,
                 domainEventStream.version,
                 domainEventStream.timestamp.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(),
-                serializeService.serialize(eventSerializer.serialize(domainEventStream.getEvents()))
+                serializeService.serialize(eventSerializer.serialize(domainEventStream.events))
             )
         }
         pgPool.withTransaction { client ->

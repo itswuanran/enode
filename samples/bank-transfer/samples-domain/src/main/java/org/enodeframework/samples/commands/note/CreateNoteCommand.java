@@ -2,7 +2,7 @@ package org.enodeframework.samples.commands.note;
 
 import org.enodeframework.commanding.AbstractCommandMessage;
 
-public class CreateNoteCommand extends AbstractCommandMessage<String> {
+public class CreateNoteCommand extends AbstractCommandMessage {
     private String title;
 
     public CreateNoteCommand() {

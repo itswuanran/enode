@@ -5,7 +5,7 @@ import org.enodeframework.eventing.AbstractDomainEventMessage;
 /**
  * 存款交易已完成
  */
-public class DepositTransactionCompletedEvent extends AbstractDomainEventMessage<String> {
+public class DepositTransactionCompletedEvent extends AbstractDomainEventMessage {
     public String accountId;
 
     public DepositTransactionCompletedEvent() {

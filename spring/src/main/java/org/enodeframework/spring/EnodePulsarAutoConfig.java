@@ -1,5 +1,6 @@
 package org.enodeframework.spring;
 
+import com.google.common.collect.Maps;
 import org.apache.pulsar.client.api.Producer;
 import org.enode.pulsar.message.PulsarMessageListener;
 import org.enode.pulsar.message.PulsarSendMessageService;
@@ -10,9 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @ConditionalOnProperty(prefix = "spring.enode", name = "mq", havingValue = "pulsar")
@@ -50,11 +49,11 @@ public class EnodePulsarAutoConfig {
 
     @Bean(name = "pulsarSendMessageService")
     public PulsarSendMessageService pulsarSendMessageService() {
-        List<Producer<byte[]>> producers = new ArrayList<>();
-        producers.add(enodePulsarCommandProducer);
-        producers.add(enodePulsarDomainEventProducer);
-        producers.add(enodePulsarPublishableExceptionProducer);
-        producers.add(enodePulsarApplicationMessageProducer);
+        Map<Character, Producer<byte[]>> producers = Maps.newHashMap();
+        producers.put(MessageTypeCode.CommandMessage.getValue(), enodePulsarCommandProducer);
+        producers.put(MessageTypeCode.DomainEventMessage.getValue(), enodePulsarDomainEventProducer);
+        producers.put(MessageTypeCode.ExceptionMessage.getValue(), enodePulsarPublishableExceptionProducer);
+        producers.put(MessageTypeCode.ApplicationMessage.getValue(), enodePulsarApplicationMessageProducer);
         return new PulsarSendMessageService(producers);
     }
 }

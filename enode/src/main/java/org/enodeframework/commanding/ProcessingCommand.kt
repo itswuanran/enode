@@ -6,7 +6,7 @@ import java.util.concurrent.CompletableFuture
  * @author anruence@gmail.com
  */
 class ProcessingCommand(
-    val message: CommandMessage<*>,
+    val message: CommandMessage,
     val commandExecuteContext: CommandExecuteContext,
     val items: MutableMap<String, Any>
 ) {

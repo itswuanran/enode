@@ -3,7 +3,7 @@ package org.enodeframework.test.domain;
 import com.google.common.collect.Lists;
 import org.enodeframework.domain.AbstractAggregateRoot;
 
-public class TestAggregate extends AbstractAggregateRoot<String> {
+public class TestAggregate extends AbstractAggregateRoot {
     private String title;
 
     public TestAggregate() {
