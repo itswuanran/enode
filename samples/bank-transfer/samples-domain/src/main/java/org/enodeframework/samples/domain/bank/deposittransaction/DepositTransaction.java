@@ -6,7 +6,7 @@ import org.enodeframework.samples.domain.bank.TransactionStatus;
 /**
  * 聚合根，表示一笔银行存款交易
  */
-public class DepositTransaction extends AbstractAggregateRoot<String> {
+public class DepositTransaction extends AbstractAggregateRoot {
     private String accountId;
     private double amount;
     private int status;

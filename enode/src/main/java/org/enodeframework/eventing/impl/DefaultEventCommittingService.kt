@@ -6,6 +6,7 @@ import org.enodeframework.commanding.CommandStatus
 import org.enodeframework.commanding.ProcessingCommand
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.common.serializing.SerializeService
+import org.enodeframework.domain.AggregateRoot
 import org.enodeframework.domain.MemoryCache
 import org.enodeframework.eventing.*
 import org.enodeframework.messaging.MessagePublisher
@@ -194,21 +195,23 @@ class DefaultEventCommittingService(
         commandMailBox.pause()
         val future = CompletableFuture<Boolean>()
         eventMailBox.removeAggregateAllEventCommittingContexts(aggregateRootId)
-        memoryCache.refreshAggregateFromEventStoreAsync(context.eventStream.aggregateRootTypeName, aggregateRootId)
-            .whenComplete { _, _ ->
-                try {
-                    if (duplicateCommandIdList != null) {
-                        for (commandId in duplicateCommandIdList) {
-                            commandMailBox.addDuplicateCommandId(commandId)
-                        }
+        memoryCache.refreshAggregateFromEventStoreAsync<AggregateRoot>(
+            context.eventStream.aggregateRootTypeName,
+            aggregateRootId
+        ).whenComplete { _, _ ->
+            try {
+                if (duplicateCommandIdList != null) {
+                    for (commandId in duplicateCommandIdList) {
+                        commandMailBox.addDuplicateCommandId(commandId)
                     }
-                    commandMailBox.resetConsumingSequence(consumingSequence)
-                } finally {
-                    commandMailBox.resume()
-                    commandMailBox.tryRun()
                 }
-                future.complete(true)
+                commandMailBox.resetConsumingSequence(consumingSequence)
+            } finally {
+                commandMailBox.resume()
+                commandMailBox.tryRun()
             }
+            future.complete(true)
+        }
         return future
     }
 

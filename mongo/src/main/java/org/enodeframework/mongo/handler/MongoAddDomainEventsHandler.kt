@@ -29,8 +29,7 @@ class MongoAddDomainEventsHandler(
 
     override fun handle(ar: AsyncResult<MongoClientBulkWriteResult>) {
         if (ar.succeeded()) {
-            val appendResult = AggregateEventAppendResult()
-            appendResult.eventAppendStatus = EventAppendStatus.Success
+            val appendResult = AggregateEventAppendResult(EventAppendStatus.Success)
             future.complete(appendResult)
             return
         }
@@ -46,14 +45,12 @@ class MongoAddDomainEventsHandler(
             }
         }
         if (message.contains(options.eventVersionUkName)) {
-            val appendResult = AggregateEventAppendResult()
-            appendResult.eventAppendStatus = EventAppendStatus.DuplicateEvent
+            val appendResult = AggregateEventAppendResult(EventAppendStatus.DuplicateEvent)
             future.complete(appendResult)
             return
         }
         if (message.contains(options.eventCommandIdUkName)) {
-            val appendResult = AggregateEventAppendResult()
-            appendResult.eventAppendStatus = EventAppendStatus.DuplicateCommand
+            val appendResult = AggregateEventAppendResult(EventAppendStatus.DuplicateCommand)
             val commandId = options.parseDuplicatedId(message)
             if (!Strings.isNullOrEmpty(commandId)) {
                 appendResult.duplicateCommandIds = Lists.newArrayList(commandId)

@@ -18,13 +18,13 @@ interface CommandContext {
     /**
      * Get an aggregate sync from the current command context.
      */
-    suspend fun <T : AggregateRoot> get(id: Any, firstFromCache: Boolean, aggregateRootType: Class<T>): T
+    suspend fun <T : AggregateRoot?> get(id: String, firstFromCache: Boolean, aggregateRootType: Class<T>): T
 
     /**
      * Get an aggregate async from the current command context.
      */
-    fun <T : AggregateRoot> getAsync(
-        id: Any,
+    fun <T : AggregateRoot?> getAsync(
+        id: String,
         firstFromCache: Boolean,
         aggregateRootType: Class<T>
     ): CompletableFuture<T>
@@ -32,12 +32,12 @@ interface CommandContext {
     /**
      * Get an aggregate sync from the current command context, default from cache.
      */
-    suspend fun <T : AggregateRoot> get(id: Any, aggregateRootType: Class<T>): T
+    suspend fun <T : AggregateRoot?> get(id: String, aggregateRootType: Class<T>): T
 
     /**
      * Get an aggregate async from the current command context, default from cache.
      */
-    fun <T : AggregateRoot> getAsync(id: Any, aggregateRootType: Class<T>): CompletableFuture<T>
+    fun <T : AggregateRoot?> getAsync(id: String, aggregateRootType: Class<T>): CompletableFuture<T>
 
     /**
      * Get result.

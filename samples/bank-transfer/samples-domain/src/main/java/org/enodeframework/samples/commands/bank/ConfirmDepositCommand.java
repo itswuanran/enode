@@ -5,7 +5,7 @@ import org.enodeframework.commanding.AbstractCommandMessage;
 /**
  * 确认存款
  */
-public class ConfirmDepositCommand extends AbstractCommandMessage<String> {
+public class ConfirmDepositCommand extends AbstractCommandMessage {
     public ConfirmDepositCommand() {
     }
 

@@ -2,7 +2,7 @@ package org.enodeframework.test.command;
 
 import org.enodeframework.commanding.AbstractCommandMessage;
 
-public class SetResultCommand extends AbstractCommandMessage<String> {
+public class SetResultCommand extends AbstractCommandMessage {
     public String Result;
 
     public String getResult() {

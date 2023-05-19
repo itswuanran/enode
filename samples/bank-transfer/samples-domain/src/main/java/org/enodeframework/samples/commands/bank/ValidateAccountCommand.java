@@ -8,7 +8,7 @@ import org.enodeframework.commanding.AbstractCommandMessage;
 /**
  * 验证账户是否合法
  */
-public class ValidateAccountCommand extends AbstractCommandMessage<String> {
+public class ValidateAccountCommand extends AbstractCommandMessage {
     public String transactionId;
 
     public ValidateAccountCommand() {

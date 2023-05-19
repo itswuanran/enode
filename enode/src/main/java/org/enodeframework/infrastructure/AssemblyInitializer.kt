@@ -1,5 +1,7 @@
 package org.enodeframework.infrastructure
 
+import org.enodeframework.common.container.ObjectContainer
+
 interface AssemblyInitializer {
-    fun initialize(componentTypes: Set<Class<*>>)
+    fun initialize(objectContainer: ObjectContainer, componentTypes: Set<Class<*>>)
 }

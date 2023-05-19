@@ -11,12 +11,12 @@ import java.util.concurrent.CompletableFuture
  */
 interface CommandResultProcessor {
     fun registerProcessingCommand(
-        command: CommandMessage<*>,
+        command: CommandMessage,
         commandReturnType: CommandReturnType,
         taskCompletionSource: CompletableFuture<CommandResult>
     )
 
     fun getBindAddress(): SocketAddress
 
-    fun processFailedSendingCommand(command: CommandMessage<*>)
+    fun processFailedSendingCommand(command: CommandMessage)
 }

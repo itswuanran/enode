@@ -6,7 +6,7 @@ import org.enodeframework.samples.domain.bank.TransactionStatus;
 /**
  * 聚合根，表示一笔银行内账户之间的转账交易
  */
-public class TransferTransaction extends AbstractAggregateRoot<String> {
+public class TransferTransaction extends AbstractAggregateRoot {
     private TransferTransactionInfo transferTransactionInfo;
     private int status;
     private boolean isSourceAccountValidatePassed;

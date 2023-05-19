@@ -5,11 +5,10 @@ import org.enodeframework.messaging.Message
 /**
  * Represents a command.
  */
-interface CommandMessage<T> : Message {
+interface CommandMessage : Message {
     /**
      * Represents the associated aggregate root string id.
      */
-    var aggregateRootId: T
+    var aggregateRootId: String
 
-    fun getAggregateRootIdAsString(): String
 }

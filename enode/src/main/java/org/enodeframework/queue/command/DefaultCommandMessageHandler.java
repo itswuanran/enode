@@ -50,7 +50,7 @@ public class DefaultCommandMessageHandler implements MessageHandler {
         logger.info("Received command message: {}", queueMessage);
         GenericCommandMessage commandMessage = serializeService.deserialize(queueMessage.getBody(), GenericCommandMessage.class);
         Class<?> commandType = typeNameProvider.getType(commandMessage.getCommandType());
-        CommandMessage<?> command = (CommandMessage<?>) serializeService.deserialize(commandMessage.getCommandData(), commandType);
+        CommandMessage command = (CommandMessage) serializeService.deserialize(commandMessage.getCommandData(), commandType);
         DefaultCommandExecuteContext commandExecuteContext = new DefaultCommandExecuteContext(repository, aggregateRootStorage, queueMessage, context, commandMessage, sendReplyService);
         Map<String, Object> commandItems = new HashMap<>();
         String uri = commandMessage.getReplyAddress();

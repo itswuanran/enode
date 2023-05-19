@@ -5,7 +5,7 @@ import org.enodeframework.eventing.AbstractDomainEventMessage;
 /**
  * 账户预操作已执行
  */
-public class TransactionPreparationCommittedEvent extends AbstractDomainEventMessage<String> {
+public class TransactionPreparationCommittedEvent extends AbstractDomainEventMessage {
     public double currentBalance;
     public TransactionPreparation transactionPreparation;
 

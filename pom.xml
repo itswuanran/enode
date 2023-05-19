@@ -25,34 +25,35 @@
     <packaging>pom</packaging>
 
     <properties>
-        <revision>1.1.5</revision>
+        <revision>1.1.4</revision>
         <maven.skip.deploy>false</maven.skip.deploy>
-        <maven.jar.version>3.2.0</maven.jar.version>
-        <maven.surefire.version>2.22.2</maven.surefire.version>
-        <maven.deploy.version>2.8.2</maven.deploy.version>
-        <maven.compiler.version>3.8.1</maven.compiler.version>
-        <maven.source.version>3.2.1</maven.source.version>
-        <maven.war.version>3.2.3</maven.war.version>
-        <maven.javadoc.version>3.2.0</maven.javadoc.version>
+        <maven.jar.version>3.3.0</maven.jar.version>
+        <maven.surefire.version>3.1.0</maven.surefire.version>
+        <maven.deploy.version>3.1.1</maven.deploy.version>
+        <maven.compiler.version>3.11.0</maven.compiler.version>
+        <maven.source.version>3.3.0</maven.source.version>
+        <maven.resources.version>3.3.1</maven.resources.version>
+        <maven.war.version>3.3.2</maven.war.version>
+        <maven.javadoc.version>3.5.0</maven.javadoc.version>
         <maven.gpg.version>1.6</maven.gpg.version>
-        <maven.flatten.version>1.2.7</maven.flatten.version>
+        <maven.flatten.version>1.5.0</maven.flatten.version>
         <dokka.version>1.8.10</dokka.version>
-        <kotlin.version>1.8.10</kotlin.version>
-        <kotlinx-coroutines.version>1.6.4</kotlinx-coroutines.version>
-        <slfj4.version>1.7.36</slfj4.version>
+        <kotlin.version>1.8.21</kotlin.version>
+        <kotlinx-coroutines.version>1.7.1</kotlinx-coroutines.version>
+        <slfj4.version>2.0.7</slfj4.version>
         <guava.version>31.1-jre</guava.version>
-        <jackson.version>2.14.2</jackson.version>
+        <jackson.version>2.15.1</jackson.version>
         <junit.version>4.13.2</junit.version>
         <jmh.version>1.36</jmh.version>
         <rocketmq.version>5.1.0</rocketmq.version>
         <ons.version>2.0.5.Final</ons.version>
-        <pulsar.version>2.10.3</pulsar.version>
-        <mysql.version>8.0.32</mysql.version>
+        <pulsar.version>2.11.1</pulsar.version>
+        <mysql.version>8.0.33</mysql.version>
         <reflections.version>0.10.2</reflections.version>
-        <vertx.version>4.4.0</vertx.version>
-        <opentelemetry.version>1.24.0</opentelemetry.version>
-        <metrics-core.version>4.2.17</metrics-core.version>
-        <spring-boot.version>3.0.4</spring-boot.version>
+        <vertx.version>4.4.2</vertx.version>
+        <opentelemetry.version>1.26.0</opentelemetry.version>
+        <metrics-core.version>4.2.18</metrics-core.version>
+        <spring-boot.version>3.1.0</spring-boot.version>
     </properties>
 
     <name>${project.artifactId}</name>
@@ -184,8 +185,8 @@
                 <version>${jackson.version}</version>
             </dependency>
             <dependency>
-                <groupId>mysql</groupId>
-                <artifactId>mysql-connector-java</artifactId>
+                <groupId>com.mysql</groupId>
+                <artifactId>mysql-connector-j</artifactId>
                 <version>${mysql.version}</version>
             </dependency>
             <dependency>
@@ -381,6 +382,11 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>${maven.resources.version}</version>
+            </plugin>
+            <plugin>
                 <groupId>org.jetbrains.dokka</groupId>
                 <artifactId>dokka-maven-plugin</artifactId>
                 <version>${dokka.version}</version>
@@ -413,6 +419,7 @@
                             <execution>
                                 <id>sign-artifacts</id>
                                 <phase>verify</phase>
+                                <!--suppress MavenModelInspection -->
                                 <goals>
                                     <goal>sign</goal>
                                 </goals>

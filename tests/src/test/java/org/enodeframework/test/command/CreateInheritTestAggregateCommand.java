@@ -2,7 +2,7 @@ package org.enodeframework.test.command;
 
 import org.enodeframework.commanding.AbstractCommandMessage;
 
-public class CreateInheritTestAggregateCommand extends AbstractCommandMessage<String> {
+public class CreateInheritTestAggregateCommand extends AbstractCommandMessage {
     public String Title;
 
     public String getTitle() {

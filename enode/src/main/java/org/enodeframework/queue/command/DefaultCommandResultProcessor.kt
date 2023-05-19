@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit
 /**
  * @author anruence@gmail.com
  */
-class DefaultCommandResultProcessor constructor(
+class DefaultCommandResultProcessor(
     private val scheduleService: ScheduleService,
     private val serializeService: SerializeService,
     private val socketAddress: SocketAddress,
@@ -50,7 +50,7 @@ class DefaultCommandResultProcessor constructor(
     private var started = false
 
     private fun startServer(socketAddress: SocketAddress) {
-        val address = ReplyUtil.toURI(socketAddress)
+        val address = ReplyUtil.toAddr(socketAddress)
         vertx.eventBus().consumer(address) { msg: Message<JsonObject> ->
             processRequestInternal(msg.body())
         }
@@ -66,13 +66,13 @@ class DefaultCommandResultProcessor constructor(
     }
 
     override fun registerProcessingCommand(
-        command: CommandMessage<*>,
+        command: CommandMessage,
         commandReturnType: CommandReturnType,
         taskCompletionSource: CompletableFuture<CommandResult>
     ) {
         if (commandTaskDict.asMap().putIfAbsent(
                 command.id, CommandTaskCompletionSource(
-                    command.getAggregateRootIdAsString(),
+                    command.aggregateRootId,
                     commandReturnType,
                     taskCompletionSource
                 )
@@ -187,13 +187,13 @@ class DefaultCommandResultProcessor constructor(
         }
     }
 
-    override fun processFailedSendingCommand(commandMessage: CommandMessage<*>) {
-        val commandTaskCompletionSource = commandTaskDict.asMap().remove(commandMessage.id)
+    override fun processFailedSendingCommand(command: CommandMessage) {
+        val commandTaskCompletionSource = commandTaskDict.asMap().remove(command.id)
         if (commandTaskCompletionSource != null) {
             val commandResult = CommandResult(
                 CommandStatus.Failed,
-                commandMessage.id,
-                commandMessage.getAggregateRootIdAsString(),
+                command.id,
+                command.aggregateRootId,
                 "Failed to send the command.",
                 String::class.java.name
             )
@@ -230,7 +230,7 @@ class DefaultCommandResultProcessor constructor(
 
     init {
         commandTaskDict = CacheBuilder.newBuilder()
-            .removalListener<String, CommandTaskCompletionSource> { notification ->
+            .removalListener { notification ->
                 if (notification.cause == RemovalCause.EXPIRED) {
                     processTimeoutCommand(notification.key!!, notification.value)
                 }

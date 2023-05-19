@@ -18,7 +18,7 @@ class DefaultCommandHandlerProxy : CommandHandlerProxy {
     private lateinit var methodHandle: MethodHandle
     private lateinit var method: Method
 
-    override suspend fun handleAsync(context: CommandContext, command: CommandMessage<*>) {
+    override suspend fun handleAsync(context: CommandContext, command: CommandMessage) {
         if (method.kotlinFunction?.isSuspend == true) {
             invokeSuspend(getInnerObject(), context, command)
             return
@@ -29,7 +29,7 @@ class DefaultCommandHandlerProxy : CommandHandlerProxy {
         }
     }
 
-    private suspend fun invokeSuspend(obj: Any, context: CommandContext, command: CommandMessage<*>): Any? =
+    private suspend fun invokeSuspend(obj: Any, context: CommandContext, command: CommandMessage): Any? =
         suspendCoroutineUninterceptedOrReturn { continuation ->
             methodHandle.invoke(obj, context, command, continuation)
         }

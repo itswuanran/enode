@@ -67,27 +67,26 @@ class DefaultCommandExecuteContext(
     /**
      * Get an aggregate from the current command context.
      */
-    override fun <T : AggregateRoot> getAsync(
-        id: Any,
+    override fun <T : AggregateRoot?> getAsync(
+        id: String,
         firstFromCache: Boolean,
         aggregateRootType: Class<T>
     ): CompletableFuture<T> {
         Assert.nonNull(id, "id")
-        val aggregateRootId = id.toString()
-        val iAggregateRoot = trackingAggregateRootDict[aggregateRootId] as T?
+        val trackingAggregateRoot = trackingAggregateRootDict[id] as T
         var future = CompletableFuture<T>()
-        if (iAggregateRoot != null) {
-            future.complete(iAggregateRoot)
+        if (trackingAggregateRoot != null) {
+            future.complete(trackingAggregateRoot)
             return future
         }
-        future = if (firstFromCache) {
-            repository.getAsync(aggregateRootType, id)
+        if (firstFromCache) {
+            future = repository.getAsync(aggregateRootType, id)
         } else {
-            aggregateRootStorage.getAsync(aggregateRootType, aggregateRootId)
+            future = aggregateRootStorage.getAsync(aggregateRootType, id)
         }
-        return future.thenApply { aggregateRoot: T? ->
+        return future.thenApply { aggregateRoot: T ->
             if (aggregateRoot == null) {
-                throw AggregateRootNotFoundException(aggregateRootId, aggregateRootType)
+                throw AggregateRootNotFoundException(id, aggregateRootType)
             }
             trackingAggregateRootDict[aggregateRoot.uniqueId] = aggregateRoot
             repository.refreshAggregate(aggregateRoot)
@@ -95,15 +94,15 @@ class DefaultCommandExecuteContext(
         }
     }
 
-    override fun <T : AggregateRoot> getAsync(id: Any, aggregateRootType: Class<T>): CompletableFuture<T> {
+    override fun <T : AggregateRoot?> getAsync(id: String, aggregateRootType: Class<T>): CompletableFuture<T> {
         return getAsync(id, true, aggregateRootType)
     }
 
-    override suspend fun <T : AggregateRoot> get(id: Any, firstFromCache: Boolean, aggregateRootType: Class<T>): T {
+    override suspend fun <T : AggregateRoot?> get(id: String, firstFromCache: Boolean, aggregateRootType: Class<T>): T {
         return getAsync(id, firstFromCache, aggregateRootType).await()
     }
 
-    override suspend fun <T : AggregateRoot> get(id: Any, aggregateRootType: Class<T>): T {
+    override suspend fun <T : AggregateRoot?> get(id: String, aggregateRootType: Class<T>): T {
         return getAsync(id, aggregateRootType).await()
     }
 

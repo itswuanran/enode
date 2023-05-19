@@ -55,7 +55,7 @@ class EventCommittingContextMailBox(
                         message.processingCommand.message.id,
                         message.eventStream.version,
                         message.eventStream.id,
-                        message.eventStream.events.joinToString("|") { obj: DomainEventMessage<*> -> obj.id })
+                        message.eventStream.events.joinToString("|") { obj: DomainEventMessage -> obj.id })
                 }
                 lastActiveTime = Date()
                 tryRun()

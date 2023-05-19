@@ -2,7 +2,7 @@ package org.enodeframework.samples.domain.note;
 
 import org.enodeframework.domain.AbstractAggregateRoot;
 
-public class Note extends AbstractAggregateRoot<String> {
+public class Note extends AbstractAggregateRoot {
     private String title;
 
     public Note() {

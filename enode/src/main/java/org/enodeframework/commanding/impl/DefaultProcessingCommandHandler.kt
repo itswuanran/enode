@@ -41,7 +41,7 @@ class DefaultProcessingCommandHandler(
 ) : ProcessingCommandHandler {
     override fun handleAsync(processingCommand: ProcessingCommand): CompletableFuture<Boolean> {
         val command = processingCommand.message
-        if (Strings.isNullOrEmpty(command.getAggregateRootIdAsString())) {
+        if (Strings.isNullOrEmpty(command.aggregateRootId)) {
             val errorMessage = String.format(
                 "The aggregateRootId of command cannot be null or empty. commandType:%s, commandId:%s",
                 command.javaClass.name,
@@ -199,7 +199,7 @@ class DefaultProcessingCommandHandler(
         val trackedAggregateRoots = context.trackedAggregateRoots
         var dirtyAggregateRootCount = 0
         var dirtyAggregateRoot: AggregateRoot? = null
-        var changedEvents: List<DomainEventMessage<*>> = ArrayList()
+        var changedEvents: List<DomainEventMessage> = ArrayList()
         for (aggregateRoot in trackedAggregateRoots) {
             val events = aggregateRoot.changes
             if (events.size > 0) {
@@ -253,7 +253,7 @@ class DefaultProcessingCommandHandler(
         val future = CompletableFuture<Boolean>()
         val command = processingCommand.message
         IOHelper.tryAsyncActionRecursively("ProcessIfNoEventsOfCommand", {
-            eventStore.findAsync(command.getAggregateRootIdAsString(), command.id)
+            eventStore.findAsync(command.aggregateRootId, command.id)
         }, { result: DomainEventStream? ->
             if (result != null) {
                 eventCommittingService.publishDomainEventAsync(processingCommand, result)
@@ -282,7 +282,7 @@ class DefaultProcessingCommandHandler(
         val command = processingCommand.message
         val future = CompletableFuture<Boolean>()
         IOHelper.tryAsyncActionRecursively("FindEventByCommandIdAsync", {
-            eventStore.findAsync(command.getAggregateRootIdAsString(), command.id)
+            eventStore.findAsync(command.aggregateRootId, command.id)
         }, { result: DomainEventStream? ->
             if (result != null) {
                 //这里，我们需要再重新做一遍发布事件这个操作；
@@ -409,7 +409,7 @@ class DefaultProcessingCommandHandler(
         val commandResult = CommandResult(
             commandStatus,
             processingCommand.message.id,
-            processingCommand.message.getAggregateRootIdAsString(),
+            processingCommand.message.aggregateRootId,
             result,
             resultType
         )

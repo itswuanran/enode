@@ -8,8 +8,8 @@
     <version>${revision}</version>
     <packaging>pom</packaging>
     <properties>
-        <revision>1.1.5</revision>
-        <maven.flatten.version>1.2.7</maven.flatten.version>
+        <revision>1.1.4</revision>
+        <maven.flatten.version>1.5.0</maven.flatten.version>
         <maven.gpg.version>1.6</maven.gpg.version>
     </properties>
 
@@ -138,6 +138,9 @@
     <profiles>
         <profile>
             <id>sonatype-oss-release</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <build>
                 <plugins>
                     <plugin>

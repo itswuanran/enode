@@ -27,7 +27,7 @@ class DefaultCommandProcessor(
     private var commandMailBoxPersistenceMaxBatchSize = 1000
     private var scanExpiredAggregateIntervalMilliseconds = 5000
     override fun process(processingCommand: ProcessingCommand) {
-        val aggregateRootId = processingCommand.message.getAggregateRootIdAsString()
+        val aggregateRootId = processingCommand.message.aggregateRootId
         Assert.nonNullOrEmpty(
             aggregateRootId,
             String.format("aggregateRootId of command, commandId: %s", processingCommand.message.id)

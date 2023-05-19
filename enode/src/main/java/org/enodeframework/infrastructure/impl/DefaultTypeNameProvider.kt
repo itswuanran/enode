@@ -34,8 +34,8 @@ class DefaultTypeNameProvider(private val typeDict: Map<String, String>) : TypeN
     fun checkForAliasCircle(name: String, alias: String) {
         check(!hasAlias(name, alias)) {
             "Cannot register alias '" + alias +
-                    "' for name '" + name + "': Circular reference - '" +
-                    name + "' is a direct or indirect alias for '" + alias + "' already"
+                "' for name '" + name + "': Circular reference - '" +
+                name + "' is a direct or indirect alias for '" + alias + "' already"
         }
     }
 

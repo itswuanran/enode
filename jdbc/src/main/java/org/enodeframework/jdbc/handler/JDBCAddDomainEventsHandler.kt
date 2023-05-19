@@ -27,8 +27,7 @@ open class JDBCAddDomainEventsHandler(
 
     override fun handle(ar: AsyncResult<RowSet<Row>>) {
         if (ar.succeeded()) {
-            val appendResult = AggregateEventAppendResult()
-            appendResult.eventAppendStatus = EventAppendStatus.Success
+            val appendResult = AggregateEventAppendResult(EventAppendStatus.Success)
             future.complete(appendResult)
             return
         }
@@ -41,15 +40,13 @@ open class JDBCAddDomainEventsHandler(
             throwable = ex.cause
         }
         if (throwable.message?.contains(options.eventVersionUkName) == true) {
-            val appendResult = AggregateEventAppendResult()
-            appendResult.eventAppendStatus = EventAppendStatus.DuplicateEvent
+            val appendResult = AggregateEventAppendResult(EventAppendStatus.DuplicateEvent)
             future.complete(appendResult)
             return
         }
         if (throwable.message?.contains(options.eventCommandIdUkName) == true) {
             // 不同的数据库在冲突时的错误信息不同，可以通过解析错误信息的方式将冲突的commandId找出来，这里要求id不能命中正则的规则（不包含-字符）
-            val appendResult = AggregateEventAppendResult()
-            appendResult.eventAppendStatus = EventAppendStatus.DuplicateCommand
+            val appendResult = AggregateEventAppendResult(EventAppendStatus.DuplicateCommand)
             val message = throwable.message ?: ""
             val commandId = options.parseDuplicatedId(message)
             if (!Strings.isNullOrEmpty(commandId)) {

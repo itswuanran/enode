@@ -51,7 +51,7 @@ open class MongoEventStore(
         tryAsyncActionRecursively(
             "BatchAppendAggregateEventsAsync",
             { batchAppendAggregateEventsAsync(aggregateRootId, eventStreamList) },
-            { result: AggregateEventAppendResult? ->
+            { result: AggregateEventAppendResult ->
                 batchAggregateEventAppendResult.addCompleteAggregate(
                     aggregateRootId, result
                 )
@@ -96,7 +96,7 @@ open class MongoEventStore(
             document.put("commandId", domainEventStream.commandId)
             document.put("version", domainEventStream.version)
             document.put("gmtCreate", domainEventStream.timestamp.toInstant())
-            document.put("events", serializeService.serialize(eventSerializer.serialize(domainEventStream.getEvents())))
+            document.put("events", serializeService.serialize(eventSerializer.serialize(domainEventStream.events)))
             val bulk = BulkOperation.createInsert(document)
             bulks.add(bulk)
         }

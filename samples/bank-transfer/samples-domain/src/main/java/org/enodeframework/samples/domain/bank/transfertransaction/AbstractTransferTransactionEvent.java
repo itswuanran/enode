@@ -5,7 +5,7 @@ import org.enodeframework.eventing.AbstractDomainEventMessage;
 /**
  * 转账交易已开始
  */
-public abstract class AbstractTransferTransactionEvent extends AbstractDomainEventMessage<String> {
+public abstract class AbstractTransferTransactionEvent extends AbstractDomainEventMessage {
     public TransferTransactionInfo transferTransactionInfo;
 
     public AbstractTransferTransactionEvent() {

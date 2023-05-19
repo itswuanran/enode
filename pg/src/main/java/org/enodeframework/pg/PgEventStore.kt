@@ -76,7 +76,7 @@ open class PgEventStore(
                 domainEventStream.commandId,
                 domainEventStream.version,
                 domainEventStream.timestamp.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(),
-                serializeService.serialize(eventSerializer.serialize(domainEventStream.getEvents()))
+                serializeService.serialize(eventSerializer.serialize(domainEventStream.events))
             )
         }
         pgPool.withTransaction { client ->
