@@ -3,7 +3,7 @@ package org.enodeframework.test.domain;
 import org.enodeframework.eventing.AbstractDomainEventMessage;
 
 
-public class TestAggregateCreated extends AbstractDomainEventMessage<String> {
+public class TestAggregateCreated extends AbstractDomainEventMessage {
     private String title;
 
     public TestAggregateCreated() {

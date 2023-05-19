@@ -13,9 +13,7 @@ class MongoAddPublishedVersionHandler(
     private val msg: String, private val publishedUkName: String
 ) : Handler<AsyncResult<String>> {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(MongoEventStore::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(MongoEventStore::class.java)
 
     var future = CompletableFuture<Int>()
 

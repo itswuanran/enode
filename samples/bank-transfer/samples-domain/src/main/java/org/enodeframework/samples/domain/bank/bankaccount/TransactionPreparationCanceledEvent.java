@@ -5,7 +5,7 @@ import org.enodeframework.eventing.AbstractDomainEventMessage;
 /**
  * 账户预操作已取消
  */
-public class TransactionPreparationCanceledEvent extends AbstractDomainEventMessage<String> {
+public class TransactionPreparationCanceledEvent extends AbstractDomainEventMessage {
     public TransactionPreparation transactionPreparation;
 
     public TransactionPreparationCanceledEvent() {

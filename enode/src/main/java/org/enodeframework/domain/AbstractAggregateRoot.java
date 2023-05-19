@@ -1,11 +1,12 @@
 package org.enodeframework.domain;
 
 import com.google.common.collect.Lists;
-import org.enodeframework.common.container.DefaultObjectContainer;
 import org.enodeframework.common.function.Action2;
 import org.enodeframework.common.utils.Assert;
+import org.enodeframework.domain.impl.DefaultAggregateRootInternalHandlerProvider;
 import org.enodeframework.eventing.DomainEventMessage;
 import org.enodeframework.eventing.DomainEventStream;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.List;
@@ -15,23 +16,21 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Represents an abstract base aggregate root.
- *
- * @param <TAggregateRootId>
  */
-public abstract class AbstractAggregateRoot<TAggregateRootId> implements AggregateRoot {
-    private final List<DomainEventMessage<?>> emptyEvents = Collections.emptyList();
-    protected TAggregateRootId id;
+public abstract class AbstractAggregateRoot implements AggregateRoot {
+    private final List<DomainEventMessage> emptyEvents = Collections.emptyList();
+    protected String id;
     protected int version;
-    private Queue<DomainEventMessage<?>> uncommittedEvents = new ConcurrentLinkedQueue<>();
+    private Queue<DomainEventMessage> uncommittedEvents = new ConcurrentLinkedQueue<>();
 
     protected AbstractAggregateRoot() {
     }
 
-    protected AbstractAggregateRoot(TAggregateRootId id) {
+    protected AbstractAggregateRoot(String id) {
         this(id, 0);
     }
 
-    protected AbstractAggregateRoot(TAggregateRootId id, int version) {
+    protected AbstractAggregateRoot(String id, int version) {
         this();
         Assert.nonNull(id, "id");
         this.id = id;
@@ -41,11 +40,11 @@ public abstract class AbstractAggregateRoot<TAggregateRootId> implements Aggrega
         this.version = version;
     }
 
-    public TAggregateRootId getId() {
+    public String getId() {
         return this.id;
     }
 
-    protected void applyEvent(DomainEventMessage<TAggregateRootId> domainEvent) {
+    protected void applyEvent(DomainEventMessage domainEvent) {
         Assert.nonNull(domainEvent, "domainEvent");
         Assert.nonNull(id, "AggregateRootId");
         domainEvent.setAggregateRootId(id);
@@ -54,21 +53,21 @@ public abstract class AbstractAggregateRoot<TAggregateRootId> implements Aggrega
         appendUncommittedEvent(domainEvent);
     }
 
-    protected void applyEvents(List<DomainEventMessage<TAggregateRootId>> domainEvents) {
-        for (DomainEventMessage<TAggregateRootId> domainEvent : domainEvents) {
+    protected void applyEvents(List<DomainEventMessage> domainEvents) {
+        for (DomainEventMessage domainEvent : domainEvents) {
             applyEvent(domainEvent);
         }
     }
 
-    private void handleEvent(DomainEventMessage<?> domainEvent) {
-        Action2<AggregateRoot, DomainEventMessage<?>> handler = DefaultObjectContainer.resolve(AggregateRootInternalHandlerProvider.class).getInternalEventHandler(getClass(), (Class<? extends DomainEventMessage<?>>) domainEvent.getClass());
+    private void handleEvent(DomainEventMessage domainEvent) {
+        Action2<AggregateRoot, DomainEventMessage> handler = DefaultAggregateRootInternalHandlerProvider.Dict.getInternalEventHandler(getClass(), domainEvent.getClass());
         if (this.id == null && domainEvent.getVersion() == 1) {
-            this.id = (TAggregateRootId) domainEvent.getAggregateRootId();
+            this.id = domainEvent.getAggregateRootId();
         }
         handler.apply(this, domainEvent);
     }
 
-    private void appendUncommittedEvent(DomainEventMessage<TAggregateRootId> domainEvent) {
+    private void appendUncommittedEvent(DomainEventMessage domainEvent) {
         if (uncommittedEvents == null) {
             uncommittedEvents = new ConcurrentLinkedQueue<>();
         }
@@ -87,6 +86,7 @@ public abstract class AbstractAggregateRoot<TAggregateRootId> implements Aggrega
         }
     }
 
+    @NotNull
     @Override
     public String getUniqueId() {
         return Objects.toString(id, "");
@@ -98,7 +98,7 @@ public abstract class AbstractAggregateRoot<TAggregateRootId> implements Aggrega
     }
 
     @Override
-    public List<DomainEventMessage<?>> getChanges() {
+    public List<DomainEventMessage> getChanges() {
         if (uncommittedEvents == null) {
             return emptyEvents;
         }

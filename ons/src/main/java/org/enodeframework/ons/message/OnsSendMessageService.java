@@ -7,6 +7,7 @@ import com.aliyun.openservices.ons.api.SendCallback;
 import com.aliyun.openservices.ons.api.SendResult;
 import org.enodeframework.common.exception.IORuntimeException;
 import org.enodeframework.queue.QueueMessage;
+import org.enodeframework.queue.SendMessageResult;
 import org.enodeframework.queue.SendMessageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +28,8 @@ public class OnsSendMessageService implements SendMessageService {
     }
 
     @Override
-    public CompletableFuture<Boolean> sendMessageAsync(QueueMessage queueMessage) {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+    public CompletableFuture<SendMessageResult> sendMessageAsync(QueueMessage queueMessage) {
+        CompletableFuture<SendMessageResult> future = new CompletableFuture<>();
         Message message = OnsTool.covertToProducerRecord(queueMessage);
         producer.sendAsync(message, new SendCallback() {
             @Override
@@ -36,7 +37,7 @@ public class OnsSendMessageService implements SendMessageService {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Async send message success, sendResult: {}, message: {}", result, message);
                 }
-                future.complete(true);
+                future.complete(new SendMessageResult(result.getMessageId(), result));
             }
 
             @Override

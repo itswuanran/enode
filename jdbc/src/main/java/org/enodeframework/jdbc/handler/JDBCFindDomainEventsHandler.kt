@@ -22,9 +22,9 @@ open class JDBCFindDomainEventsHandler(
     private val msg: String
 ) : Handler<AsyncResult<RowSet<Row>>> {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(JDBCFindDomainEventsHandler::class.java)
-    }
+
+    private val logger = LoggerFactory.getLogger(JDBCFindDomainEventsHandler::class.java)
+
 
     var future = CompletableFuture<List<DomainEventStream>>()
 

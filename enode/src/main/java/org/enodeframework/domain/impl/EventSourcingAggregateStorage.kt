@@ -21,23 +21,7 @@ class EventSourcingAggregateStorage(
     private val aggregateSnapshotter: AggregateSnapshotter,
     private val typeNameProvider: TypeNameProvider
 ) : AggregateStorage {
-    override fun <T : AggregateRoot?> getAsync(
-        aggregateRootType: Class<T>, aggregateRootId: String
-    ): CompletableFuture<T> {
-        Assert.nonNull(aggregateRootId, "aggregateRootId")
-        Assert.nonNull(aggregateRootType, "aggregateRootType")
-        return tryGetFromSnapshot(aggregateRootId, aggregateRootType).thenCompose { aggregateRoot: T? ->
-            if (aggregateRoot != null) {
-                return@thenCompose CompletableFuture.completedFuture(aggregateRoot)
-            }
-            val aggregateRootTypeName = typeNameProvider.getTypeName(aggregateRootType)
-            tryQueryAggregateEventsAsync(
-                aggregateRootType, aggregateRootTypeName, aggregateRootId, MIN_VERSION, MAX_VERSION, 0
-            ).thenApply { eventStreams: List<DomainEventStream> ->
-                rebuildAggregateRoot(aggregateRootType, eventStreams)
-            }
-        }
-    }
+
 
     private fun <T : AggregateRoot?> tryRestoreFromSnapshotAsync(
         aggregateRootType: Class<T>, aggregateRootId: String, retryTimes: Int
@@ -79,13 +63,13 @@ class EventSourcingAggregateStorage(
     private fun <T : AggregateRoot?> tryGetFromSnapshot(
         aggregateRootId: String, aggregateRootType: Class<T>
     ): CompletableFuture<T> {
-        return tryRestoreFromSnapshotAsync(aggregateRootType, aggregateRootId, 0).thenCompose { aggregateRoot: T? ->
-            processSnapshot(aggregateRoot, aggregateRootId, aggregateRootType)
+        return tryRestoreFromSnapshotAsync(aggregateRootType, aggregateRootId, 0).thenCompose { aggregateRoot: T ->
+            queryAggregateEventsSnapshot(aggregateRoot, aggregateRootId, aggregateRootType)
         }
     }
 
-    private fun <T : AggregateRoot?> processSnapshot(
-        aggregateRoot: T?, aggregateRootId: String, aggregateRootType: Class<*>
+    private fun <T : AggregateRoot?> queryAggregateEventsSnapshot(
+        aggregateRoot: T, aggregateRootId: String, aggregateRootType: Class<*>
     ): CompletableFuture<T> {
         if (aggregateRoot == null) {
             return CompletableFuture.completedFuture(null)
@@ -104,7 +88,7 @@ class EventSourcingAggregateStorage(
         val aggregateRootTypeName = typeNameProvider.getTypeName(aggregateRootType)
         return tryQueryAggregateEventsAsync(
             aggregateRootType, aggregateRootTypeName, aggregateRootId, aggregateRoot.version + 1, MAX_VERSION, 0
-        ).thenApply { eventStreams: List<DomainEventStream>? ->
+        ).thenApply { eventStreams: List<DomainEventStream> ->
             aggregateRoot.replayEvents(eventStreams)
             aggregateRoot
         }
@@ -114,14 +98,41 @@ class EventSourcingAggregateStorage(
         aggregateRootType: Class<T>, eventStreams: List<DomainEventStream>
     ): T {
         return eventStreams.isNotEmpty().let {
-            val aggregateRoot = aggregateRootFactory.createAggregateRoot(aggregateRootType)!!
-            aggregateRoot.replayEvents(eventStreams)
+            val aggregateRoot = aggregateRootFactory.createAggregateRoot(aggregateRootType)
+            aggregateRoot?.replayEvents(eventStreams)
             aggregateRoot
         }
     }
 
-    companion object {
-        private const val MIN_VERSION = 1
-        private const val MAX_VERSION = Int.MAX_VALUE
+    private val MIN_VERSION = 1
+    private val MAX_VERSION = Int.MAX_VALUE
+
+    override fun <T : AggregateRoot?> getAsync(
+        aggregateRootType: Class<T>,
+        aggregateRootId: String
+    ): CompletableFuture<T> {
+        Assert.nonNull(aggregateRootId, "aggregateRootId")
+        Assert.nonNull(aggregateRootType, "aggregateRootType")
+        val future = tryGetFromSnapshot(aggregateRootId, aggregateRootType)
+        var result = CompletableFuture<T>()
+        future.whenComplete { aggregateRoot, _ ->
+            if (aggregateRoot != null) {
+                result.complete(aggregateRoot)
+            } else {
+                result = queryAggregateEvents(aggregateRootType, aggregateRootId)
+            }
+        }
+        return result
+    }
+
+    private fun <T : AggregateRoot?> queryAggregateEvents(
+        aggregateRootType: Class<T>, aggregateRootId: String
+    ): CompletableFuture<T> {
+        val aggregateRootTypeName = typeNameProvider.getTypeName(aggregateRootType)
+        return tryQueryAggregateEventsAsync(
+            aggregateRootType, aggregateRootTypeName, aggregateRootId, MIN_VERSION, MAX_VERSION, 0
+        ).thenApply { eventStreams ->
+            rebuildAggregateRoot(aggregateRootType, eventStreams)
+        }
     }
 }

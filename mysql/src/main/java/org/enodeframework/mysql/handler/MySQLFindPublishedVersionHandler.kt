@@ -12,9 +12,7 @@ import java.util.concurrent.CompletableFuture
 
 class MySQLFindPublishedVersionHandler(private val msg: String) : Handler<AsyncResult<RowSet<Row>>> {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(MySQLFindPublishedVersionHandler::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(MySQLFindPublishedVersionHandler::class.java)
 
     val future = CompletableFuture<Int>()
 

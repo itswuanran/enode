@@ -2,7 +2,6 @@ package org.enodeframework.samples.controller;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
-import io.vertx.core.spi.cluster.ClusterManager;
 import org.enodeframework.queue.DefaultSendReplyService;
 import org.enodeframework.queue.command.DefaultCommandResultProcessor;
 import org.enodeframework.spring.EnableEnode;

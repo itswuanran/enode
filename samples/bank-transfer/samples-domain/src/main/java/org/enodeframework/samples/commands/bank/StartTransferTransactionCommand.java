@@ -6,7 +6,7 @@ import org.enodeframework.samples.domain.bank.transfertransaction.TransferTransa
 /**
  * 发起一笔转账交易
  */
-public class StartTransferTransactionCommand extends AbstractCommandMessage<String> {
+public class StartTransferTransactionCommand extends AbstractCommandMessage {
     /**
      * 转账交易信息
      */

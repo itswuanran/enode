@@ -11,9 +11,7 @@ import java.util.concurrent.CompletableFuture
 
 class MongoFindPublishedVersionHandler(private val msg: String) : Handler<AsyncResult<JsonObject?>> {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(MongoFindPublishedVersionHandler::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(MongoFindPublishedVersionHandler::class.java)
 
     var future = CompletableFuture<Int>()
 

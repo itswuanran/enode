@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 /**
  * 银行账户聚合根，封装银行账户余额变动的数据一致性
  */
-public class BankAccount extends AbstractAggregateRoot<String> {
+public class BankAccount extends AbstractAggregateRoot {
     private Map<String, TransactionPreparation> transactionPreparations;
     private String owner;
     private double balance;

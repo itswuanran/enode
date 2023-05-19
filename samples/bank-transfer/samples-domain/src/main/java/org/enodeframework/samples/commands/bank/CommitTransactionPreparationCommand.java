@@ -5,7 +5,7 @@ import org.enodeframework.commanding.AbstractCommandMessage;
 /**
  * 提交预操作
  */
-public class CommitTransactionPreparationCommand extends AbstractCommandMessage<String> {
+public class CommitTransactionPreparationCommand extends AbstractCommandMessage {
     public String transactionId;
 
     public CommitTransactionPreparationCommand() {

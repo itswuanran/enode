@@ -5,16 +5,27 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asCompletableFuture
-import org.enodeframework.commanding.*
+import org.enodeframework.commanding.CommandHandlerProvider
+import org.enodeframework.commanding.CommandHandlerProxy
+import org.enodeframework.commanding.CommandResult
+import org.enodeframework.commanding.CommandStatus
+import org.enodeframework.commanding.HandlerFindResult
+import org.enodeframework.commanding.HandlerFindStatus
+import org.enodeframework.commanding.ProcessingCommand
+import org.enodeframework.commanding.ProcessingCommandHandler
 import org.enodeframework.common.exception.AggregateRootReferenceChangedException
+import org.enodeframework.common.extensions.SysProperties
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.common.io.Task
 import org.enodeframework.common.serializing.SerializeService
-import org.enodeframework.configurations.SysProperties
 import org.enodeframework.domain.AggregateRoot
 import org.enodeframework.domain.DomainExceptionMessage
 import org.enodeframework.domain.MemoryCache
-import org.enodeframework.eventing.*
+import org.enodeframework.eventing.DomainEventMessage
+import org.enodeframework.eventing.DomainEventStream
+import org.enodeframework.eventing.EventCommittingContext
+import org.enodeframework.eventing.EventCommittingService
+import org.enodeframework.eventing.EventStore
 import org.enodeframework.infrastructure.TypeNameProvider
 import org.enodeframework.messaging.ApplicationMessage
 import org.enodeframework.messaging.MessageHandlerData
@@ -39,9 +50,11 @@ class DefaultProcessingCommandHandler(
     private val serializeService: SerializeService,
     private val coroutineDispatcher: CoroutineDispatcher
 ) : ProcessingCommandHandler {
+    private val logger = LoggerFactory.getLogger(DefaultProcessingCommandHandler::class.java)
+
     override fun handleAsync(processingCommand: ProcessingCommand): CompletableFuture<Boolean> {
         val command = processingCommand.message
-        if (Strings.isNullOrEmpty(command.getAggregateRootIdAsString())) {
+        if (Strings.isNullOrEmpty(command.aggregateRootId)) {
             val errorMessage = String.format(
                 "The aggregateRootId of command cannot be null or empty. commandType:%s, commandId:%s",
                 command.javaClass.name,
@@ -199,7 +212,7 @@ class DefaultProcessingCommandHandler(
         val trackedAggregateRoots = context.trackedAggregateRoots
         var dirtyAggregateRootCount = 0
         var dirtyAggregateRoot: AggregateRoot? = null
-        var changedEvents: List<DomainEventMessage<*>> = ArrayList()
+        var changedEvents: List<DomainEventMessage> = ArrayList()
         for (aggregateRoot in trackedAggregateRoots) {
             val events = aggregateRoot.changes
             if (events.size > 0) {
@@ -253,7 +266,7 @@ class DefaultProcessingCommandHandler(
         val future = CompletableFuture<Boolean>()
         val command = processingCommand.message
         IOHelper.tryAsyncActionRecursively("ProcessIfNoEventsOfCommand", {
-            eventStore.findAsync(command.getAggregateRootIdAsString(), command.id)
+            eventStore.findAsync(command.aggregateRootId, command.id)
         }, { result: DomainEventStream? ->
             if (result != null) {
                 eventCommittingService.publishDomainEventAsync(processingCommand, result)
@@ -282,7 +295,7 @@ class DefaultProcessingCommandHandler(
         val command = processingCommand.message
         val future = CompletableFuture<Boolean>()
         IOHelper.tryAsyncActionRecursively("FindEventByCommandIdAsync", {
-            eventStore.findAsync(command.getAggregateRootIdAsString(), command.id)
+            eventStore.findAsync(command.aggregateRootId, command.id)
         }, { result: DomainEventStream? ->
             if (result != null) {
                 //这里，我们需要再重新做一遍发布事件这个操作；
@@ -301,17 +314,21 @@ class DefaultProcessingCommandHandler(
                     ).whenComplete { _, _ -> future.complete(true) }
                 } else {
                     completeCommand(
-                        processingCommand, CommandStatus.Failed, realException.javaClass.name, realException.message
+                        processingCommand,
+                        CommandStatus.Failed,
+                        realException.javaClass.name,
+                        realException.message ?: ""
                     ).whenComplete { _, _ -> future.complete(true) }
                 }
             }
         }, {
             String.format(
-                "[command:[id:%s,type:%s],handlerType:%s,aggregateRootId:%s]",
+                "[command:[id:%s,type:%s],handlerType:%s,aggregateRootId:%s] %s",
                 command.id,
                 command.javaClass.name,
                 commandHandler.getInnerObject().javaClass.name,
-                command.aggregateRootId
+                command.aggregateRootId,
+                errorMessage
             )
         }, null, retryTimes, true)
         return future
@@ -338,7 +355,10 @@ class DefaultProcessingCommandHandler(
             exceptionPublisher.publishAsync(exception)
         }, {
             completeCommand(
-                processingCommand, CommandStatus.Failed, exception.javaClass.name, (exception as Exception).message
+                processingCommand,
+                CommandStatus.Failed,
+                exception.javaClass.name,
+                (exception as Exception).message ?: ""
             ).whenComplete { _, _ -> future.complete(true) }
         }, {
             "[commandId: ${processingCommand.message.id}]"
@@ -404,19 +424,16 @@ class DefaultProcessingCommandHandler(
     }
 
     private fun completeCommand(
-        processingCommand: ProcessingCommand, commandStatus: CommandStatus, resultType: String, result: String?
+        processingCommand: ProcessingCommand, commandStatus: CommandStatus, resultType: String, result: String
     ): CompletableFuture<Boolean> {
         val commandResult = CommandResult(
             commandStatus,
             processingCommand.message.id,
-            processingCommand.message.getAggregateRootIdAsString(),
+            processingCommand.message.aggregateRootId,
             result,
             resultType
         )
         return processingCommand.mailBox.completeMessage(processingCommand, commandResult)
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(DefaultProcessingCommandHandler::class.java)
-    }
 }

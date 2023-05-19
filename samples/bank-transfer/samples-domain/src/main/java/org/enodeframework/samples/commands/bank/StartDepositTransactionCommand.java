@@ -5,7 +5,7 @@ import org.enodeframework.commanding.AbstractCommandMessage;
 /**
  * 发起一笔存款交易
  */
-public class StartDepositTransactionCommand extends AbstractCommandMessage<String> {
+public class StartDepositTransactionCommand extends AbstractCommandMessage {
     /**
      * 账户ID
      */

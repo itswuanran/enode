@@ -1,6 +1,5 @@
 package org.enodeframework.spring;
 
-import org.enodeframework.common.container.DefaultObjectContainer;
 import org.enodeframework.common.extensions.ClassNameComparator;
 import org.enodeframework.common.extensions.ClassPathScanHandler;
 import org.enodeframework.infrastructure.AssemblyInitializer;
@@ -22,13 +21,12 @@ public class EnodeBeanContainerAutoConfig implements ApplicationContextAware {
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
-        DefaultObjectContainer.INSTANCE = new SpringObjectContainer(applicationContext);
-        scanConfiguredPackages(DefaultObjectContainer.BASE_PACKAGES);
+        scanConfiguredPackages(SpringObjectContainer.BASE_PACKAGES);
     }
 
     private void registerBeans(Set<Class<?>> classSet) {
         applicationContext.getBeansOfType(AssemblyInitializer.class).values().forEach(provider -> {
-            provider.initialize(classSet);
+            provider.initialize(new SpringObjectContainer(applicationContext), classSet);
             if (logger.isDebugEnabled()) {
                 logger.debug("{} initialize success", provider.getClass().getName());
             }

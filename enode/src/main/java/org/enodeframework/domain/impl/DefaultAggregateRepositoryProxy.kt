@@ -8,19 +8,19 @@ import java.util.concurrent.CompletableFuture
 /**
  * @author anruence@gmail.com
  */
-class DefaultAggregateRepositoryProxy<TAggregateRoot : AggregateRoot?> :
+class DefaultAggregateRepositoryProxy<T : AggregateRoot?> :
     AggregateRepositoryProxy {
-    private lateinit var aggregateRepository: AggregateRepository<TAggregateRoot>
+    private lateinit var aggregateRepository: AggregateRepository<T>
 
     override fun getInnerObject(): Any {
         return aggregateRepository
     }
 
     override fun setInnerObject(innerObject: Any) {
-        aggregateRepository = innerObject as AggregateRepository<TAggregateRoot>
+        aggregateRepository = innerObject as AggregateRepository<T>
     }
 
     override fun <T : AggregateRoot?> getAsync(aggregateRootId: String): CompletableFuture<T> {
-        return aggregateRepository.getAsync(aggregateRootId) as CompletableFuture<T>
+        return aggregateRepository.getAsync(aggregateRootId)
     }
 }

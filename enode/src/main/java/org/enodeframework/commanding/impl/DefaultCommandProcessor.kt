@@ -19,15 +19,33 @@ import java.util.concurrent.ConcurrentMap
 class DefaultCommandProcessor(
     private val processingCommandHandler: ProcessingCommandHandler,
     private val scheduleService: ScheduleService,
-    private val coroutineDispatcher: CoroutineDispatcher
+    private val coroutineDispatcher: CoroutineDispatcher,
+    /**
+     * 当使用默认的从内存清理聚合根的服务时，该属性用于配置扫描过期的聚合根的时间间隔，默认为5秒；
+     */
+    private val scanExpiredAggregateIntervalMilliseconds: Int = 5000,
+    /**
+     * 当使用默认的MemoryCache时，该属性用于配置聚合根的最长允许的不活跃时间，超过这个时间就认为是过期，就可以从内存清除了；然后下次如果再需要用的时候再重新加载进来；默认为3天；
+     */
+    private val aggregateRootMaxInactiveSeconds: Int = 3600 * 24 * 3,
+    /**
+     * CommandMailBox中的命令处理时一次最多处理多少个命令，默认为1000个
+     */
+    private val commandMailBoxPersistenceMaxBatchSize: Int = 1000
 ) : CommandProcessor {
+    constructor(
+        processingCommandHandler: ProcessingCommandHandler,
+        scheduleService: ScheduleService,
+        coroutineDispatcher: CoroutineDispatcher
+    ) : this(
+        processingCommandHandler, scheduleService, coroutineDispatcher, 5000, 3600 * 24 * 3, 1000
+    )
+
+    private val logger = LoggerFactory.getLogger(DefaultCommandProcessor::class.java)
     private val mailboxDict: ConcurrentMap<String, ProcessingCommandMailbox>
     private val taskName: String
-    private var aggregateRootMaxInactiveSeconds = 3600 * 24 * 3
-    private var commandMailBoxPersistenceMaxBatchSize = 1000
-    private var scanExpiredAggregateIntervalMilliseconds = 5000
     override fun process(processingCommand: ProcessingCommand) {
-        val aggregateRootId = processingCommand.message.getAggregateRootIdAsString()
+        val aggregateRootId = processingCommand.message.aggregateRootId
         Assert.nonNullOrEmpty(
             aggregateRootId,
             String.format("aggregateRootId of command, commandId: %s", processingCommand.message.id)
@@ -91,9 +109,6 @@ class DefaultCommandProcessor(
         }
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(DefaultCommandProcessor::class.java)
-    }
 
     init {
         mailboxDict = ConcurrentHashMap()

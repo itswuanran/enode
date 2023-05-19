@@ -27,21 +27,19 @@ class DefaultMemoryCache(
     private val aggregateRootInfoDict: ConcurrentMap<String, AggregateCacheInfo>
     private val lockObj = Any()
     private val taskName: String
-    var timeoutSeconds = 5000
-    var scanExpiredAggregateIntervalMilliseconds = 5000
-    override fun <T : AggregateRoot> getAsync(
-        aggregateRootId: Any,
-        aggregateRootType: Class<T>
+    private var timeoutSeconds = 5000
+    private var scanExpiredAggregateIntervalMilliseconds = 5000
+    override fun <T : AggregateRoot?> getAsync(
+        aggregateRootId: String, aggregateRootType: Class<T>
     ): CompletableFuture<T> {
         Assert.nonNull(aggregateRootId, "aggregateRootId")
         Assert.nonNull(aggregateRootType, "aggregateRootType")
         val future = CompletableFuture<T>()
-        val aggregateRootInfo = aggregateRootInfoDict[aggregateRootId.toString()]
+        val aggregateRootInfo = aggregateRootInfoDict[aggregateRootId]
         if (aggregateRootInfo == null) {
             future.complete(null)
             return future
         }
-        val aggregateRoot = aggregateRootInfo.aggregateRoot as T
         if (aggregateRootInfo.aggregateRoot.javaClass != aggregateRootType) {
             throw AggregateRootTypeNotMatchException(
                 String.format(
@@ -52,22 +50,17 @@ class DefaultMemoryCache(
                 )
             )
         }
-        if (aggregateRoot.changes.size > 0) {
-            val latestAggregateRootFuture = aggregateStorage.getAsync(aggregateRootType, aggregateRootId.toString())
-            return latestAggregateRootFuture.thenApply { latestAggregateRoot: AggregateRoot ->
-                resetAggregateRootCache(aggregateRootType, aggregateRootId.toString(), latestAggregateRoot)
+        if (aggregateRootInfo.aggregateRoot.changes.isNotEmpty()) {
+            val latestAggregateRootFuture = aggregateStorage.getAsync(aggregateRootType, aggregateRootId)
+            return latestAggregateRootFuture.thenApply { latestAggregateRoot: AggregateRoot? ->
+                if (latestAggregateRoot != null) {
+                    resetAggregateRootCache(aggregateRootType, aggregateRootId, latestAggregateRoot)
+                }
                 latestAggregateRoot as T
             }
         }
-        future.complete(aggregateRoot)
+        future.complete(aggregateRootInfo.aggregateRoot as T)
         return future
-    }
-
-    /**
-     * Get an aggregate from memory cache.
-     */
-    override fun getAsync(aggregateRootId: Any): CompletableFuture<AggregateRoot> {
-        return getAsync(aggregateRootId, AggregateRoot::class.java)
     }
 
     override fun <T : AggregateRoot> acceptAggregateRootChanges(aggregateRoot: T) {
@@ -111,14 +104,13 @@ class DefaultMemoryCache(
         resetAggregateRootCache(aggregateRoot.javaClass, aggregateRoot.uniqueId, aggregateRoot)
     }
 
-    override fun refreshAggregateFromEventStoreAsync(
-        aggregateRootTypeName: String,
-        aggregateRootId: String
-    ): CompletableFuture<AggregateRoot> {
+    override fun <T : AggregateRoot?> refreshAggregateFromEventStoreAsync(
+        aggregateRootTypeName: String, aggregateRootId: String
+    ): CompletableFuture<T> {
         Assert.nonNull(aggregateRootTypeName, "aggregateRootTypeName")
-        val future = CompletableFuture<AggregateRoot>()
+        val future = CompletableFuture<T>()
         return try {
-            val aggregateRootType = typeNameProvider.getType(aggregateRootTypeName) as Class<AggregateRoot>
+            val aggregateRootType = typeNameProvider.getType(aggregateRootTypeName) as Class<T>
             refreshAggregateFromEventStoreAsync(aggregateRootType, aggregateRootId)
         } catch (e: Exception) {
             future.completeExceptionally(e)
@@ -126,9 +118,8 @@ class DefaultMemoryCache(
         }
     }
 
-    override fun <T : AggregateRoot> refreshAggregateFromEventStoreAsync(
-        aggregateRootType: Class<T>,
-        aggregateRootId: String
+    override fun <T : AggregateRoot?> refreshAggregateFromEventStoreAsync(
+        aggregateRootType: Class<T>, aggregateRootId: String
     ): CompletableFuture<T> {
         Assert.nonNull(aggregateRootId, "aggregateRootId")
         Assert.nonNull(aggregateRootType, "aggregateRootType")
@@ -160,9 +151,7 @@ class DefaultMemoryCache(
     }
 
     private fun resetAggregateRootCache(
-        aggregateRootType: Class<*>,
-        aggregateRootId: String,
-        aggregateRoot: AggregateRoot
+        aggregateRootType: Class<*>, aggregateRootId: String, aggregateRoot: AggregateRoot?
     ) {
         val aggregateCacheInfo = aggregateRootInfoDict.remove(aggregateRootId)
         if (aggregateCacheInfo != null) {
@@ -173,6 +162,7 @@ class DefaultMemoryCache(
                 aggregateCacheInfo.aggregateRoot.version
             )
         }
+        aggregateRoot!!
         synchronized(lockObj) {
             val cacheReset = AtomicBoolean(false)
             val cacheInfo = aggregateRootInfoDict.computeIfAbsent(aggregateRoot.uniqueId) {
@@ -205,8 +195,8 @@ class DefaultMemoryCache(
     }
 
     private fun cleanInactiveAggregateRoot() {
-        val inactiveList: List<Map.Entry<String, AggregateCacheInfo>> = aggregateRootInfoDict.entries
-            .filter { entry -> entry.value.isExpired(timeoutSeconds) }
+        val inactiveList: List<Map.Entry<String, AggregateCacheInfo>> =
+            aggregateRootInfoDict.entries.filter { entry -> entry.value.isExpired(timeoutSeconds) }
         inactiveList.forEach { entry: Map.Entry<String, AggregateCacheInfo> ->
             if (aggregateRootInfoDict.remove(entry.key) != null) {
                 logger.info("Removed inactive aggregate root, id: {}", entry.key)
@@ -214,9 +204,7 @@ class DefaultMemoryCache(
         }
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(DefaultMemoryCache::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(DefaultMemoryCache::class.java)
 
     init {
         aggregateRootInfoDict = ConcurrentHashMap()

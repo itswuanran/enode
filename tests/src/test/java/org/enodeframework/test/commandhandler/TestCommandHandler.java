@@ -3,9 +3,9 @@ package org.enodeframework.test.commandhandler;
 import org.enodeframework.annotation.Command;
 import org.enodeframework.annotation.Subscribe;
 import org.enodeframework.commanding.CommandContext;
-import org.enodeframework.common.container.DefaultObjectContainer;
 import org.enodeframework.common.io.Task;
 import org.enodeframework.domain.MemoryCache;
+import org.enodeframework.spring.SpringObjectContainer;
 import org.enodeframework.test.command.AggregateThrowExceptionCommand;
 import org.enodeframework.test.command.BaseCommand;
 import org.enodeframework.test.command.ChangeInheritTestAggregateTitleCommand;
@@ -38,7 +38,7 @@ public class TestCommandHandler {
     public CompletableFuture<TestAggregate> handleAsync(CommandContext context, ChangeTestAggregateTitleWhenDirtyCommand command) {
         CompletableFuture<TestAggregate> future = context.getAsync(command.getAggregateRootId(), TestAggregate.class);
         if (command.isFirstExecute()) {
-            DefaultObjectContainer.resolve(MemoryCache.class).refreshAggregateFromEventStoreAsync(TestAggregate.class.getName(), command.getAggregateRootId());
+            SpringObjectContainer.getBean(MemoryCache.class).refreshAggregateFromEventStoreAsync(TestAggregate.class.getName(), command.getAggregateRootId());
         }
         future.thenAccept(testAggregate -> {
             testAggregate.changeTitle(command.getTitle());
@@ -57,7 +57,7 @@ public class TestCommandHandler {
 
     @Subscribe
     public CompletableFuture<Void> handleAsync(CommandContext context, ChangeTestAggregateTitleCommand command) {
-        return context.getAsync(command.aggregateRootId, TestAggregate.class).thenAccept(testAggregate -> {
+        return context.getAsync(command.getAggregateRootId(), TestAggregate.class).thenAccept(testAggregate -> {
             testAggregate.changeTitle(command.title);
         });
     }

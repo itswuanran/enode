@@ -2,7 +2,7 @@ package org.enodeframework.test.command;
 
 import org.enodeframework.commanding.AbstractCommandMessage;
 
-public class ChangeTestAggregateTitleWhenDirtyCommand extends AbstractCommandMessage<String> {
+public class ChangeTestAggregateTitleWhenDirtyCommand extends AbstractCommandMessage {
     private String title;
 
     private boolean firstExecute;

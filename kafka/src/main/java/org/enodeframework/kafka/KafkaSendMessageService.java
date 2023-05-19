@@ -1,8 +1,10 @@
 package org.enodeframework.kafka;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.enodeframework.common.exception.IORuntimeException;
 import org.enodeframework.queue.QueueMessage;
+import org.enodeframework.queue.SendMessageResult;
 import org.enodeframework.queue.SendMessageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,13 +21,12 @@ public class KafkaSendMessageService implements SendMessageService {
 
     private final KafkaTemplate<String, String> producer;
 
-
     public KafkaSendMessageService(KafkaTemplate<String, String> producer) {
         this.producer = producer;
     }
 
     @Override
-    public CompletableFuture<Boolean> sendMessageAsync(QueueMessage queueMessage) {
+    public CompletableFuture<SendMessageResult> sendMessageAsync(QueueMessage queueMessage) {
         ProducerRecord<String, String> message = this.covertToProducerRecord(queueMessage);
         return producer.send(message).handle((result, throwable) -> {
             if (throwable != null) {
@@ -35,8 +36,15 @@ public class KafkaSendMessageService implements SendMessageService {
             if (logger.isDebugEnabled()) {
                 logger.debug("Async send message success, sendResult: {}, message: {}", result, queueMessage);
             }
-            return true;
+            return new SendMessageResult(msgId(result.getRecordMetadata()), result);
         });
+    }
+
+    private String msgId(RecordMetadata meta) {
+        if (meta == null) {
+            return "";
+        }
+        return String.format("%s:%d:%d", meta.topic(), meta.partition(), meta.offset());
     }
 
     private ProducerRecord<String, String> covertToProducerRecord(QueueMessage queueMessage) {

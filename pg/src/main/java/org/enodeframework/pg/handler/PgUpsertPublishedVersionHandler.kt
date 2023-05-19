@@ -13,12 +13,9 @@ import java.util.concurrent.CompletableFuture
 class PgUpsertPublishedVersionHandler(private val publishedUkName: String, private val msg: String) :
     Handler<AsyncResult<RowSet<Row>>> {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(PgUpsertPublishedVersionHandler::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(PgUpsertPublishedVersionHandler::class.java)
 
     val future = CompletableFuture<Int>()
-
     override fun handle(ar: AsyncResult<RowSet<Row>>) {
         if (ar.succeeded()) {
             if (ar.result().rowCount() == 0) {

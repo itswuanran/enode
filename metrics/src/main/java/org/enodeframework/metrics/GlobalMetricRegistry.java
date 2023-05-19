@@ -84,7 +84,7 @@ public class GlobalMetricRegistry {
      * @param eventProcessorName the name under which the {@link ProcessingEventProcessor} should be registered to the registry
      * @return a {@link MessageMonitor} to monitor the behavior of an {@link ProcessingEventProcessor}
      */
-    public MessageMonitor<? super AbstractDomainEventMessage<?>> registerEventProcessor(String eventProcessorName) {
+    public MessageMonitor<? super AbstractDomainEventMessage> registerEventProcessor(String eventProcessorName) {
         MessageTimerMonitor messageTimerMonitor = MessageTimerMonitor.builder().build();
         EventProcessorLatencyMonitor eventProcessorLatencyMonitor = new EventProcessorLatencyMonitor();
         CapacityMonitor capacityMonitor = new CapacityMonitor(1, TimeUnit.MINUTES);
@@ -97,7 +97,7 @@ public class GlobalMetricRegistry {
         eventProcessingRegistry.register("capacity", capacityMonitor);
         registry.register(eventProcessorName, eventProcessingRegistry);
 
-        List<MessageMonitor<? super AbstractDomainEventMessage<?>>> monitors = new ArrayList<>();
+        List<MessageMonitor<? super AbstractDomainEventMessage>> monitors = new ArrayList<>();
         monitors.add(messageTimerMonitor);
         monitors.add(eventProcessorLatencyMonitor);
         monitors.add(capacityMonitor);
@@ -113,7 +113,7 @@ public class GlobalMetricRegistry {
      * @param commandBusName the name under which the commandBus should be registered to the registry
      * @return a {@link MessageMonitor} to monitor the behavior of a CommandBus
      */
-    public MessageMonitor<? super CommandMessage<?>> registerCommandBus(String commandBusName) {
+    public MessageMonitor<? super CommandMessage> registerCommandBus(String commandBusName) {
         return registerDefaultHandlerMessageMonitor(commandBusName);
     }
 

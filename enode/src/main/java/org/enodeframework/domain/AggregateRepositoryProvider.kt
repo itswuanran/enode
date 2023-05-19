@@ -7,5 +7,5 @@ interface AggregateRepositoryProvider {
     /**
      * Get the aggregateRepository for the given aggregate type.
      */
-    fun getRepository(aggregateRootType: Class<out AggregateRoot>): AggregateRepositoryProxy?
+    fun getRepository(aggregateRootType: Class<out AggregateRoot?>): AggregateRepositoryProxy
 }

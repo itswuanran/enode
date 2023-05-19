@@ -3,7 +3,7 @@ package org.enodeframework.pg
 import io.vertx.pgclient.PgPool
 import io.vertx.sqlclient.Tuple
 import org.enodeframework.common.io.IOHelper
-import org.enodeframework.configurations.EventStoreOptions
+import org.enodeframework.eventing.EventStoreConfiguration
 import org.enodeframework.eventing.PublishedVersionStore
 import org.enodeframework.pg.handler.PgFindPublishedVersionHandler
 import org.enodeframework.pg.handler.PgUpsertPublishedVersionHandler
@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture
  * @author anruence@gmail.com
  */
 open class PgPublishedVersionStore(
-    private val sqlClient: PgPool, private val configuration: EventStoreOptions
+    private val sqlClient: PgPool, private val options: EventStoreConfiguration
 ) : PublishedVersionStore {
 
     override fun updatePublishedVersionAsync(
@@ -39,9 +39,9 @@ open class PgPublishedVersionStore(
         processorName: String, aggregateRootTypeName: String, aggregateRootId: String, publishedVersion: Int
     ): CompletableFuture<Int> {
         val handler = PgUpsertPublishedVersionHandler(
-            configuration.publishedUkName, "$processorName#$aggregateRootTypeName#$aggregateRootId#$publishedVersion"
+            options.publishedUkName, "$processorName#$aggregateRootTypeName#$aggregateRootId#$publishedVersion"
         )
-        val sql = String.format(UPDATE_SQL, configuration.publishedTableName)
+        val sql = String.format(UPDATE_SQL, options.publishedTableName)
         val tuple = Tuple.of(
             publishedVersion, LocalDateTime.now(), processorName, aggregateRootId, publishedVersion - 1
         )
@@ -53,9 +53,9 @@ open class PgPublishedVersionStore(
         processorName: String, aggregateRootTypeName: String, aggregateRootId: String, publishedVersion: Int
     ): CompletableFuture<Int> {
         val handler = PgUpsertPublishedVersionHandler(
-            configuration.publishedUkName, "$processorName#$aggregateRootTypeName#$aggregateRootId#$publishedVersion"
+            options.publishedUkName, "$processorName#$aggregateRootTypeName#$aggregateRootId#$publishedVersion"
         )
-        val sql = String.format(INSERT_SQL, configuration.publishedTableName)
+        val sql = String.format(INSERT_SQL, options.publishedTableName)
         val tuple = Tuple.of(processorName, aggregateRootTypeName, aggregateRootId, 1, LocalDateTime.now())
         sqlClient.preparedQuery(sql).execute(tuple).onComplete(handler)
         return handler.future
@@ -73,7 +73,7 @@ open class PgPublishedVersionStore(
         processorName: String, aggregateRootTypeName: String, aggregateRootId: String
     ): CompletableFuture<Int> {
         val handler = PgFindPublishedVersionHandler("$aggregateRootId#$processorName#$aggregateRootTypeName")
-        val sql = String.format(SELECT_SQL, configuration.publishedTableName)
+        val sql = String.format(SELECT_SQL, options.publishedTableName)
         sqlClient.preparedQuery(sql).execute(Tuple.of(processorName, aggregateRootId)).onComplete(handler)
         return handler.future
     }

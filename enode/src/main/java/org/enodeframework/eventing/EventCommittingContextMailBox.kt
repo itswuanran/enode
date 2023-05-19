@@ -19,6 +19,7 @@ class EventCommittingContextMailBox(
     private val coroutineDispatcher: CoroutineDispatcher,
     handleEventAction: Action1<List<EventCommittingContext>>
 ) {
+    private val logger: Logger = LoggerFactory.getLogger(EventCommittingContextMailBox::class.java)
     private val lockObj = Any()
     private val asyncLockObj = Any()
     private val aggregateDictDict: ConcurrentHashMap<String, ConcurrentHashMap<String, Byte>> = ConcurrentHashMap()
@@ -55,7 +56,7 @@ class EventCommittingContextMailBox(
                         message.processingCommand.message.id,
                         message.eventStream.version,
                         message.eventStream.id,
-                        message.eventStream.events.joinToString("|") { obj: DomainEventMessage<*> -> obj.id })
+                        message.eventStream.events.joinToString("|") { obj: DomainEventMessage -> obj.id })
                 }
                 lastActiveTime = Date()
                 tryRun()
@@ -144,7 +145,6 @@ class EventCommittingContextMailBox(
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(EventCommittingContextMailBox::class.java)
         private const val ONE_BYTE: Byte = 1
     }
 

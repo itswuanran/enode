@@ -12,9 +12,7 @@ import java.util.concurrent.CompletableFuture
 
 class PgFindPublishedVersionHandler(private val msg: String) : Handler<AsyncResult<RowSet<Row>>> {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(PgFindPublishedVersionHandler::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(PgFindPublishedVersionHandler::class.java)
 
     val future = CompletableFuture<Int>()
 
