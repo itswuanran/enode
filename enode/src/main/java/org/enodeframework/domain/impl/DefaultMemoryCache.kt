@@ -204,9 +204,7 @@ class DefaultMemoryCache(
         }
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(DefaultMemoryCache::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(DefaultMemoryCache::class.java)
 
     init {
         aggregateRootInfoDict = ConcurrentHashMap()

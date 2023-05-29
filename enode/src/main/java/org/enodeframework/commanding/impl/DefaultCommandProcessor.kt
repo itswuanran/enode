@@ -21,6 +21,7 @@ class DefaultCommandProcessor(
     private val scheduleService: ScheduleService,
     private val coroutineDispatcher: CoroutineDispatcher
 ) : CommandProcessor {
+    private val logger = LoggerFactory.getLogger(DefaultCommandProcessor::class.java)
     private val mailboxDict: ConcurrentMap<String, ProcessingCommandMailbox>
     private val taskName: String
     private var aggregateRootMaxInactiveSeconds = 3600 * 24 * 3
@@ -91,9 +92,6 @@ class DefaultCommandProcessor(
         }
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(DefaultCommandProcessor::class.java)
-    }
 
     init {
         mailboxDict = ConcurrentHashMap()

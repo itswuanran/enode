@@ -52,7 +52,6 @@ import org.enodeframework.messaging.impl.DefaultMessageHandlerProvider;
 import org.enodeframework.messaging.impl.DefaultThreeMessageHandlerProvider;
 import org.enodeframework.messaging.impl.DefaultTwoMessageHandlerProvider;
 import org.enodeframework.queue.DefaultSendReplyService;
-import org.enodeframework.queue.PointToPointEventBus;
 import org.enodeframework.queue.SendMessageService;
 import org.enodeframework.queue.SendReplyService;
 import org.enodeframework.queue.applicationmessage.DefaultApplicationMessageHandler;

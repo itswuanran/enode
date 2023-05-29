@@ -104,10 +104,8 @@ class EventSourcingAggregateStorage(
         }
     }
 
-    companion object {
-        private const val MIN_VERSION = 1
-        private const val MAX_VERSION = Int.MAX_VALUE
-    }
+    private val MIN_VERSION = 1
+    private val MAX_VERSION = Int.MAX_VALUE
 
     override fun <T : AggregateRoot?> getAsync(
         aggregateRootType: Class<T>,

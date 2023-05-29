@@ -1,7 +1,9 @@
 ## 框架简介
+
 `enode`是基于`JVM`平台，采用`Domain Driven Design`思想落地的一个`Open Source`应用框架，主要服务于云原生和微服务场景。
 
 ## 发版记录
+
 [CHANGELOG](CHANGELOG.md)
 
 ## 整体架构
@@ -11,35 +13,45 @@
 ![](enode-arch.jpg)
 
 ## 使用约束
+
 - **一个**命令一次只能修改**一个**聚合根
 - **聚合间**只能通过**领域消息**交互
 - 聚合内**强一致性**
 - 聚合间**最终一致性**
 
 ## `Saga`的两种模式
+
 - 编排（`Choreography`）
-参与者（子事务）之间的调用、分配、决策和排序，通过交换事件进行进行。是一种去中心化的模式，参与者之间通过消息机制进行沟通，通过监听器的方式监听其他参与者发出的消息，从而执行后续的逻辑处理。
+  参与者（子事务）之间的调用、分配、决策和排序，通过交换事件进行进行。是一种去中心化的模式，参与者之间通过消息机制进行沟通，通过监听器的方式监听其他参与者发出的消息，从而执行后续的逻辑处理。
+
 > `enode`中使用的就是这种模式
 
 - 控制（`Orchestration`）
-提供一个控制类，方便参与者之间的协调工作。事务执行的命令从控制类发起，按照逻辑顺序请求`Saga`的参与者，从参与者那里接受到反馈以后，控制类在发起向其他参与者的调用。所有`Saga`的参与者都围绕这个控制类进行沟通和协调工作。
+  提供一个控制类，方便参与者之间的协调工作。事务执行的命令从控制类发起，按照逻辑顺序请求`Saga`
+  的参与者，从参与者那里接受到反馈以后，控制类在发起向其他参与者的调用。所有`Saga`的参与者都围绕这个控制类进行沟通和协调工作。
+
 > [`Apache ServiceComb`](https://servicecomb.apache.org/) 使用的是这种模式
 
 ## 框架特色
 
-- 实现`CQRS`架构，解决`CQRS`架构的`C`端的高并发写的问题，以及`CQ`两端数据同步的顺序性保证和幂等性，支持`C`端完成后立即返回`Command`的结果，也支持`CQ`两端都完成后才返回`Command`的结果
-- 聚合根常驻内存（`In-Memory Domain Model`），设计上尽可能的避免了聚合根重建，可以完全以`OO`的方式来设计实现聚合根，不必为`ORM`的阻抗失衡而烦恼
+- 实现`CQRS`架构，解决`CQRS`架构的`C`端的高并发写的问题，以及`CQ`两端数据同步的顺序性保证和幂等性，支持`C`
+  端完成后立即返回`Command`的结果，也支持`CQ`两端都完成后才返回`Command`的结果
+- 聚合根常驻内存（`In-Memory Domain Model`），设计上尽可能的避免了聚合根重建，可以完全以`OO`
+  的方式来设计实现聚合根，不必为`ORM`的阻抗失衡而烦恼
 - 基于聚合根`ID` + 事件版本号的唯一索引，实现聚合根的乐观并发控制
-- 通过聚合根`ID`对命令或事件进行路由，聚合根的处理基于`Actor`思想，做到最小的并发冲突、最大的并行处理，`Group Commit Domain event`
+- 通过聚合根`ID`对命令或事件进行路由，聚合根的处理基于`Actor`
+  思想，做到最小的并发冲突、最大的并行处理，`Group Commit Domain event`
 - 架构层面严格规范了开发人员该如何写代码，和`DDD`开发紧密结合，严格遵守聚合内强一致性、聚合之间最终一致性的原则
 - 先进的`Saga`机制，以事件驱动的流程管理器（`Process Manager`）的方式支持一个用户操作跨多个聚合根的业务场景，如订单处理，从而避免分布式事务的使用
 - 基于`ES`（`Event Sourcing`）的思想持久化`C`端的聚合根的状态，让`C`端的数据持久化变得通用化，具有一切`ES`的优点
 - 在设计上完全与IoC容器解耦，同时保留了扩展性，目前适配了SpringBoot
-- 通过基于分布式消息队列横向扩展的方式实现系统的可伸缩性（基于队列的动态扩容/缩容），接口抽象极简，只要求最基础的队列能力，目前适配了`Kafka`、`RocketMQ（ONS）`、`Pulsar`
+-
+通过基于分布式消息队列横向扩展的方式实现系统的可伸缩性（基于队列的动态扩容/缩容），接口抽象极简，只要求最基础的队列能力，目前适配了`Kafka`、`RocketMQ（ONS）`、`Pulsar`
 - EventStore内置适配了`JDBC`、`MySQL`、`PostgreSQL`、`MongoDB`存储，可针对性实现对应扩展
 - 框架完全采用响应式编程理念，在`db`层面使用了异步驱动，同时集成了`kotlin coroutine`
 
 ## 最佳实践
+
 - 可参考[samples](samples)模块中的例子
 
 > 目前基于enode开发的项目 [conference](https://github.com/anruence/conference)
@@ -49,7 +61,9 @@
 [wiki](https://github.com/anruence/enode/wiki)
 
 ## 核心思想
-不管是`DDD`也好，`CQRS`架构也好，虽然都做到了让领域对象不仅有**状态**，而且有**行为**，但还不够彻底。因为对象的行为总是“**被调用**”的。因为贫血模型的情况下，对象是提供了数据让别人去操作或者说被别人使用；而充血模型的情况下，对象则是提供了数据和行为，但还是让别人去操作或者说被别人使用。
+
+不管是`DDD`也好，`CQRS`架构也好，虽然都做到了让领域对象不仅有**状态**，而且有**行为**，但还不够彻底。因为对象的行为总是“**被调用
+**”的。因为贫血模型的情况下，对象是提供了数据让别人去操作或者说被别人使用；而充血模型的情况下，对象则是提供了数据和行为，但还是让别人去操作或者说被别人使用。
 
 > 真正的面向对象编程中的对象应该是一个”活“的具有主观能动性的存在于内存中的客观存在，它们不仅有状态而且还有自主行为。
 
@@ -91,9 +105,11 @@ spring.enode.mq.topic.event=EnodeBankEventTopic
 ```
 
 ### `kafka bean`配置
+
 > 如果把生成者和消费者配置在一个config文件中，这里会产生存在一个循环依赖，为了避免这种情况，建议分开两个文件配置
 
 #### producer
+
 ```java
 @Bean
 public ProducerFactory<String, String> producerFactory() {
@@ -115,6 +131,7 @@ public KafkaTemplate<String, String> kafkaTemplate(ProducerFactory<String, Strin
 ```
 
 #### consumer
+
 ```java
 @Value("${spring.enode.mq.topic.command}")
 private String commandTopic;
@@ -212,7 +229,9 @@ public class DbConfig {
 ```
 
 ### 事件表新建
+
 #### 表的含义
+
 `event_stream` 表中存储的是每个聚合根和对应版本的领域事件历史记录
 `published_version` 表中存储的每个聚合根当前的消费进度（版本）
 
@@ -292,25 +311,29 @@ db.published_version.createIndex({processorName:1,aggregateRootId:1},{unique:tru
 
 启动时会扫描包路径下的注解，注册成`Spring Bean`，和`@Component`作用相同。
 
-
 #### 什么时候采取事件驱动，什么时候使用过程式编程？命令和事件的区别，两者都是消息，为什么要分开表示呢？
+
 命令可以被拒绝。
 事件已经发生。
 这可能是最重要的原因。在事件驱动的体系结构中，毫无疑问，引发的事件代表了已发生的事情。
 现在，因为命令是我们想要发生的事情，并且事件已经发生了，所以当我们命名这些事情时，我们应该使用不同的词，命令一般是名词，事件一般是过去分词
 举个例子，拿订单系统来说，我们有个外部支付系统的依赖。
-当用户在支付系统完成支付后，支付系统会向订单系统发送一个`Command`，`MarkOrderAsPayed`（标记订单已支付），订单在处理这个`Command`时，获取当前订单，调用订单的标记已支付（行为），产生了`OrderPayed`（订单已支付）事件。
+当用户在支付系统完成支付后，支付系统会向订单系统发送一个`Command`，`MarkOrderAsPayed`
+（标记订单已支付），订单在处理这个`Command`时，获取当前订单，调用订单的标记已支付（行为），产生了`OrderPayed`（订单已支付）事件。
 
 我们可以看到，命令通常由系统外调用，事件是由处理程序和系统中的其他代码提供的。
 这是他们分开表示的另一个原因。概念清晰度。
 命令和事件都是消息。但它们实际上是独立的概念，应该明确地对概念进行建模。
-这两者我理解都是符合人类思维的，首先是基于大脑接收到感知到的消息（`Event`）产生一个想法【意图】（`Command`），然后如何实现这个想法，思考的维度是过程式的，在实现的过程中，会产生一些事件消息，这个消息又会影响到大脑。如此循环往复
+这两者我理解都是符合人类思维的，首先是基于大脑接收到感知到的消息（`Event`）产生一个想法【意图】（`Command`
+），然后如何实现这个想法，思考的维度是过程式的，在实现的过程中，会产生一些事件消息，这个消息又会影响到大脑。如此循环往复
 
 ### 消息
-- 目前enode函数调用的实现是放在`kotlin coroutine`中来执行的，这里涉及到实际执行的任务类型，针对计算密集型和IO密集型的任务，目前没有做可定制化的配置，后续的版本会考虑加上，
-**使用也很简单，`@Subscribe` 方法体加上`suspend`标记即可**。
 
-- **针对`Java`异步编程做了深度优化，支持`CommandHandler`和`EventHandler`中定义`CompletableFuture`返回值，阻塞调用封装在协程中，避免使用`#join() #get()`等阻塞代码，同时也支持kotlin suspend**
+- 目前enode函数调用的实现是放在`kotlin coroutine`中来执行的，这里涉及到实际执行的任务类型，针对计算密集型和IO密集型的任务，目前没有做可定制化的配置，后续的版本会考虑加上，
+  **使用也很简单，`@Subscribe` 方法体加上`suspend`标记即可**。
+
+- **针对`Java`异步编程做了深度优化，支持`CommandHandler`和`EventHandler`中定义`CompletableFuture`
+  返回值，阻塞调用封装在协程中，避免使用`#join() #get()`等阻塞代码，同时也支持kotlin suspend**
 
 ```kotlin
 @Command
@@ -333,6 +356,7 @@ public CompletableFuture<BankAccount> handleAsync(CommandContext context, AddTra
     return future;
 }
 ```
+
 发送命令消息：
 
 ```java
@@ -452,14 +476,18 @@ public class DepositTransactionProcessManager {
 }
 
 ```
+
 ### `MQ`配置启动
+
 目前支持三种
 
 #### `Pulsar`
+
 ```bash 
 bin/pulsar standalone
 
 ```
+
 #### `Kafka`
 
 https://kafka.apache.org/quickstart
@@ -525,14 +553,19 @@ aggregateRootType.getDeclaredConstructor().newInstance();
 
 因为服务的现状大都是服务提供者少，通常只有几台机器，而服务的消费者多，可能整个网站都在访问该服务。
 在我们的这个场景里面，`command-web`只需要很少的机器就能满足前端大量的请求，`command-consumer`和`event-consumer`的机器相对较多些。
-如果采用常规的“单请求单连接”的方式，服务提供者很容易就被压跨，通过单一连接，保证单一消费者不会压死提供者，长连接，减少连接握手验证等，并使用异步`IO`，复用线程池，防止`C10K`问题。
+如果采用常规的“单请求单连接”的方式，服务提供者很容易就被压跨，通过单一连接，保证单一消费者不会压死提供者，长连接，减少连接握手验证等，并使用异步`IO`
+，复用线程池，防止`C10K`问题。
 
 ### `CommandHandler`和`CommandAsyncHandler`区别 (现在统一成一个了)
 
-- `CommandHandler`是为了操作内存中的聚合根的，所以不会有异步操作，但后来`CommandHandler`的`Handle`方法也设计为了`handleAsync`了，目的是为了异步到底，否则异步链路中断的话，异步就没效果了
+- `CommandHandler`是为了操作内存中的聚合根的，所以不会有异步操作，但后来`CommandHandler`的`Handle`
+  方法也设计为了`handleAsync`了，目的是为了异步到底，否则异步链路中断的话，异步就没效果了
 - `CommandAsyncHandler`是为了让开发者调用外部系统的接口的，也就是访问外部`IO`，所以用了`Async
-> `CommandHandler`，`CommandAsyncHandler`这两个接口是用于不同的业务场景，`CommandHandler.handleAsync`方法执行完成后，框架要从`context`中获取当前修改的聚合根的领域事件，然后去提交。而`CommandAsyncHandler.handleAsync`方法执行完成后，不会有这个逻辑，而是看一下`handleAsync`方法执行的异步消息结果是什么，也就是`IApplicationMessage`。
-目前已经删除了`CommandAsyncHandler`，统一使用`CommandHandler`来处理，异步结果会放在`context`中，通过访问 `#setResult`设置
+
+> `CommandHandler`，`CommandAsyncHandler`这两个接口是用于不同的业务场景，`CommandHandler.handleAsync`
+> 方法执行完成后，框架要从`context`中获取当前修改的聚合根的领域事件，然后去提交。而`CommandAsyncHandler.handleAsync`
+> 方法执行完成后，不会有这个逻辑，而是看一下`handleAsync`方法执行的异步消息结果是什么，也就是`IApplicationMessage`。
+> 目前已经删除了`CommandAsyncHandler`，统一使用`CommandHandler`来处理，异步结果会放在`context`中，通过访问 `#setResult`设置
 
 ### `CommandBus` `sendAsync` 和 `executeAsync`的区别
 
@@ -544,7 +577,9 @@ aggregateRootType.getDeclaredConstructor().newInstance();
 
 ### `event`使用哪个订阅者发送处理结果
 
-`event`的订阅者可能有很多个，所以`enode`只要求有一个订阅者处理完事件后发送结果给发送命令的人即可，通过`defaultDomainEventMessageHandler`中`sendEventHandledMessage`参数来设置是否发送，最终来决定由哪个订阅者来发送命令处理结果。
+`event`的订阅者可能有很多个，所以`enode`
+只要求有一个订阅者处理完事件后发送结果给发送命令的人即可，通过`defaultDomainEventMessageHandler`
+中`sendEventHandledMessage`参数来设置是否发送，最终来决定由哪个订阅者来发送命令处理结果。
 
 ## 参考项目
 

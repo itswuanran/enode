@@ -39,6 +39,8 @@ class DefaultProcessingCommandHandler(
     private val serializeService: SerializeService,
     private val coroutineDispatcher: CoroutineDispatcher
 ) : ProcessingCommandHandler {
+    private val logger = LoggerFactory.getLogger(DefaultProcessingCommandHandler::class.java)
+
     override fun handleAsync(processingCommand: ProcessingCommand): CompletableFuture<Boolean> {
         val command = processingCommand.message
         if (Strings.isNullOrEmpty(command.aggregateRootId)) {
@@ -416,7 +418,4 @@ class DefaultProcessingCommandHandler(
         return processingCommand.mailBox.completeMessage(processingCommand, commandResult)
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(DefaultProcessingCommandHandler::class.java)
-    }
 }

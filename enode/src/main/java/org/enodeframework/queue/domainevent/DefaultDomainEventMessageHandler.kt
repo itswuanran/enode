@@ -10,7 +10,6 @@ import org.enodeframework.queue.MessageHandler
 import org.enodeframework.queue.QueueMessage
 import org.enodeframework.queue.SendReplyService
 import org.slf4j.LoggerFactory
-import java.util.*
 import java.util.concurrent.CompletableFuture
 
 class DefaultDomainEventMessageHandler(
@@ -19,6 +18,8 @@ class DefaultDomainEventMessageHandler(
     private val eventSerializer: EventSerializer,
     private val serializeService: SerializeService
 ) : MessageHandler {
+    private val logger = LoggerFactory.getLogger(DefaultDomainEventMessageHandler::class.java)
+
     var isSendEventHandledMessage = true
 
     override fun handle(queueMessage: QueueMessage, context: MessageContext) {
@@ -55,26 +56,17 @@ class DefaultDomainEventMessageHandler(
             if (!eventConsumer.isSendEventHandledMessage) {
                 return Task.completedTask
             }
-            val address = Optional.ofNullable<Map<String, Any>>(
-                domainEventStreamMessage.items
-            ).map { x: Map<String, Any> -> x[SysProperties.ITEMS_COMMAND_REPLY_ADDRESS_KEY] as String? }
-                .orElse("")
+            val address = domainEventStreamMessage.items[SysProperties.ITEMS_COMMAND_REPLY_ADDRESS_KEY] as String?
             if (Strings.isNullOrEmpty(address)) {
                 return Task.completedTask
             }
-            val commandResult = Optional.ofNullable<Map<String, Any>>(
-                domainEventStreamMessage.items
-            ).map { x: Map<String, Any> -> x[SysProperties.ITEMS_COMMAND_RESULT_KEY] as String? }
-                .orElse("")
+            val commandResult = domainEventStreamMessage.items[SysProperties.ITEMS_COMMAND_RESULT_KEY] as String?
             val domainEventHandledMessage = DomainEventHandledMessage()
             domainEventHandledMessage.commandId = domainEventStreamMessage.commandId
             domainEventHandledMessage.aggregateRootId = domainEventStreamMessage.aggregateRootId
-            domainEventHandledMessage.commandResult = commandResult
+            domainEventHandledMessage.commandResult = commandResult ?: ""
             return eventConsumer.sendReplyService.sendEventReply(domainEventHandledMessage, address!!)
         }
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(DefaultDomainEventMessageHandler::class.java)
-    }
 }

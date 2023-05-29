@@ -20,9 +20,7 @@ class PgAddDomainEventsHandler(
     private val msg: String,
 ) : Handler<AsyncResult<RowSet<Row>>> {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(PgAddDomainEventsHandler::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(PgAddDomainEventsHandler::class.java)
 
     val future = CompletableFuture<AggregateEventAppendResult>()
 

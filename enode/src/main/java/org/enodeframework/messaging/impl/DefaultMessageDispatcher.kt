@@ -41,9 +41,10 @@ class DefaultMessageDispatcher(
             return Task.completedTask
         }
         val rootDispatching = RootDispatching()
-        //先对每个事件调用其Handler
+        // 先对每个事件调用其Handler
         val queueMessageDispatching = QueueMessageDispatching(this, rootDispatching, messages)
-        dispatchSingleMessage(queueMessageDispatching.dequeueMessage(), queueMessageDispatching)
+        val message = queueMessageDispatching.dequeueMessage() ?: return Task.completedTask
+        dispatchSingleMessage(message, queueMessageDispatching)
         //如果有至少两个事件，则尝试调用针对两个事件的Handler
         if (messageCount >= 2) {
             val twoMessageHandlers =
@@ -180,7 +181,6 @@ class DefaultMessageDispatcher(
         retryTimes: Int
     ) {
         val message = singleMessageDispatching.message
-
         IOHelper.tryAsyncActionRecursivelyWithoutResult("HandleSingleMessageAsync", {
             CoroutineScope(coroutineDispatcher).async {
                 handlerProxy.handleAsync(message)
