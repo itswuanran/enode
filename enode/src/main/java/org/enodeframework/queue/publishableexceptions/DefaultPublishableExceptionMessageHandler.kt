@@ -15,6 +15,8 @@ class DefaultPublishableExceptionMessageHandler(
     private val messageDispatcher: MessageDispatcher,
     private val serializeService: SerializeService
 ) : MessageHandler {
+    private val logger = LoggerFactory.getLogger(DefaultPublishableExceptionMessageHandler::class.java)
+
     override fun handle(queueMessage: QueueMessage, context: MessageContext) {
         logger.info("Received domain exception message: {}", queueMessage)
         val exceptionMessage =
@@ -30,12 +32,6 @@ class DefaultPublishableExceptionMessageHandler(
         exception.items = exceptionMessage.items
         exception.restoreFrom(exceptionMessage.serializableInfo)
         messageDispatcher.dispatchMessageAsync(exception)
-            .whenComplete { _: Boolean, y: Throwable? -> context.onMessageHandled(queueMessage) }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(
-            DefaultPublishableExceptionMessageHandler::class.java
-        )
+            .whenComplete { _, _ -> context.onMessageHandled(queueMessage) }
     }
 }

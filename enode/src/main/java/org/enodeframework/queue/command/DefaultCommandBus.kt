@@ -9,6 +9,7 @@ import org.enodeframework.common.serializing.SerializeService
 import org.enodeframework.common.utils.Assert
 import org.enodeframework.queue.MessageTypeCode
 import org.enodeframework.queue.QueueMessage
+import org.enodeframework.queue.SendMessageResult
 import org.enodeframework.queue.SendMessageService
 import java.util.concurrent.CompletableFuture
 
@@ -22,11 +23,11 @@ class DefaultCommandBus(
     private val sendMessageService: SendMessageService,
     private val serializeService: SerializeService,
 ) : CommandBus {
-    override fun sendAsync(command: CommandMessage): CompletableFuture<Boolean> {
+    override fun sendAsync(command: CommandMessage): CompletableFuture<SendMessageResult> {
         return sendMessageService.sendMessageAsync(buildCommandMessage(command, false))
     }
 
-    override suspend fun send(command: CommandMessage): Boolean {
+    override suspend fun send(command: CommandMessage): SendMessageResult {
         return sendAsync(command).await()
     }
 

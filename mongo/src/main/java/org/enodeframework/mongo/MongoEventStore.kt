@@ -8,13 +8,13 @@ import io.vertx.ext.mongo.MongoClient
 import org.enodeframework.common.io.IOHelper.tryAsyncActionRecursively
 import org.enodeframework.common.io.IOHelper.tryIOFuncAsync
 import org.enodeframework.common.serializing.SerializeService
-import org.enodeframework.configurations.EventStoreOptions
 import org.enodeframework.eventing.AggregateEventAppendResult
 import org.enodeframework.eventing.BatchAggregateEventAppendResult
 import org.enodeframework.eventing.DomainEventStream
 import org.enodeframework.eventing.EventAppendResult
 import org.enodeframework.eventing.EventSerializer
 import org.enodeframework.eventing.EventStore
+import org.enodeframework.eventing.EventStoreConfiguration
 import org.enodeframework.mongo.handler.MongoAddDomainEventsHandler
 import org.enodeframework.mongo.handler.MongoFindDomainEventsHandler
 import java.util.concurrent.CompletableFuture
@@ -24,13 +24,10 @@ import java.util.concurrent.CompletableFuture
  */
 open class MongoEventStore(
     private val mongoClient: MongoClient,
-    private val options: EventStoreOptions,
+    private val options: EventStoreConfiguration,
     private val eventSerializer: EventSerializer,
     private val serializeService: SerializeService
 ) : EventStore {
-    constructor(
-        mongoClient: MongoClient, eventSerializer: EventSerializer, serializeService: SerializeService
-    ) : this(mongoClient, EventStoreOptions.mongo(), eventSerializer, serializeService)
 
     override fun batchAppendAsync(eventStreams: List<DomainEventStream>): CompletableFuture<EventAppendResult> {
         val future = CompletableFuture<EventAppendResult>()

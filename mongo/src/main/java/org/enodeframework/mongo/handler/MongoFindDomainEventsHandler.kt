@@ -21,9 +21,7 @@ class MongoFindDomainEventsHandler(
     private val msg: String
 ) : Handler<AsyncResult<List<JsonObject>>> {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(MongoEventStore::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(MongoEventStore::class.java)
 
     val future = CompletableFuture<List<DomainEventStream>>()
 

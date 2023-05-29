@@ -22,9 +22,7 @@ class PgFindDomainEventsHandler(
     private val msg: String
 ) : Handler<AsyncResult<RowSet<Row>>> {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(PgFindDomainEventsHandler::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(PgFindDomainEventsHandler::class.java)
 
     val future = CompletableFuture<List<DomainEventStream>>()
 

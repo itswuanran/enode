@@ -19,6 +19,7 @@ class EventCommittingContextMailBox(
     private val coroutineDispatcher: CoroutineDispatcher,
     handleEventAction: Action1<List<EventCommittingContext>>
 ) {
+    private val logger: Logger = LoggerFactory.getLogger(EventCommittingContextMailBox::class.java)
     private val lockObj = Any()
     private val asyncLockObj = Any()
     private val aggregateDictDict: ConcurrentHashMap<String, ConcurrentHashMap<String, Byte>> = ConcurrentHashMap()
@@ -144,7 +145,6 @@ class EventCommittingContextMailBox(
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(EventCommittingContextMailBox::class.java)
         private const val ONE_BYTE: Byte = 1
     }
 

@@ -8,11 +8,11 @@ import io.vertx.core.eventbus.EventBusOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.NetClient;
 import io.vertx.core.net.NetClientOptions;
-import io.vertx.core.net.NetServerOptions;
 import io.vertx.core.net.NetSocket;
+import io.vertx.core.net.SocketAddress;
 import io.vertx.core.net.impl.ConnectionBase;
 import io.vertx.ext.eventbus.bridge.tcp.impl.protocol.FrameHelper;
-import org.enodeframework.common.utils.ReplyUtil;
+import org.enodeframework.common.exception.ReplyAddressInvalidException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,10 +45,6 @@ public class PointToPointEventBus {
 
     NetClient client() {
         return client;
-    }
-
-    private NetServerOptions getServerOptions() {
-        return new NetServerOptions(this.options.toJson());
     }
 
     public void send(String address, JsonObject message) {
@@ -130,7 +126,7 @@ class OutboundDeliveryContext implements Handler<AsyncResult<Void>> {
 
 class ConnectionHolder {
 
-    private static final Logger log = LoggerFactory.getLogger(ConnectionHolder.class);
+    private final Logger log = LoggerFactory.getLogger(ConnectionHolder.class);
 
     private final PointToPointEventBus eventBus;
 
@@ -151,9 +147,19 @@ class ConnectionHolder {
         this.remoteNodeAddress = remoteNodeAddress;
     }
 
+    SocketAddress toURI(String value) {
+        try {
+            URI uri = new URI(value);
+            return SocketAddress.inetSocketAddress(uri.getPort(), uri.getHost());
+        } catch (Exception e) {
+            log.error("parse address error. uri: {}", value, e);
+            throw new ReplyAddressInvalidException(value, e);
+        }
+    }
+
     void connect() {
-        URI info = ReplyUtil.toURI(remoteNodeAddress);
-        eventBus.client().connect(info.getPort(), info.getHost())
+        SocketAddress socketAddress = toURI(remoteNodeAddress);
+        eventBus.client().connect(socketAddress)
             .onComplete(ar -> {
                 if (ar.succeeded()) {
                     connected(ar.result());

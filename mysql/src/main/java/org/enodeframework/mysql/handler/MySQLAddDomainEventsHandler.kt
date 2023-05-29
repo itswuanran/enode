@@ -10,21 +10,18 @@ import io.vertx.sqlclient.Row
 import io.vertx.sqlclient.RowSet
 import org.enodeframework.common.exception.EventStoreException
 import org.enodeframework.common.exception.IORuntimeException
-import org.enodeframework.configurations.EventStoreOptions
 import org.enodeframework.eventing.AggregateEventAppendResult
 import org.enodeframework.eventing.EventAppendStatus
+import org.enodeframework.eventing.EventStoreConfiguration
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 
 open class MySQLAddDomainEventsHandler(
-    private val options: EventStoreOptions,
+    private val options: EventStoreConfiguration,
     private val msg: String,
 ) : Handler<AsyncResult<RowSet<Row>>> {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(MySQLAddDomainEventsHandler::class.java)
-    }
-
+    private val logger = LoggerFactory.getLogger(MySQLAddDomainEventsHandler::class.java)
     val future = CompletableFuture<AggregateEventAppendResult>()
 
     override fun handle(ar: AsyncResult<RowSet<Row>>) {
@@ -53,7 +50,7 @@ open class MySQLAddDomainEventsHandler(
             // 不同的数据库在冲突时的错误信息不同，可以通过解析错误信息的方式将冲突的commandId找出来，这里要求id不能命中正则的规则（不包含-字符）
             val appendResult = AggregateEventAppendResult(EventAppendStatus.DuplicateCommand)
             val message = throwable.message ?: ""
-            val commandId = options.parseDuplicatedId(message)
+            val commandId = options.seekCommandId(message)
             if (!Strings.isNullOrEmpty(commandId)) {
                 appendResult.duplicateCommandIds = Lists.newArrayList(commandId)
             } else {

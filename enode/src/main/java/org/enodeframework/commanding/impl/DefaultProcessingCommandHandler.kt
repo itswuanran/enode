@@ -314,17 +314,21 @@ class DefaultProcessingCommandHandler(
                     ).whenComplete { _, _ -> future.complete(true) }
                 } else {
                     completeCommand(
-                        processingCommand, CommandStatus.Failed, realException.javaClass.name, realException.message
+                        processingCommand,
+                        CommandStatus.Failed,
+                        realException.javaClass.name,
+                        realException.message ?: ""
                     ).whenComplete { _, _ -> future.complete(true) }
                 }
             }
         }, {
             String.format(
-                "[command:[id:%s,type:%s],handlerType:%s,aggregateRootId:%s]",
+                "[command:[id:%s,type:%s],handlerType:%s,aggregateRootId:%s] %s",
                 command.id,
                 command.javaClass.name,
                 commandHandler.getInnerObject().javaClass.name,
-                command.aggregateRootId
+                command.aggregateRootId,
+                errorMessage
             )
         }, null, retryTimes, true)
         return future
@@ -351,7 +355,10 @@ class DefaultProcessingCommandHandler(
             exceptionPublisher.publishAsync(exception)
         }, {
             completeCommand(
-                processingCommand, CommandStatus.Failed, exception.javaClass.name, (exception as Exception).message
+                processingCommand,
+                CommandStatus.Failed,
+                exception.javaClass.name,
+                (exception as Exception).message ?: ""
             ).whenComplete { _, _ -> future.complete(true) }
         }, {
             "[commandId: ${processingCommand.message.id}]"
@@ -417,7 +424,7 @@ class DefaultProcessingCommandHandler(
     }
 
     private fun completeCommand(
-        processingCommand: ProcessingCommand, commandStatus: CommandStatus, resultType: String, result: String?
+        processingCommand: ProcessingCommand, commandStatus: CommandStatus, resultType: String, result: String
     ): CompletableFuture<Boolean> {
         val commandResult = CommandResult(
             commandStatus,

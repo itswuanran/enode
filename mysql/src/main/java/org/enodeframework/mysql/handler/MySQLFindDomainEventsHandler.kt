@@ -22,9 +22,7 @@ open class MySQLFindDomainEventsHandler(
     private val msg: String
 ) : Handler<AsyncResult<RowSet<Row>>> {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(MySQLFindDomainEventsHandler::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(MySQLFindDomainEventsHandler::class.java)
 
     var future = CompletableFuture<List<DomainEventStream>>()
 

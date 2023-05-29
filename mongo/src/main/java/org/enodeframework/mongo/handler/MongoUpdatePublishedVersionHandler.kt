@@ -12,9 +12,7 @@ import java.util.concurrent.CompletableFuture
 
 class MongoUpdatePublishedVersionHandler(private val msg: String) : Handler<AsyncResult<MongoClientUpdateResult?>> {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(MongoEventStore::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(MongoEventStore::class.java)
 
     var future = CompletableFuture<Int>()
 

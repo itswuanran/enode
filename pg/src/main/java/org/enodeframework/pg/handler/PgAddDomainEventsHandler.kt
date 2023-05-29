@@ -9,14 +9,14 @@ import io.vertx.sqlclient.Row
 import io.vertx.sqlclient.RowSet
 import org.enodeframework.common.exception.EventStoreException
 import org.enodeframework.common.exception.IORuntimeException
-import org.enodeframework.configurations.EventStoreOptions
 import org.enodeframework.eventing.AggregateEventAppendResult
 import org.enodeframework.eventing.EventAppendStatus
+import org.enodeframework.eventing.EventStoreConfiguration
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 
 class PgAddDomainEventsHandler(
-    private val options: EventStoreOptions,
+    private val options: EventStoreConfiguration,
     private val msg: String,
 ) : Handler<AsyncResult<RowSet<Row>>> {
 
@@ -48,7 +48,7 @@ class PgAddDomainEventsHandler(
             val appendResult = AggregateEventAppendResult(EventAppendStatus.DuplicateCommand)
             if (throwable is PgException) {
                 val message = throwable.detail ?: ""
-                val commandId = options.parseDuplicatedId(message)
+                val commandId = options.seekCommandId(message)
                 if (!Strings.isNullOrEmpty(commandId)) {
                     appendResult.duplicateCommandIds = Lists.newArrayList(commandId)
                 } else {

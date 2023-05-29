@@ -1,5 +1,6 @@
 package org.enodeframework.commanding
 
+import org.enodeframework.queue.SendMessageResult
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -12,12 +13,12 @@ interface CommandBus {
      * @param command The command to send.
      * @return A task which contains the send result of the command.
      */
-    fun sendAsync(command: CommandMessage): CompletableFuture<Boolean>
+    fun sendAsync(command: CommandMessage): CompletableFuture<SendMessageResult>
 
     /**
      * Send a command synchronously.
      */
-    suspend fun send(command: CommandMessage): Boolean
+    suspend fun send(command: CommandMessage): SendMessageResult
 
     /**
      * Execute a command asynchronously with the default command return type.

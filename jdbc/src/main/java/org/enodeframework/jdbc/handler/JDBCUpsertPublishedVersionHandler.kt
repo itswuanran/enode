@@ -6,18 +6,16 @@ import io.vertx.sqlclient.Row
 import io.vertx.sqlclient.RowSet
 import org.enodeframework.common.exception.IORuntimeException
 import org.enodeframework.common.exception.PublishedVersionStoreException
-import org.enodeframework.configurations.EventStoreOptions
+import org.enodeframework.eventing.EventStoreConfiguration
 import org.slf4j.LoggerFactory
 import java.sql.SQLException
 import java.util.concurrent.CompletableFuture
 
 open class JDBCUpsertPublishedVersionHandler(
-    private val options: EventStoreOptions, private val msg: String
+    private val options: EventStoreConfiguration, private val msg: String
 ) : Handler<AsyncResult<RowSet<Row>>> {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(JDBCUpsertPublishedVersionHandler::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(JDBCUpsertPublishedVersionHandler::class.java)
 
     val future = CompletableFuture<Int>()
 

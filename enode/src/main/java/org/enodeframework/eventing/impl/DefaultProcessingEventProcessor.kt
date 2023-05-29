@@ -242,8 +242,6 @@ class DefaultProcessingEventProcessor(
         return (mailbox.isInactive(timeoutSeconds) && !mailbox.isRunning() && mailbox.getTotalUnHandledMessageCount() == 0 && mailbox.getWaitingMessageCount() == 0)
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(DefaultProcessingEventProcessor::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(DefaultProcessingEventProcessor::class.java)
 
 }

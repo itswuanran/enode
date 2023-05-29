@@ -221,9 +221,7 @@ class DefaultCommandResultProcessor(
         }
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(DefaultCommandResultProcessor::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(DefaultCommandResultProcessor::class.java)
 
     init {
         commandTaskDict = CacheBuilder.newBuilder()

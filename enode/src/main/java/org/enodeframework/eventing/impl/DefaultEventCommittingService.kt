@@ -328,9 +328,7 @@ class DefaultEventCommittingService(
         return processingCommand.mailBox.completeMessage(processingCommand, commandResult)
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(DefaultEventCommittingService::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(DefaultEventCommittingService::class.java)
 
     init {
         eventCommittingContextMailBoxList = ArrayList()

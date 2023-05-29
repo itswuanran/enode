@@ -1,7 +1,6 @@
 package org.enodeframework.spring;
 
 import org.enodeframework.common.serializing.SerializeService;
-import org.enodeframework.configurations.EventStoreOptions;
 import org.enodeframework.eventing.EventSerializer;
 import org.enodeframework.jdbc.JDBCEventStore;
 import org.enodeframework.jdbc.JDBCPublishedVersionStore;
@@ -16,13 +15,13 @@ public class EnodeJDBCPgEventStoreAutoConfig {
 
     @Bean
     public JDBCEventStore jdbcEventStore(@Qualifier("enodePgDataSource") DataSource enodePgDataSource, EventSerializer eventSerializer, SerializeService serializeService) {
-        JDBCEventStore eventStore = new JDBCEventStore(enodePgDataSource, EventStoreOptions.pg(), eventSerializer, serializeService);
+        JDBCEventStore eventStore = new JDBCEventStore(enodePgDataSource, DefaultEventStoreConfiguration.Driver.pg(), eventSerializer, serializeService);
         return eventStore;
     }
 
     @Bean
     public JDBCPublishedVersionStore jdbcPublishedVersionStore(@Qualifier("enodePgDataSource") DataSource enodePgDataSource) {
-        JDBCPublishedVersionStore publishedVersionStore = new JDBCPublishedVersionStore(enodePgDataSource, EventStoreOptions.pg());
+        JDBCPublishedVersionStore publishedVersionStore = new JDBCPublishedVersionStore(enodePgDataSource, DefaultEventStoreConfiguration.Driver.pg());
         return publishedVersionStore;
     }
 }

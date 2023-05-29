@@ -252,9 +252,7 @@ class ProcessingEventMailBox(
         return waitingProcessingEventDict.size
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(ProcessingEventMailBox::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(ProcessingEventMailBox::class.java)
 
     init {
         this.lastActiveTime = Date()

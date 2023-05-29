@@ -2,14 +2,14 @@ package org.enodeframework.test.mock;
 
 import org.enodeframework.common.exception.EnodeException;
 import org.enodeframework.common.exception.IORuntimeException;
-import org.enodeframework.common.io.Task;
 import org.enodeframework.messaging.ApplicationMessage;
 import org.enodeframework.messaging.MessagePublisher;
+import org.enodeframework.queue.SendMessageResult;
 
 import java.util.concurrent.CompletableFuture;
 
 public class MockApplicationMessagePublisher implements MessagePublisher<ApplicationMessage> {
-    private static final CompletableFuture<Boolean> successResultTask = Task.completedTask;
+    private static final CompletableFuture<SendMessageResult> successResultTask = CompletableFuture.completedFuture(new SendMessageResult("", ""));
     private int expectFailedCount = 0;
     private int currentFailedCount = 0;
     private FailedType failedType;
@@ -26,7 +26,7 @@ public class MockApplicationMessagePublisher implements MessagePublisher<Applica
     }
 
     @Override
-    public CompletableFuture<Boolean> publishAsync(ApplicationMessage message) {
+    public CompletableFuture<SendMessageResult> publishAsync(ApplicationMessage message) {
         if (currentFailedCount < expectFailedCount) {
             currentFailedCount++;
             if (failedType == FailedType.UnKnownException) {

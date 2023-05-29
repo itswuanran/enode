@@ -6,6 +6,7 @@ import org.enodeframework.commanding.CommandResult;
 import org.enodeframework.commanding.CommandReturnType;
 import org.enodeframework.common.io.Task;
 import org.enodeframework.common.utils.IdGenerator;
+import org.enodeframework.queue.SendMessageResult;
 import org.enodeframework.samples.commands.bank.CreateAccountCommand;
 import org.enodeframework.samples.commands.bank.StartDepositTransactionCommand;
 import org.enodeframework.samples.commands.bank.StartTransferTransactionCommand;
@@ -29,7 +30,7 @@ public class BankController {
     private CommandBus commandBus;
 
     @RequestMapping("transfer")
-    public Mono<Boolean> transfer() {
+    public Mono<SendMessageResult> transfer() {
         String account1 = IdGenerator.id();
         String account2 = IdGenerator.id();
         String account3 = "INVALID-" + IdGenerator.id();
@@ -42,7 +43,7 @@ public class BankController {
         CompletableFuture<CommandResult> future2 = commandBus.executeAsync(new CreateAccountCommand(account2, "account2"), CommandReturnType.EventHandled).thenCompose(x -> {
             return (commandBus.executeAsync(new StartDepositTransactionCommand(IdGenerator.id(), account2, 1000), CommandReturnType.EventHandled));
         });
-        CompletableFuture<Boolean> future = CompletableFuture.allOf(future1, future2).thenCompose(x -> {
+        CompletableFuture<SendMessageResult> future = CompletableFuture.allOf(future1, future2).thenCompose(x -> {
             //账户1向账户3转账300元，交易会失败，因为账户3不存在
             return commandBus.executeAsync(new StartTransferTransactionCommand(IdGenerator.id(), new TransferTransactionInfo(account1, account3, 300D)))
                 .thenCompose(y -> {

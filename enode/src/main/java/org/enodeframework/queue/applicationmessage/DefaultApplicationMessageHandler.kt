@@ -22,11 +22,8 @@ class DefaultApplicationMessageHandler(
             appDataMessage.applicationMessageData,
             applicationMessageType
         ) as ApplicationMessage
-        messageDispatcher.dispatchMessageAsync(message)
-            .whenComplete { x: Boolean?, y: Throwable? -> context.onMessageHandled(queueMessage) }
+        messageDispatcher.dispatchMessageAsync(message).whenComplete { _, _ -> context.onMessageHandled(queueMessage) }
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(DefaultApplicationMessageHandler::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(DefaultApplicationMessageHandler::class.java)
 }

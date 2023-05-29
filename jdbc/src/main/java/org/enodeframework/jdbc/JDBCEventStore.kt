@@ -5,13 +5,13 @@ import io.vertx.jdbcclient.JDBCPool
 import io.vertx.sqlclient.Tuple
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.common.serializing.SerializeService
-import org.enodeframework.configurations.EventStoreOptions
 import org.enodeframework.eventing.AggregateEventAppendResult
 import org.enodeframework.eventing.BatchAggregateEventAppendResult
 import org.enodeframework.eventing.DomainEventStream
 import org.enodeframework.eventing.EventAppendResult
 import org.enodeframework.eventing.EventSerializer
 import org.enodeframework.eventing.EventStore
+import org.enodeframework.eventing.EventStoreConfiguration
 import org.enodeframework.jdbc.handler.JDBCAddDomainEventsHandler
 import org.enodeframework.jdbc.handler.JDBCFindDomainEventsHandler
 import java.time.ZoneId
@@ -23,14 +23,14 @@ import javax.sql.DataSource
  */
 open class JDBCEventStore(
     dataSource: DataSource,
-    options: EventStoreOptions,
+    options: EventStoreConfiguration,
     eventSerializer: EventSerializer,
     serializeService: SerializeService
 ) : AbstractVerticle(), EventStore {
 
     private val eventSerializer: EventSerializer
     private val serializeService: SerializeService
-    private val options: EventStoreOptions
+    private val options: EventStoreConfiguration
     private val dataSource: DataSource
     private lateinit var sqlClient: JDBCPool
 

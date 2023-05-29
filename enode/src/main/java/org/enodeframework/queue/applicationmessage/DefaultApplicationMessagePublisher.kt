@@ -7,6 +7,7 @@ import org.enodeframework.messaging.ApplicationMessage
 import org.enodeframework.messaging.MessagePublisher
 import org.enodeframework.queue.MessageTypeCode
 import org.enodeframework.queue.QueueMessage
+import org.enodeframework.queue.SendMessageResult
 import org.enodeframework.queue.SendMessageService
 import java.util.concurrent.CompletableFuture
 
@@ -35,7 +36,7 @@ class DefaultApplicationMessagePublisher(
         return queueMessage
     }
 
-    override fun publishAsync(message: ApplicationMessage): CompletableFuture<Boolean> {
+    override fun publishAsync(message: ApplicationMessage): CompletableFuture<SendMessageResult> {
         return producer.sendMessageAsync(createApplicationMessage(message))
     }
 }

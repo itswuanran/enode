@@ -7,6 +7,7 @@ import org.enodeframework.infrastructure.TypeNameProvider
 import org.enodeframework.messaging.MessagePublisher
 import org.enodeframework.queue.MessageTypeCode
 import org.enodeframework.queue.QueueMessage
+import org.enodeframework.queue.SendMessageResult
 import org.enodeframework.queue.SendMessageService
 import java.util.concurrent.CompletableFuture
 
@@ -39,7 +40,7 @@ class DefaultPublishableExceptionPublisher(
         return queueMessage
     }
 
-    override fun publishAsync(message: DomainExceptionMessage): CompletableFuture<Boolean> {
+    override fun publishAsync(message: DomainExceptionMessage): CompletableFuture<SendMessageResult> {
         return sendMessageService.sendMessageAsync(createExceptionMessage(message))
     }
 }

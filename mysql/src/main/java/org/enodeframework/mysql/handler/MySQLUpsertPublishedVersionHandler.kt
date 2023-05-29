@@ -14,9 +14,7 @@ import java.util.concurrent.CompletableFuture
 class MySQLUpsertPublishedVersionHandler(private val publishedUkName: String, private val msg: String) :
     Handler<AsyncResult<RowSet<Row>>> {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(MySQLUpsertPublishedVersionHandler::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(MySQLUpsertPublishedVersionHandler::class.java)
 
     val future = CompletableFuture<Int>()
 

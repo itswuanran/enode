@@ -7,6 +7,7 @@ import org.enodeframework.eventing.EventSerializer
 import org.enodeframework.messaging.MessagePublisher
 import org.enodeframework.queue.MessageTypeCode
 import org.enodeframework.queue.QueueMessage
+import org.enodeframework.queue.SendMessageResult
 import org.enodeframework.queue.SendMessageService
 import java.util.concurrent.CompletableFuture
 
@@ -41,7 +42,7 @@ class DefaultDomainEventPublisher(
         return queueMessage
     }
 
-    override fun publishAsync(message: DomainEventStream): CompletableFuture<Boolean> {
+    override fun publishAsync(message: DomainEventStream): CompletableFuture<SendMessageResult> {
         return sendMessageService.sendMessageAsync(createDomainEventStreamMessage(message))
     }
 }

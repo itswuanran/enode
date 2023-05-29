@@ -4,6 +4,7 @@ import org.enodeframework.annotation.Event;
 import org.enodeframework.annotation.Subscribe;
 import org.enodeframework.commanding.CommandBus;
 import org.enodeframework.common.io.Task;
+import org.enodeframework.queue.SendMessageResult;
 import org.enodeframework.samples.applicationmessages.AccountValidateFailedMessage;
 import org.enodeframework.samples.applicationmessages.AccountValidatePassedMessage;
 import org.enodeframework.samples.commands.bank.AddTransactionPreparationCommand;
@@ -46,32 +47,32 @@ public class TransferTransactionProcessManager {
     private CommandBus commandService;
 
     @Subscribe
-    public CompletableFuture<Void> handleAsync(TransferTransactionStartedEvent evnt) {
+    public CompletableFuture handleAsync(TransferTransactionStartedEvent evnt) {
         ValidateAccountCommand command = new ValidateAccountCommand(evnt.transferTransactionInfo.sourceAccountId, evnt.getAggregateRootId());
         command.setId(evnt.getId());
         ValidateAccountCommand targetCommand = new ValidateAccountCommand(evnt.transferTransactionInfo.targetAccountId, evnt.getAggregateRootId());
         targetCommand.setId(evnt.getId());
-        CompletableFuture<Boolean> task1 = commandService.sendAsync(command);
-        CompletableFuture<Boolean> task2 = commandService.sendAsync(targetCommand);
+        CompletableFuture<SendMessageResult> task1 = commandService.sendAsync(command);
+        CompletableFuture<SendMessageResult> task2 = commandService.sendAsync(targetCommand);
         return (CompletableFuture.allOf(task1, task2));
     }
 
     @Subscribe
-    public CompletableFuture<Boolean> handleAsync(AccountValidatePassedMessage message) {
+    public CompletableFuture handleAsync(AccountValidatePassedMessage message) {
         ConfirmAccountValidatePassedCommand command = new ConfirmAccountValidatePassedCommand(message.transactionId, message.accountId);
         command.setId(message.getId());
         return (commandService.sendAsync(command));
     }
 
     @Subscribe
-    public CompletableFuture<Boolean> handleAsync(AccountValidateFailedMessage message) {
+    public CompletableFuture handleAsync(AccountValidateFailedMessage message) {
         CancelTransferTransactionCommand command = new CancelTransferTransactionCommand(message.transactionId);
         command.setId(message.getId());
         return (commandService.sendAsync(command));
     }
 
     @Subscribe
-    public CompletableFuture<Boolean> handleAsync(AccountValidatePassedConfirmCompletedEvent evnt) {
+    public CompletableFuture handleAsync(AccountValidatePassedConfirmCompletedEvent evnt) {
         AddTransactionPreparationCommand command = new AddTransactionPreparationCommand(
             evnt.transferTransactionInfo.sourceAccountId,
             evnt.getAggregateRootId(),
@@ -83,7 +84,7 @@ public class TransferTransactionProcessManager {
     }
 
     @Subscribe
-    public CompletableFuture<Boolean> handleAsync(TransactionPreparationAddedEvent evnt) {
+    public CompletableFuture handleAsync(TransactionPreparationAddedEvent evnt) {
         if (evnt.transactionPreparation.transactionType == TransactionType.TRANSFER_TRANSACTION) {
             if (evnt.transactionPreparation.preparationType == PreparationType.DEBIT_PREPARATION) {
                 ConfirmTransferOutPreparationCommand command = new ConfirmTransferOutPreparationCommand(evnt.transactionPreparation.transactionId);
@@ -99,7 +100,7 @@ public class TransferTransactionProcessManager {
     }
 
     @Subscribe
-    public CompletableFuture<Boolean> handleAsync(InsufficientBalanceException exception) {
+    public CompletableFuture handleAsync(InsufficientBalanceException exception) {
         if (exception.transactionType == TransactionType.TRANSFER_TRANSACTION) {
             CancelTransferTransactionCommand command = new CancelTransferTransactionCommand(exception.transactionId);
             command.setId(exception.getId());
@@ -109,7 +110,7 @@ public class TransferTransactionProcessManager {
     }
 
     @Subscribe
-    public CompletableFuture<Boolean> handleAsync(TransferOutPreparationConfirmedEvent evnt) {
+    public CompletableFuture handleAsync(TransferOutPreparationConfirmedEvent evnt) {
         AddTransactionPreparationCommand command = new AddTransactionPreparationCommand(
             evnt.transferTransactionInfo.targetAccountId,
             evnt.getAggregateRootId(),
@@ -121,18 +122,18 @@ public class TransferTransactionProcessManager {
     }
 
     @Subscribe
-    public CompletableFuture<Void> handleAsync(TransferInPreparationConfirmedEvent evnt) {
+    public CompletableFuture handleAsync(TransferInPreparationConfirmedEvent evnt) {
         CommitTransactionPreparationCommand command = new CommitTransactionPreparationCommand(evnt.transferTransactionInfo.sourceAccountId, evnt.getAggregateRootId());
         command.setId(evnt.getId());
         CommitTransactionPreparationCommand targetCommand = new CommitTransactionPreparationCommand(evnt.transferTransactionInfo.targetAccountId, evnt.getAggregateRootId());
         targetCommand.setId(evnt.getId());
-        CompletableFuture<Boolean> task1 = commandService.sendAsync(command);
-        CompletableFuture<Boolean> task2 = commandService.sendAsync(targetCommand);
+        CompletableFuture<SendMessageResult> task1 = commandService.sendAsync(command);
+        CompletableFuture<SendMessageResult> task2 = commandService.sendAsync(targetCommand);
         return (CompletableFuture.allOf(task1, task2));
     }
 
     @Subscribe
-    public CompletableFuture<Boolean> handleAsync(TransactionPreparationCommittedEvent evnt) {
+    public CompletableFuture handleAsync(TransactionPreparationCommittedEvent evnt) {
         if (evnt.transactionPreparation.transactionType == TransactionType.TRANSFER_TRANSACTION) {
             if (evnt.transactionPreparation.preparationType == PreparationType.DEBIT_PREPARATION) {
                 ConfirmTransferOutCommand command = new ConfirmTransferOutCommand(evnt.transactionPreparation.transactionId);

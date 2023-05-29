@@ -4,7 +4,7 @@ import io.vertx.core.AbstractVerticle
 import io.vertx.jdbcclient.JDBCPool
 import io.vertx.sqlclient.Tuple
 import org.enodeframework.common.io.IOHelper
-import org.enodeframework.configurations.EventStoreOptions
+import org.enodeframework.eventing.EventStoreConfiguration
 import org.enodeframework.eventing.PublishedVersionStore
 import org.enodeframework.jdbc.handler.JDBCFindPublishedVersionHandler
 import org.enodeframework.jdbc.handler.JDBCUpsertPublishedVersionHandler
@@ -16,7 +16,7 @@ import javax.sql.DataSource
  * @author anruence@gmail.com
  */
 open class JDBCPublishedVersionStore(
-    dataSource: DataSource, private val options: EventStoreOptions
+    dataSource: DataSource, private val options: EventStoreConfiguration
 ) : AbstractVerticle(), PublishedVersionStore {
 
     private lateinit var sqlClient: JDBCPool

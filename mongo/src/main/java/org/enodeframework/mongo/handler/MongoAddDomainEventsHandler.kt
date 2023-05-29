@@ -10,20 +10,19 @@ import io.vertx.core.Handler
 import io.vertx.ext.mongo.MongoClientBulkWriteResult
 import org.enodeframework.common.exception.EventStoreException
 import org.enodeframework.common.exception.IORuntimeException
-import org.enodeframework.configurations.EventStoreOptions
 import org.enodeframework.eventing.AggregateEventAppendResult
 import org.enodeframework.eventing.EventAppendStatus
+import org.enodeframework.eventing.EventStoreConfiguration
 import org.enodeframework.mongo.MongoEventStore
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 
 class MongoAddDomainEventsHandler(
-    private val options: EventStoreOptions,
+    private val options: EventStoreConfiguration,
     private val msg: String,
 ) : Handler<AsyncResult<MongoClientBulkWriteResult>> {
-    companion object {
-        private val logger = LoggerFactory.getLogger(MongoEventStore::class.java)
-    }
+
+    private val logger = LoggerFactory.getLogger(MongoEventStore::class.java)
 
     val future = CompletableFuture<AggregateEventAppendResult>()
 
@@ -51,7 +50,7 @@ class MongoAddDomainEventsHandler(
         }
         if (message.contains(options.eventCommandIdUkName)) {
             val appendResult = AggregateEventAppendResult(EventAppendStatus.DuplicateCommand)
-            val commandId = options.parseDuplicatedId(message)
+            val commandId = options.seekCommandId(message)
             if (!Strings.isNullOrEmpty(commandId)) {
                 appendResult.duplicateCommandIds = Lists.newArrayList(commandId)
             } else {

@@ -267,7 +267,5 @@ class DefaultMessageDispatcher(
         }, null, retryTimes, true)
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(DefaultMessageDispatcher::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(DefaultMessageDispatcher::class.java)
 }
