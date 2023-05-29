@@ -4,7 +4,7 @@ import org.enodeframework.annotation.Command
 import org.enodeframework.annotation.Event
 import org.enodeframework.annotation.Priority
 import org.enodeframework.annotation.Subscribe
-import org.enodeframework.common.container.ObjectContainer
+import org.enodeframework.common.extensions.ObjectContainer
 import org.enodeframework.common.exception.HandlerRegisterException
 import org.enodeframework.infrastructure.AssemblyInitializer
 import org.enodeframework.infrastructure.MethodInvocation

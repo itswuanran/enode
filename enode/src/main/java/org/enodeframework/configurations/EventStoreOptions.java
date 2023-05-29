@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
  */
 public class EventStoreOptions {
 
-    public static final Pattern MYSQL_PATTERN = Pattern.compile("^Duplicate entry '.*-(.*)' for key");
+    public static final Pattern MYSQL_PATTERN = Pattern.compile("^Duplicate entry '.*-(.*)' for key|=\\(.*, (.*)\\) already exists.|\\{.+?commandId: \"(.+?)\" }$");
 
     public static final Pattern PG_PATTERN = Pattern.compile("=\\(.*, (.*)\\) already exists.");
 

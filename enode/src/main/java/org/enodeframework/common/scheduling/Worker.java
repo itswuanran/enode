@@ -40,8 +40,8 @@ public class Worker {
                 return this;
             }
             status = Status.StopRequested;
-            thread.interrupt();
             logger.info("Worker thread shutdown, thread id:{}", thread.getName());
+            thread.interrupt();
             return this;
         }
     }

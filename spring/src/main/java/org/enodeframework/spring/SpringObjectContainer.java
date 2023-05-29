@@ -1,6 +1,6 @@
 package org.enodeframework.spring;
 
-import org.enodeframework.common.container.ObjectContainer;
+import org.enodeframework.common.extensions.ObjectContainer;
 import org.springframework.context.ApplicationContext;
 
 /**

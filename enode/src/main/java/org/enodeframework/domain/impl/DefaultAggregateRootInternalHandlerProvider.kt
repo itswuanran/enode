@@ -1,6 +1,6 @@
 package org.enodeframework.domain.impl
 
-import org.enodeframework.common.container.ObjectContainer
+import org.enodeframework.common.extensions.ObjectContainer
 import org.enodeframework.common.exception.HandlerNotFoundException
 import org.enodeframework.common.function.Action2
 import org.enodeframework.configurations.SysProperties

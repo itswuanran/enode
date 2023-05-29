@@ -1,4 +1,4 @@
-package org.enodeframework.common.container;
+package org.enodeframework.common.extensions;
 
 /**
  * 抽象的Ioc容器，Dependency Inject
