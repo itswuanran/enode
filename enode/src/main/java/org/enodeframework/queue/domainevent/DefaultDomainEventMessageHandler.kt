@@ -4,7 +4,11 @@ import com.google.common.base.Strings
 import org.enodeframework.common.io.Task
 import org.enodeframework.common.serializing.SerializeService
 import org.enodeframework.configurations.SysProperties
-import org.enodeframework.eventing.*
+import org.enodeframework.eventing.DomainEventStream
+import org.enodeframework.eventing.EventProcessContext
+import org.enodeframework.eventing.EventSerializer
+import org.enodeframework.eventing.ProcessingEvent
+import org.enodeframework.eventing.ProcessingEventProcessor
 import org.enodeframework.queue.MessageContext
 import org.enodeframework.queue.MessageHandler
 import org.enodeframework.queue.QueueMessage

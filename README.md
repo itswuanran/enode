@@ -46,7 +46,9 @@
 - 基于`ES`（`Event Sourcing`）的思想持久化`C`端的聚合根的状态，让`C`端的数据持久化变得通用化，具有一切`ES`的优点
 - 在设计上完全与IoC容器解耦，同时保留了扩展性，目前适配了SpringBoot
 -
+
 通过基于分布式消息队列横向扩展的方式实现系统的可伸缩性（基于队列的动态扩容/缩容），接口抽象极简，只要求最基础的队列能力，目前适配了`Kafka`、`RocketMQ（ONS）`、`Pulsar`
+
 - EventStore内置适配了`JDBC`、`MySQL`、`PostgreSQL`、`MongoDB`存储，可针对性实现对应扩展
 - 框架完全采用响应式编程理念，在`db`层面使用了异步驱动，同时集成了`kotlin coroutine`
 

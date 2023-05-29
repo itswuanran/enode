@@ -7,7 +7,6 @@ import org.enodeframework.commanding.CommandResult
 import org.enodeframework.commanding.CommandReturnType
 import org.enodeframework.common.serializing.SerializeService
 import org.enodeframework.common.utils.Assert
-import org.enodeframework.common.utils.ReplyUtil
 import org.enodeframework.queue.MessageTypeCode
 import org.enodeframework.queue.QueueMessage
 import org.enodeframework.queue.SendMessageService
@@ -69,7 +68,7 @@ class DefaultCommandBus(
         val commandData = serializeService.serialize(command)
         val genericCommandMessage = GenericCommandMessage()
         if (needReply) {
-            genericCommandMessage.replyAddress = ReplyUtil.toAddr(commandResultProcessor.getBindAddress())
+            genericCommandMessage.replyAddress = commandResultProcessor.getBindAddress()
         }
         genericCommandMessage.commandData = commandData
         genericCommandMessage.commandType = command.javaClass.name

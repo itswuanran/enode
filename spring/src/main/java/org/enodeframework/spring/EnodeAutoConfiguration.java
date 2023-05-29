@@ -3,7 +3,6 @@ package org.enodeframework.spring;
 import com.google.common.collect.Maps;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.net.NetServerOptions;
-import io.vertx.core.net.SocketAddress;
 import kotlinx.coroutines.Dispatchers;
 import org.enodeframework.commanding.CommandHandlerProvider;
 import org.enodeframework.commanding.CommandProcessor;
@@ -70,7 +69,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 
 /**
  * @author anruence@gmail.com
@@ -98,10 +96,10 @@ public class EnodeAutoConfiguration {
     @Bean(name = "defaultCommandResultProcessor")
     @ConditionalOnProperty(prefix = "spring.enode", name = "server.port")
     public DefaultCommandResultProcessor defaultCommandResultProcessor(ScheduleService scheduleService, SerializeService serializeService) throws Exception {
-        InetSocketAddress bindAddress = new InetSocketAddress(InetAddress.getLocalHost(), port);
-        SocketAddress socketAddress = SocketAddress.inetSocketAddress(bindAddress);
         NetServerOptions serverOptions = new NetServerOptions();
-        return new DefaultCommandResultProcessor(scheduleService, serializeService, socketAddress, serverOptions, timeout);
+        serverOptions.setPort(port);
+        serverOptions.setHost(InetAddress.getLocalHost().getHostAddress());
+        return new DefaultCommandResultProcessor(scheduleService, serializeService, serverOptions, timeout);
     }
 
     @Bean(name = "defaultSendReplyService")

@@ -1,7 +1,7 @@
 package org.enodeframework.domain.impl
 
-import org.enodeframework.common.extensions.ObjectContainer
 import org.enodeframework.common.exception.AggregateRootTypeRepositoryNotFoundException
+import org.enodeframework.common.extensions.ObjectContainer
 import org.enodeframework.domain.AggregateRepository
 import org.enodeframework.domain.AggregateRepositoryProvider
 import org.enodeframework.domain.AggregateRepositoryProxy
