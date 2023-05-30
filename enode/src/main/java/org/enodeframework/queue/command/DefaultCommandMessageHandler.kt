@@ -5,8 +5,8 @@ import org.enodeframework.commanding.CommandMessage
 import org.enodeframework.commanding.CommandProcessor
 import org.enodeframework.commanding.ProcessingCommand
 import org.enodeframework.commanding.impl.DefaultCommandExecuteContext
-import org.enodeframework.common.serializing.SerializeService
 import org.enodeframework.common.extensions.SysProperties
+import org.enodeframework.common.serializing.SerializeService
 import org.enodeframework.domain.AggregateStorage
 import org.enodeframework.domain.Repository
 import org.enodeframework.infrastructure.TypeNameProvider

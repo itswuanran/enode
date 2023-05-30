@@ -2,8 +2,8 @@ package org.enodeframework.domain.impl
 
 import org.enodeframework.common.exception.HandlerNotFoundException
 import org.enodeframework.common.extensions.ObjectContainer
-import org.enodeframework.common.function.Action2
 import org.enodeframework.common.extensions.SysProperties
+import org.enodeframework.common.function.Action2
 import org.enodeframework.domain.AggregateRoot
 import org.enodeframework.eventing.DomainEventMessage
 import org.enodeframework.infrastructure.AssemblyInitializer
