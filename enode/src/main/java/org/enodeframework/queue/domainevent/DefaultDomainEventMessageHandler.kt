@@ -1,9 +1,9 @@
 package org.enodeframework.queue.domainevent
 
 import com.google.common.base.Strings
+import org.enodeframework.common.extensions.SysProperties
 import org.enodeframework.common.io.Task
 import org.enodeframework.common.serializing.SerializeService
-import org.enodeframework.common.extensions.SysProperties
 import org.enodeframework.eventing.DomainEventStream
 import org.enodeframework.eventing.EventProcessContext
 import org.enodeframework.eventing.EventSerializer
