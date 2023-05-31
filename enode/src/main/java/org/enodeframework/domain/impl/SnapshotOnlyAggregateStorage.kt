@@ -22,13 +22,7 @@ class SnapshotOnlyAggregateStorage(private val aggregateSnapshotter: AggregateSn
             .thenApply { aggregateRoot: T ->
                 if (aggregateRoot != null && (aggregateRoot.javaClass != aggregateRootType || aggregateRoot.uniqueId != aggregateRootId)) {
                     throw AggregateRootInvalidException(
-                        String.format(
-                            "AggregateRoot recovery from snapshot is invalid as the aggregateRootType or aggregateRootId is not matched. Snapshot: [aggregateRootType: %s, aggregateRootId: %s], expected: [aggregateRootType: %s, aggregateRootId: %s]",
-                            aggregateRoot.javaClass,
-                            aggregateRoot.uniqueId,
-                            aggregateRootType,
-                            aggregateRootId
-                        )
+                        "AggregateRoot recovery from snapshot is invalid as the aggregateRootType or aggregateRootId is not matched. Snapshot: [aggregateRootType: ${aggregateRoot.javaClass}, aggregateRootId: ${aggregateRoot.uniqueId}], expected: [aggregateRootType: $aggregateRootType, aggregateRootId: $aggregateRootId]"
                     )
                 }
                 aggregateRoot
@@ -46,11 +40,7 @@ class SnapshotOnlyAggregateStorage(private val aggregateSnapshotter: AggregateSn
             { aggregateSnapshotter.restoreFromSnapshotAsync(aggregateRootType, aggregateRootId) },
             { value: T -> taskSource.complete(value) },
             {
-                String.format(
-                    "aggregateSnapshotter.tryRestoreFromSnapshotAsync has unknown exception, aggregateRootType: %s, aggregateRootId: %s",
-                    aggregateRootType.name,
-                    aggregateRootId
-                )
+                "aggregateSnapshotter.tryRestoreFromSnapshotAsync has unknown exception, aggregateRootType: ${aggregateRootType.name}, aggregateRootId: $aggregateRootId"
             },
             null,
             retryTimes,

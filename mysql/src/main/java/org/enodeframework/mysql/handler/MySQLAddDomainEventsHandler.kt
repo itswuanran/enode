@@ -22,6 +22,7 @@ open class MySQLAddDomainEventsHandler(
 ) : Handler<AsyncResult<RowSet<Row>>> {
 
     private val logger = LoggerFactory.getLogger(MySQLAddDomainEventsHandler::class.java)
+
     val future = CompletableFuture<AggregateEventAppendResult>()
 
     override fun handle(ar: AsyncResult<RowSet<Row>>) {
@@ -30,26 +31,25 @@ open class MySQLAddDomainEventsHandler(
             future.complete(appendResult)
             return
         }
-        val ex = ar.cause()
-        var throwable = ex
-        if (ex is MySQLException) {
-            throwable = ex;
+        val throwable = ar.cause()
+        var message = ""
+        if (throwable is MySQLException) {
+            message = throwable.message ?: ""
         }
-        if (ex.cause is MySQLException) {
-            throwable = ex.cause
+        if (throwable.cause is MySQLException) {
+            message = (throwable.cause as MySQLException).message ?: ""
         }
-        if (ex is MySQLBatchException) {
-            throwable = ex.iterationError.values.first()
+        if (throwable is MySQLBatchException) {
+            message = throwable.iterationError.values.firstOrNull()?.message ?: ""
         }
-        if (throwable.message?.contains(options.eventVersionUkName) == true) {
+        if (message.contains(options.eventVersionUkName)) {
             val appendResult = AggregateEventAppendResult(EventAppendStatus.DuplicateEvent)
             future.complete(appendResult)
             return
         }
-        if (throwable.message?.contains(options.eventCommandIdUkName) == true) {
+        if (message.contains(options.eventCommandIdUkName)) {
             // 不同的数据库在冲突时的错误信息不同，可以通过解析错误信息的方式将冲突的commandId找出来，这里要求id不能命中正则的规则（不包含-字符）
             val appendResult = AggregateEventAppendResult(EventAppendStatus.DuplicateCommand)
-            val message = throwable.message ?: ""
             val commandId = options.seekCommandId(message)
             if (!Strings.isNullOrEmpty(commandId)) {
                 appendResult.duplicateCommandIds = Lists.newArrayList(commandId)

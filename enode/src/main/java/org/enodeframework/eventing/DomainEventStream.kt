@@ -50,10 +50,7 @@ class DomainEventStream : AbstractMessage {
         items: MutableMap<String, Any>
     ) {
         require(events.isNotEmpty()) {
-            String.format(
-                "events cannot be empty. aggregateRootId: %s",
-                aggregateRootId
-            )
+            "events cannot be empty. aggregateRootId: $aggregateRootId"
         }
         this.commandId = commandId
         this.aggregateRootId = aggregateRootId
@@ -67,13 +64,7 @@ class DomainEventStream : AbstractMessage {
         for (event in events) {
             if (event.version != this.version) {
                 throw DomainEventInvalidException(
-                    String.format(
-                        "Invalid domain event version, aggregateRootTypeName: %s aggregateRootId: %s expected version: %d, but was: %d",
-                        aggregateRootTypeName,
-                        aggregateRootId,
-                        this.version,
-                        event.version
-                    )
+                    "Invalid domain event version, aggregateRootTypeName: $aggregateRootTypeName aggregateRootId: $aggregateRootId expected version: ${this.version}, but was: ${event.version}",
                 )
             }
             event.commandId = commandId

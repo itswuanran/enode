@@ -82,7 +82,7 @@
 
 ### `enode`启动配置
 
-```java
+```
 @SpringBootApplication
 @EnableEnode(value = "org.enodeframework.tests")
 @ComponentScan(value = "org.enodeframework.tests")
@@ -112,7 +112,7 @@ spring.enode.mq.topic.event=EnodeBankEventTopic
 
 #### producer
 
-```java
+```
 @Bean
 public ProducerFactory<String, String> producerFactory() {
     Map<String, Object> props = new HashMap<>();
@@ -134,7 +134,7 @@ public KafkaTemplate<String, String> kafkaTemplate(ProducerFactory<String, Strin
 
 #### consumer
 
-```java
+```
 @Value("${spring.enode.mq.topic.command}")
 private String commandTopic;
 
@@ -239,17 +239,17 @@ public class DbConfig {
 
 注意有两个唯一索引，这个是实现幂等的常用思路，因为我们认为大部分情况下不会出现重复写问题
 
-#### `MySQL` & `TiDB`
+#### `MySQL`
 
 ```sql
 CREATE TABLE event_stream (
   id BIGINT AUTO_INCREMENT NOT NULL,
   aggregate_root_type_name VARCHAR(256) NOT NULL,
-  aggregate_root_id VARCHAR(36) NOT NULL,
+  aggregate_root_id VARCHAR(64) NOT NULL,
   version INT NOT NULL,
-  command_id VARCHAR(36) NOT NULL,
-  gmt_create DATETIME NOT NULL,
+  command_id VARCHAR(64) NOT NULL,
   events MEDIUMTEXT NOT NULL,
+  create_at BIGINT NOT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY uk_aggregate_root_id_version (aggregate_root_id, version),
   UNIQUE KEY uk_aggregate_root_id_command_id (aggregate_root_id, command_id)
@@ -259,12 +259,14 @@ CREATE TABLE published_version (
   id BIGINT AUTO_INCREMENT NOT NULL,
   processor_name VARCHAR(128) NOT NULL,
   aggregate_root_type_name VARCHAR(256) NOT NULL,
-  aggregate_root_id VARCHAR(36) NOT NULL,
+  aggregate_root_id VARCHAR(64) NOT NULL,
   version INT NOT NULL,
-  gmt_create DATETIME NOT NULL,
+  create_at BIGINT NOT NULL,
+  update_at BIGINT NOT NULL,
   PRIMARY KEY (id),
-  UNIQUE KEY uk_processor_name_aggregate_root_id (processor_name, aggregate_root_id)
+  UNIQUE KEY uk_aggregate_root_id_version_processor_name (aggregate_root_id, version, processor_name)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
 ```
 
 #### `postgresql`
@@ -273,11 +275,11 @@ CREATE TABLE published_version (
 CREATE TABLE event_stream (
   id bigserial,
   aggregate_root_type_name varchar(256),
-  aggregate_root_id varchar(36),
+  aggregate_root_id varchar(64),
   version integer,
-  command_id varchar(36),
-  gmt_create date,
+  command_id varchar(64),
   events text,
+  create_at bigint,
   PRIMARY KEY (id),
   CONSTRAINT uk_aggregate_root_id_version UNIQUE (aggregate_root_id, version),
   CONSTRAINT uk_aggregate_root_id_command_id UNIQUE (aggregate_root_id, command_id)
@@ -287,20 +289,22 @@ CREATE TABLE published_version (
   id bigserial,
   processor_name varchar(128),
   aggregate_root_type_name varchar(256),
-  aggregate_root_id varchar(36),
+  aggregate_root_id varchar(64),
   version integer,
-  gmt_create date,
+  create_at bigint,
+  update_at bigint,
   PRIMARY KEY (id),
-  CONSTRAINT uk_processor_name_aggregate_root_id UNIQUE (processor_name, aggregate_root_id)
+  CONSTRAINT uk_aggregate_root_id_version_processor_name UNIQUE (aggregate_root_id, version, processor_name)
 );
+
 ```
 
 #### `MongoDB`
 
-```js
+```bash
 db.event_stream.createIndex({aggregateRootId:1,commandId:1},{unique:true})
 db.event_stream.createIndex({aggregateRootId:1,version:1},{unique:true})
-db.published_version.createIndex({processorName:1,aggregateRootId:1},{unique:true})
+db.published_version.createIndex({aggregateRootId:1,version:1,processorName:1,},{unique:true})
 ```
 
 ### 编程模型
@@ -348,14 +352,17 @@ class ChangeNoteTitleCommandHandler {
 }
 ```
 
-```java
-@Subscribe
-public CompletableFuture<BankAccount> handleAsync(CommandContext context, AddTransactionPreparationCommand command) {
-    CompletableFuture<BankAccount> future = context.getAsync(command.getAggregateRootId(), BankAccount.class);
-    future.thenAccept(bankAccount -> {
-    bankAccount.addTransactionPreparation(command.transactionId, command.transactionType, command.preparationType, command.amount);
-    });
-    return future;
+```
+@Command
+public class BankAccountCommandHandler {
+    @Subscribe
+    public CompletableFuture<BankAccount> handleAsync(CommandContext context, AddTransactionPreparationCommand command) {
+        CompletableFuture<BankAccount> future = context.getAsync(command.getAggregateRootId(), BankAccount.class);
+        future.thenAccept(bankAccount -> {
+            bankAccount.addTransactionPreparation(command.transactionId, command.transactionType, command.preparationType, command.amount);
+        });
+        return future;
+    }
 }
 ```
 
@@ -367,7 +374,7 @@ CompletableFuture<CommandResult> future = commandService.executeAsync(createNote
 
 命令处理：
 
-```java
+```
 /**
  * 银行账户相关命令处理
  * CommandHandler<CreateAccountCommand>,                       //开户
@@ -450,7 +457,7 @@ public class DepositTransactionProcessManager {
     }
 
     @Subscribe
-    public CompletableFuture<Boolean> handleAsync(TransactionPreparationAddedEvent evnt) {
+    public CompletableFuture<SendMessageResult> handleAsync(TransactionPreparationAddedEvent evnt) {
         if (evnt.transactionPreparation.transactionType == TransactionType.DEPOSIT_TRANSACTION && evnt.transactionPreparation.preparationType == PreparationType.CREDIT_PREPARATION) {
             ConfirmDepositPreparationCommand command = new ConfirmDepositPreparationCommand(evnt.transactionPreparation.transactionId);
             command.setId(evnt.getId());
@@ -460,14 +467,14 @@ public class DepositTransactionProcessManager {
     }
 
     @Subscribe
-    public CompletableFuture<Boolean> handleAsync(DepositTransactionPreparationCompletedEvent evnt) {
+    public CompletableFuture<SendMessageResult> handleAsync(DepositTransactionPreparationCompletedEvent evnt) {
         CommitTransactionPreparationCommand command = new CommitTransactionPreparationCommand(evnt.accountId, evnt.getAggregateRootId());
         command.setId(evnt.getId());
         return (commandBus.sendAsync(command));
     }
 
     @Subscribe
-    public CompletableFuture<Boolean> handleAsync(TransactionPreparationCommittedEvent evnt) {
+    public CompletableFuture<SendMessageResult> handleAsync(TransactionPreparationCommittedEvent evnt) {
         if (evnt.transactionPreparation.transactionType == TransactionType.DEPOSIT_TRANSACTION && evnt.transactionPreparation.preparationType == PreparationType.CREDIT_PREPARATION) {
             ConfirmDepositCommand command = new ConfirmDepositCommand(evnt.transactionPreparation.transactionId);
             command.setId(evnt.getId());

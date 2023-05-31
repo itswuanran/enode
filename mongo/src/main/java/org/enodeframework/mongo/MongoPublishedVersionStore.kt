@@ -9,7 +9,6 @@ import org.enodeframework.eventing.PublishedVersionStore
 import org.enodeframework.mongo.handler.MongoAddPublishedVersionHandler
 import org.enodeframework.mongo.handler.MongoFindPublishedVersionHandler
 import org.enodeframework.mongo.handler.MongoUpdatePublishedVersionHandler
-import java.util.*
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -32,11 +31,13 @@ open class MongoPublishedVersionStore(
         processorName: String, aggregateRootTypeName: String, aggregateRootId: String, publishedVersion: Int
     ): CompletableFuture<Int> {
         val document = JsonObject()
+        val now = System.currentTimeMillis()
         document.put("processorName", processorName)
         document.put("aggregateRootTypeName", aggregateRootTypeName)
         document.put("aggregateRootId", aggregateRootId)
         document.put("version", 1)
-        document.put("gmtCreate", Date().toInstant())
+        document.put("createAt", now)
+        document.put("updateAt", now)
         val handler = MongoAddPublishedVersionHandler(
             "$processorName#$aggregateRootTypeName#$aggregateRootId#$publishedVersion", options.publishedUkName
         )
@@ -57,7 +58,7 @@ open class MongoPublishedVersionStore(
         val queryFilter = Lists.newArrayList(map1, map2, map3)
         queryJson.put("\$and", queryFilter)
         val update = Updates.combine(
-            Updates.set("version", publishedVersion), Updates.set("gmtCreate", Date().toInstant())
+            Updates.set("version", publishedVersion), Updates.set("updateAt", System.currentTimeMillis())
         )
         val updateJson = JsonObject(update.toBsonDocument().toJson())
         val publishHandle = MongoUpdatePublishedVersionHandler(

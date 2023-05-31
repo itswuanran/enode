@@ -38,7 +38,7 @@ class DefaultDomainEventPublisher(
         queueMessage.body = data
         queueMessage.type = MessageTypeCode.DomainEventMessage.value
         queueMessage.routeKey = routeKey
-        queueMessage.key = String.format("%s_evt_agg_%s", message.id, message.aggregateRootId)
+        queueMessage.key = "${message.id}_evt_agg_${message.aggregateRootId}"
         return queueMessage
     }
 

@@ -33,5 +33,6 @@ class MongoAddPublishedVersionHandler(
             return
         }
         future.completeExceptionally(PublishedVersionStoreException(msg, throwable))
+        return
     }
 }

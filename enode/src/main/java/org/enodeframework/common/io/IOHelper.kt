@@ -98,7 +98,7 @@ object IOHelper {
         return try {
             func.apply()
         } catch (ex: Exception) {
-            throw IORuntimeException(String.format("%s failed.", funcName), ex)
+            throw IORuntimeException("$funcName failed.", ex)
         }
     }
 
@@ -136,7 +136,7 @@ object IOHelper {
                         getContextInfo(contextInfoFunc),
                         currentRetryTimes, ex
                     )
-                    executeFailedAction(ex, String.format("Task '%s' was cancelled.", actionName))
+                    executeFailedAction(ex, "Task '${actionName}' was cancelled.")
                     null
                 }
                 return

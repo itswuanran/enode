@@ -132,11 +132,7 @@ class ProcessingEventMailBox(
         synchronized(lockObj) {
             if (isRemoved()) {
                 throw MailBoxProcessException(
-                    String.format(
-                        "ProcessingEventMailBox was removed, cannot allow to enqueue message, aggregateRootTypeName: %s, aggregateRootId: %s",
-                        aggregateRootTypeName,
-                        aggregateRootId
-                    )
+                    "ProcessingEventMailBox was removed, cannot allow to enqueue message, aggregateRootTypeName: $aggregateRootTypeName, aggregateRootId: $aggregateRootId"
                 )
             }
             val eventStream = processingEvent.message

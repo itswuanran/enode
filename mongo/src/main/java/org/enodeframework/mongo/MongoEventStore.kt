@@ -58,7 +58,7 @@ open class MongoEventStore(
                     aggregateRootId, result
                 )
             },
-            { String.format("[aggregateRootId: %s, eventStreamCount: %s]", aggregateRootId, eventStreamList.size) },
+            { "[aggregateRootId: $aggregateRootId, eventStreamCount: ${eventStreamList.size}]" },
             null,
             retryTimes,
             true
@@ -78,7 +78,7 @@ open class MongoEventStore(
                 }
                 future.complete(result)
             },
-            { String.format("[aggregateRootId:%s, commandId:%s]", aggregateRootId, commandId) },
+            { "[aggregateRootId: $aggregateRootId, commandId: $commandId]" },
             null,
             retryTimes,
             true
@@ -97,8 +97,8 @@ open class MongoEventStore(
             document.put("aggregateRootTypeName", domainEventStream.aggregateRootTypeName)
             document.put("commandId", domainEventStream.commandId)
             document.put("version", domainEventStream.version)
-            document.put("gmtCreate", domainEventStream.timestamp.toInstant())
             document.put("events", serializeService.serialize(eventSerializer.serialize(domainEventStream.events)))
+            document.put("createAt", domainEventStream.timestamp.time)
             val bulk = BulkOperation.createInsert(document)
             bulks.add(bulk)
         }
@@ -116,7 +116,7 @@ open class MongoEventStore(
                 Filters.lte("version", maxVersion)
             )
             val jsonObject = JsonObject(filter.toBsonDocument().toJson())
-            val msg = String.format("%s#%s#%s#%s", aggregateRootId, aggregateRootTypeName, minVersion, maxVersion)
+            val msg = "$aggregateRootId#$aggregateRootTypeName#$minVersion#$maxVersion"
             val manyEventHandler = MongoFindDomainEventsHandler(eventSerializer, serializeService, msg)
             mongoClient.find(options.eventTableName, jsonObject, manyEventHandler)
             manyEventHandler.future

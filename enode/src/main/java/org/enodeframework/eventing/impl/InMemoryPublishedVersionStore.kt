@@ -30,6 +30,6 @@ class InMemoryPublishedVersionStore : PublishedVersionStore {
     }
 
     private fun buildKey(eventProcessorName: String, aggregateRootId: String): String {
-        return String.format("%s-%s", eventProcessorName, aggregateRootId)
+        return "$eventProcessorName-$aggregateRootId"
     }
 }

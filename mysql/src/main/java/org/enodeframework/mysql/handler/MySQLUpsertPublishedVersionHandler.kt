@@ -17,36 +17,31 @@ class MySQLUpsertPublishedVersionHandler(private val publishedUkName: String, pr
     private val logger = LoggerFactory.getLogger(MySQLUpsertPublishedVersionHandler::class.java)
 
     val future = CompletableFuture<Int>()
-
     override fun handle(ar: AsyncResult<RowSet<Row>>) {
-
         if (ar.succeeded()) {
             if (ar.result().rowCount() == 0) {
-                future.completeExceptionally(
-                    PublishedVersionStoreException(
-                        String.format(
-                            "version update rows is 0. %s", msg
-                        )
-                    )
-                )
+                future.completeExceptionally(PublishedVersionStoreException("version update rows is 0. $msg"))
                 return
             }
             future.complete(ar.result().rowCount())
             return
         }
-        val ex = ar.cause()
-        var throwable = ex
-        if (ex is MySQLException) {
-            throwable = ex;
+        val throwable = ar.cause()
+        var message = ""
+        if (throwable is MySQLBatchException) {
+            message = throwable.iterationError.values.firstOrNull()?.message ?: ""
         }
-        if (ex is MySQLBatchException) {
-            throwable = ex.iterationError.values.first()
+        if (throwable.cause is MySQLBatchException) {
+            message = (throwable.cause as MySQLBatchException).iterationError.values.firstOrNull()?.message ?: ""
         }
-        if (ex.cause is MySQLException) {
-            throwable = ex.cause
+        if (throwable is MySQLException) {
+            message = throwable.message ?: ""
+        }
+        if (throwable.cause is MySQLException) {
+            message = (throwable.cause as MySQLException).message ?: ""
         }
         logger.error("Upsert aggregate published version has exception. {}", msg, throwable)
-        if (throwable.message?.contains(publishedUkName) == true) {
+        if (message.contains(publishedUkName)) {
             future.complete(1)
             return
         }

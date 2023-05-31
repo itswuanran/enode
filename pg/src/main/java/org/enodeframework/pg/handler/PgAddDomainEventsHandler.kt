@@ -30,25 +30,27 @@ class PgAddDomainEventsHandler(
             future.complete(appendResult)
             return
         }
-        val ex = ar.cause()
-        var throwable = ex
-        if (ex is PgException) {
-            throwable = ex;
+        val throwable = ar.cause()
+        var message = ""
+        var detail = ""
+        if (throwable is PgException) {
+            message = throwable.message ?: ""
+            detail = throwable.detail
         }
-        if (ex.cause is PgException) {
-            throwable = ex.cause
+        if (throwable.cause is PgException) {
+            message = (throwable.cause as PgException).message ?: ""
+            detail = (throwable.cause as PgException).detail
         }
-        if (throwable.message?.contains(options.eventVersionUkName) == true) {
+        if (message.contains(options.eventVersionUkName)) {
             val appendResult = AggregateEventAppendResult(EventAppendStatus.DuplicateEvent)
             future.complete(appendResult)
             return
         }
-        if (throwable.message?.contains(options.eventCommandIdUkName) == true) {
+        if (message.contains(options.eventCommandIdUkName)) {
             // 不同的数据库在冲突时的错误信息不同，可以通过解析错误信息的方式将冲突的commandId找出来，这里要求id不能命中正则的规则（不包含-字符）
             val appendResult = AggregateEventAppendResult(EventAppendStatus.DuplicateCommand)
             if (throwable is PgException) {
-                val message = throwable.detail ?: ""
-                val commandId = options.seekCommandId(message)
+                val commandId = options.seekCommandId(detail)
                 if (!Strings.isNullOrEmpty(commandId)) {
                     appendResult.duplicateCommandIds = Lists.newArrayList(commandId)
                 } else {

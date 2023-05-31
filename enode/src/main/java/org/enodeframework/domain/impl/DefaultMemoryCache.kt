@@ -42,12 +42,7 @@ class DefaultMemoryCache(
         }
         if (aggregateRootInfo.aggregateRoot.javaClass != aggregateRootType) {
             throw AggregateRootTypeNotMatchException(
-                String.format(
-                    "Incorrect aggregate root type, aggregateRootId:%s, type:%s, expecting type:%s",
-                    aggregateRootId,
-                    aggregateRootInfo.aggregateRoot.javaClass,
-                    aggregateRootType
-                )
+                "Incorrect aggregate root type, aggregateRootId:$aggregateRootId, type:${aggregateRootInfo.aggregateRoot.javaClass}, expecting type:$aggregateRootType"
             )
         }
         if (aggregateRootInfo.aggregateRoot.changes.isNotEmpty()) {

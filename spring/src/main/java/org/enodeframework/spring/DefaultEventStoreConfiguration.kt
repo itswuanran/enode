@@ -1,5 +1,6 @@
 package org.enodeframework.spring
 
+import com.google.common.base.Strings
 import org.enodeframework.eventing.EventStoreConfiguration
 import java.util.regex.Pattern
 
@@ -38,18 +39,22 @@ class DefaultEventStoreConfiguration : EventStoreConfiguration {
     override var eventCommandIdUkName: String = "uk_aggregate_root_id_command_id"
 
     /**
-     * 聚合根已发布事件表的聚合根已发布版本唯一索引的默认名称；默认为：uk_processor_name_aggregate_root_id_version
+     * 聚合根已发布事件表的聚合根已发布版本唯一索引的默认名称；默认为：uk_aggregate_root_id_version_processor_name
      */
-    override var publishedUkName: String = "uk_processor_name_aggregate_root_id_version"
+    override var publishedUkName: String = "uk_aggregate_root_id_version_processor_name"
 
     override fun seekCommandId(msg: String): String {
         val matcher = seekIdPattern.matcher(msg)
         if (!matcher.find()) {
             return ""
         }
-        return if (matcher.groupCount() == 0) {
-            ""
-        } else matcher.group(1)
+        for (i in 1..matcher.groupCount()) {
+            if (Strings.isNullOrEmpty(matcher.group(i))) {
+                continue
+            }
+            return matcher.group(i)
+        }
+        return ""
     }
 
     companion object Driver {
@@ -61,7 +66,7 @@ class DefaultEventStoreConfiguration : EventStoreConfiguration {
             option.publishedTableName = "published_version"
             option.eventVersionUkName = "uk_aggregate_root_id_version"
             option.eventCommandIdUkName = "uk_aggregate_root_id_command_id"
-            option.publishedUkName = "uk_processor_name_aggregate_root_id"
+            option.publishedUkName = "uk_aggregate_root_id_version_processor_name"
             return option
         }
 
@@ -72,7 +77,7 @@ class DefaultEventStoreConfiguration : EventStoreConfiguration {
             option.publishedTableName = "published_version"
             option.eventVersionUkName = "aggregateRootId_1_version_1"
             option.eventCommandIdUkName = "aggregateRootId_1_commandId_1"
-            option.publishedUkName = "processorName_1_aggregateRootId_1"
+            option.publishedUkName = "aggregateRootId_1_version_1_processorName_1"
             return option
         }
 
@@ -83,7 +88,7 @@ class DefaultEventStoreConfiguration : EventStoreConfiguration {
             option.publishedTableName = "published_version"
             option.eventVersionUkName = "uk_aggregate_root_id_version"
             option.eventCommandIdUkName = "uk_aggregate_root_id_command_id"
-            option.publishedUkName = "uk_processor_name_aggregate_root_id"
+            option.publishedUkName = "uk_aggregate_root_id_version_processor_name"
             return option
         }
     }

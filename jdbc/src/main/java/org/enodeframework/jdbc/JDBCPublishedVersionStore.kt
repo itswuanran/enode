@@ -8,7 +8,6 @@ import org.enodeframework.eventing.EventStoreConfiguration
 import org.enodeframework.eventing.PublishedVersionStore
 import org.enodeframework.jdbc.handler.JDBCFindPublishedVersionHandler
 import org.enodeframework.jdbc.handler.JDBCUpsertPublishedVersionHandler
-import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
 import javax.sql.DataSource
 
@@ -59,7 +58,7 @@ open class JDBCPublishedVersionStore(
         )
         val sql = String.format(UPDATE_SQL, options.publishedTableName)
         val tuple = Tuple.of(
-            publishedVersion, LocalDateTime.now(), processorName, aggregateRootId, publishedVersion - 1
+            publishedVersion, System.currentTimeMillis(), processorName, aggregateRootId, publishedVersion - 1
         )
         sqlClient.preparedQuery(sql).execute(tuple).onComplete(handler)
         return handler.future
@@ -72,7 +71,8 @@ open class JDBCPublishedVersionStore(
             options, "$processorName#$aggregateRootTypeName#$aggregateRootId#$publishedVersion"
         )
         val sql = String.format(INSERT_SQL, options.publishedTableName)
-        val tuple = Tuple.of(processorName, aggregateRootTypeName, aggregateRootId, 1, LocalDateTime.now())
+        val now = System.currentTimeMillis()
+        val tuple = Tuple.of(processorName, aggregateRootTypeName, aggregateRootId, 1, now, now)
         sqlClient.preparedQuery(sql).execute(tuple).onComplete(handler)
         return handler.future
     }
@@ -96,9 +96,9 @@ open class JDBCPublishedVersionStore(
 
     companion object {
         private const val INSERT_SQL =
-            "INSERT INTO %s (processor_name, aggregate_root_type_name, aggregate_root_id, version, gmt_create) VALUES (?, ?, ?, ?, ?)"
+            "INSERT INTO %s (processor_name, aggregate_root_type_name, aggregate_root_id, version, create_at, update_at) VALUES (?, ?, ?, ?, ?, ?)"
         private const val UPDATE_SQL =
-            "UPDATE %s SET version = ?, gmt_create = ? WHERE processor_name = ? AND aggregate_root_id = ? AND version = ?"
+            "UPDATE %s SET version = ?, update_at = ? WHERE processor_name = ? AND aggregate_root_id = ? AND version = ?"
         private const val SELECT_SQL = "SELECT version FROM %s WHERE processor_name = ? AND aggregate_root_id = ?"
     }
 

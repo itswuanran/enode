@@ -13,7 +13,6 @@ import org.enodeframework.eventing.EventStore
 import org.enodeframework.eventing.EventStoreConfiguration
 import org.enodeframework.pg.handler.PgAddDomainEventsHandler
 import org.enodeframework.pg.handler.PgFindDomainEventsHandler
-import java.time.ZoneId
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -58,7 +57,7 @@ open class PgEventStore(
                 )
             },
             {
-                String.format("[aggregateRootId: %s, eventStreamCount: %s]", aggregateRootId, eventStreamList.size)
+                "[aggregateRootId: $aggregateRootId, eventStreamCount: ${eventStreamList.size}]"
             },
             null,
             retryTimes,
@@ -77,8 +76,8 @@ open class PgEventStore(
                 domainEventStream.aggregateRootTypeName,
                 domainEventStream.commandId,
                 domainEventStream.version,
-                domainEventStream.timestamp.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(),
-                serializeService.serialize(eventSerializer.serialize(domainEventStream.events))
+                serializeService.serialize(eventSerializer.serialize(domainEventStream.events)),
+                domainEventStream.timestamp.time
             )
         }
         pgPool.withTransaction { client ->
@@ -134,9 +133,9 @@ open class PgEventStore(
 
     companion object {
         private const val INSERT_EVENT_SQL =
-            "INSERT INTO %s (aggregate_root_id, aggregate_root_type_name, command_id, version, gmt_create, events) VALUES ($1, $2, $3, $4, $5, $6)"
+            "INSERT INTO %s (aggregate_root_id, aggregate_root_type_name, command_id, version, events, create_at) VALUES ($1, $2, $3, $4, $5, $6)"
         private const val SELECT_MANY_BY_VERSION_SQL =
-            "SELECT * FROM %s WHERE aggregate_root_id = $1 AND version >= $2 AND version <= $3 ORDER BY version"
+            "SELECT * FROM %s WHERE aggregate_root_id = $1 AND version >= $2 AND version <= $3 ORDER BY version ASC"
         private const val SELECT_ONE_BY_VERSION_SQL = "SELECT * FROM %s WHERE aggregate_root_id = $1 AND version = $2"
         private const val SELECT_ONE_BY_COMMAND_ID_SQL =
             "SELECT * FROM %s WHERE aggregate_root_id = $1 AND command_id = $2"

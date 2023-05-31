@@ -29,7 +29,7 @@ class ManyType(types: List<Class<*>>) {
 
     init {
         require(HashSet(types).size == types.size) {
-            String.format("Invalid ManyType: %s", types.joinToString("|") { obj: Class<*> -> obj.name })
+            "Invalid ManyType: ${types.joinToString("|") { obj: Class<*> -> obj.name }}"
         }
         this.types = types
     }

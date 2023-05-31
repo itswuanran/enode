@@ -30,11 +30,7 @@ class EventSourcingAggregateStorage(
         IOHelper.tryAsyncActionRecursively("TryRestoreFromSnapshotAsync", {
             aggregateSnapshotter.restoreFromSnapshotAsync(aggregateRootType, aggregateRootId)
         }, { value: T -> taskSource.complete(value) }, {
-            String.format(
-                "tryRestoreFromSnapshotAsync has unknown exception, aggregateRootType: %s, aggregateRootId: %s",
-                aggregateRootType.name,
-                aggregateRootId
-            )
+            "tryRestoreFromSnapshotAsync has unknown exception, aggregateRootType: ${aggregateRootType.name}, aggregateRootId: $aggregateRootId"
         }, null, retryTimes, true)
         return taskSource
     }
@@ -51,11 +47,7 @@ class EventSourcingAggregateStorage(
         IOHelper.tryAsyncActionRecursively("TryQueryAggregateEventsAsync", {
             eventStore.queryAggregateEventsAsync(aggregateRootId, aggregateRootTypeName, minVersion, maxVersion)
         }, { value: List<DomainEventStream> -> taskSource.complete(value) }, {
-            String.format(
-                "eventStore.queryAggregateEventsAsync has unknown exception, aggregateRootTypeName: %s, aggregateRootId: %s",
-                aggregateRootTypeName,
-                aggregateRootId
-            )
+            "eventStore.queryAggregateEventsAsync has unknown exception, aggregateRootType: ${aggregateRootTypeName}, aggregateRootId: $aggregateRootId"
         }, null, retryTimes, true)
         return taskSource
     }

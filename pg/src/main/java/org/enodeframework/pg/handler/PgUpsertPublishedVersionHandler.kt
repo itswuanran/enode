@@ -20,7 +20,7 @@ class PgUpsertPublishedVersionHandler(private val publishedUkName: String, priva
         if (ar.succeeded()) {
             if (ar.result().rowCount() == 0) {
                 future.completeExceptionally(
-                    PublishedVersionStoreException(String.format("version update rows is 0. %s", msg))
+                    PublishedVersionStoreException("version update rows is 0. $msg")
                 )
                 return
             }

@@ -38,10 +38,7 @@ class MongoAddDomainEventsHandler(
             message = throwable.message!!
         }
         if (throwable is MongoBulkWriteException) {
-            if (throwable.writeErrors.size >= 1) {
-                val writeError = throwable.writeErrors[0]
-                message = writeError.message
-            }
+            message = throwable.writeErrors.firstOrNull()?.message ?: ""
         }
         if (message.contains(options.eventVersionUkName)) {
             val appendResult = AggregateEventAppendResult(EventAppendStatus.DuplicateEvent)
