@@ -8,11 +8,11 @@ import io.vertx.core.json.JsonObject
 import org.enodeframework.common.exception.EventStoreException
 import org.enodeframework.common.exception.IORuntimeException
 import org.enodeframework.common.serializing.SerializeService
-import org.enodeframework.common.utils.EventStoreUtil
 import org.enodeframework.eventing.DomainEventStream
 import org.enodeframework.eventing.EventSerializer
 import org.enodeframework.mongo.MongoEventStore
 import org.slf4j.LoggerFactory
+import java.util.*
 import java.util.concurrent.CompletableFuture
 
 class MongoFindDomainEventsHandler(
@@ -33,7 +33,7 @@ class MongoFindDomainEventsHandler(
                     document.getString("commandId"),
                     document.getString("aggregateRootId"),
                     document.getString("aggregateRootTypeName"),
-                    EventStoreUtil.toDate(document.getValue("gmtCreate")),
+                    Date(document.getLong("createAt")),
                     eventSerializer.deserialize(
                         (serializeService.deserialize(
                             document.getString("events"), MutableMap::class.java

@@ -8,7 +8,7 @@
     <version>${revision}</version>
     <packaging>pom</packaging>
     <properties>
-        <revision>1.1.5</revision>
+        <revision>1.1.6</revision>
         <maven.flatten.version>1.5.0</maven.flatten.version>
         <maven.gpg.version>1.6</maven.gpg.version>
     </properties>

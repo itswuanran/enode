@@ -48,7 +48,7 @@ class DefaultCommandProcessor(
         val aggregateRootId = processingCommand.message.aggregateRootId
         Assert.nonNullOrEmpty(
             aggregateRootId,
-            String.format("aggregateRootId of command, commandId: %s", processingCommand.message.id)
+            "aggregateRootId of command, commandId: ${processingCommand.message.id}"
         )
         var mailbox = mailboxDict.computeIfAbsent(aggregateRootId) { x: String ->
             ProcessingCommandMailbox(

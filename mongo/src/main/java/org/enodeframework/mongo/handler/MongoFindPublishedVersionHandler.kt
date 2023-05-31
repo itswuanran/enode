@@ -21,7 +21,7 @@ class MongoFindPublishedVersionHandler(private val msg: String) : Handler<AsyncR
             return
         }
         val throwable = ar.cause()
-        logger.error("Get aggregate published version has exception. {}", msg, throwable)
+        logger.error("Find aggregate published version has exception. {}", msg, throwable)
         if (throwable is MongoServerException) {
             future.completeExceptionally(IORuntimeException(throwable))
             return

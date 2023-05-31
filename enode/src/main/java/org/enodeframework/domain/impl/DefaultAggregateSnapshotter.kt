@@ -32,12 +32,7 @@ class DefaultAggregateSnapshotter(private val aggregateRepositoryProvider: Aggre
             { aggregateRepository.getAsync(aggregateRootId) },
             { result: T -> taskSource.complete(result) },
             {
-                String.format(
-                    "aggregateRepository.getAsync has unknown exception, aggregateRepository: %s, aggregateRootTypeName: %s, aggregateRootId: %s",
-                    aggregateRepository.javaClass.name,
-                    aggregateRootType.name,
-                    aggregateRootId
-                )
+                "aggregateRepository.getAsync has unknown exception, aggregateRepository: ${aggregateRepository.javaClass.name}, aggregateRootTypeName: ${aggregateRootType.name}, aggregateRootId: $aggregateRootId"
             },
             null,
             retryTimes,

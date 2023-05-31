@@ -76,11 +76,7 @@ class DefaultCommandResultProcessor(
             ) != null
         ) {
             throw DuplicateCommandRegisterException(
-                String.format(
-                    "Duplicate processing command registration, type:%s, id:%s",
-                    command.javaClass.name,
-                    command.id
-                )
+                "Duplicate processing command registration, type:${command.javaClass.name}, id:${command.id}"
             )
         }
     }

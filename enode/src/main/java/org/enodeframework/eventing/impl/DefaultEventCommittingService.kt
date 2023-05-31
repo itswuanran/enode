@@ -141,7 +141,7 @@ class DefaultEventCommittingService(
             processDuplicateAggregateRootRecursively(0, appendContextList, eventMailBox)
             //最终将当前的EventMailBox的本次处理标记为处理完成，然后继续可以处理下一批事件
         }, {
-            String.format("[contextListCount:%d]", committingContexts.size)
+            "[contextListCount: ${committingContexts.size}]"
         }, null, retryTimes, true)
     }
 
@@ -235,13 +235,8 @@ class DefaultEventCommittingService(
                     }
                 } else {
                     //如果不是同一个command，则认为是两个不同的command重复创建ID相同的聚合根，我们需要记录错误日志，然后通知当前command的处理完成；
-                    val errorMessage = String.format(
-                        "Duplicate aggregate creation. current commandId:%s, existing commandId:%s, aggregateRootId:%s, aggregateRootTypeName:%s",
-                        context.processingCommand.message.id,
-                        result.commandId,
-                        result.aggregateRootId,
-                        result.aggregateRootTypeName
-                    )
+                    val errorMessage =
+                        "Duplicate aggregate creation. current commandId:${context.processingCommand.message.id}, existing commandId:${result.commandId}, aggregateRootId:${result.aggregateRootId}, aggregateRootTypeName:${result.aggregateRootTypeName}"
                     logger.error(errorMessage)
                     resetCommandMailBoxConsumingSequence(
                         context, context.processingCommand.sequence + 1, null
@@ -259,12 +254,8 @@ class DefaultEventCommittingService(
                     }
                 }
             } else {
-                val errorMessage = String.format(
-                    "Duplicate aggregate creation, but we cannot find the existing eventstream from eventstore. commandId:%s, aggregateRootId:%s, aggregateRootTypeName:%s",
-                    context.eventStream.commandId,
-                    context.eventStream.aggregateRootId,
-                    context.eventStream.aggregateRootTypeName
-                )
+                val errorMessage =
+                    "Duplicate aggregate creation, but we cannot find the existing eventstream from eventstore. commandId:${context.eventStream.commandId}, aggregateRootId:${context.eventStream.aggregateRootId}, aggregateRootTypeName:${context.eventStream.aggregateRootTypeName}"
                 logger.error(errorMessage)
                 resetCommandMailBoxConsumingSequence(
                     context, context.processingCommand.sequence + 1, null
@@ -284,7 +275,7 @@ class DefaultEventCommittingService(
                 }
             }
         }, {
-            String.format("[eventStream:%s]", serializeService.serialize(context.eventStream))
+            "[eventStream: ${serializeService.serialize(context.eventStream)}]"
         }, null, retryTimes, true)
         return future
     }
@@ -311,7 +302,7 @@ class DefaultEventCommittingService(
                 future.complete(true)
             }
         }, {
-            String.format("[eventStream:%s]", serializeService.serialize(eventStream))
+            "[eventStream: ${serializeService.serialize(eventStream)}]"
         }, null, retryTimes, true)
         return future
     }

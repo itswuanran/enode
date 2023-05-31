@@ -11,6 +11,9 @@ object Task {
     @JvmField
     var completedTask: CompletableFuture<Boolean> = CompletableFuture.completedFuture(true)
 
+    @JvmField
+    var emptyTask: CompletableFuture<Nothing?> = CompletableFuture.completedFuture(null)
+
     @JvmStatic
     fun await(latch: CountDownLatch) {
         try {

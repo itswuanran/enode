@@ -134,11 +134,7 @@ class DefaultProcessingEventProcessor(
             processingEventMailBox.setNextExpectingEventVersion(result + 1)
             refreshingAggregateRootDict.remove(processingEventMailBox.aggregateRootId)
         }, {
-            String.format(
-                "publishedVersionStore.GetPublishedVersionAsync has unknown exception, aggregateRootTypeName: %s, aggregateRootId: %s",
-                processingEventMailBox.aggregateRootTypeName,
-                processingEventMailBox.aggregateRootId
-            )
+            "publishedVersionStore.GetPublishedVersionAsync has unknown exception, aggregateRootTypeName: ${processingEventMailBox.aggregateRootTypeName}, aggregateRootId: ${processingEventMailBox.aggregateRootId}"
         }, null, retryTimes, true
         )
     }
@@ -176,13 +172,7 @@ class DefaultProcessingEventProcessor(
                 updatePublishedVersionAsync(processingEvent, 0)
             },
             {
-                String.format(
-                    "sequence message [messageId:%s, messageType:%s, aggregateRootId:%s, aggregateRootVersion:%s]",
-                    processingEvent.message.id,
-                    processingEvent.message.javaClass.name,
-                    processingEvent.message.aggregateRootId,
-                    processingEvent.message.version
-                )
+                "sequence message [messageId:${processingEvent.message.id}, messageType:${processingEvent.message.javaClass.name}, aggregateRootId:${processingEvent.message.aggregateRootId}, aggregateRootVersion:${processingEvent.message.version}]"
             },
             null,
             retryTimes,
@@ -204,13 +194,7 @@ class DefaultProcessingEventProcessor(
             }
             processingEvent.complete()
         }, {
-            String.format(
-                "DomainEventStreamMessage [messageId:%s, messageType:%s, aggregateRootId:%s, aggregateRootVersion:%s]",
-                message.id,
-                message.javaClass.name,
-                message.aggregateRootId,
-                message.version
-            )
+            "DomainEventStreamMessage [messageId:${message.id}, messageType:${message.javaClass.name}, aggregateRootId:${message.aggregateRootId}, aggregateRootVersion:${message.version}]"
         }, null, retryTimes, true
         )
     }

@@ -22,7 +22,7 @@ open class JDBCFindPublishedVersionHandler(private val msg: String) : Handler<As
             return
         }
         val throwable = ar.cause()
-        logger.error("Get aggregate published version has exception. msg: {}", msg, throwable)
+        logger.error("Find aggregate published version has exception. msg: {}", msg, throwable)
         if (throwable is SQLException) {
             future.completeExceptionally(IORuntimeException(msg, throwable))
             return

@@ -91,11 +91,7 @@ class DefaultAggregateRootInternalHandlerProvider : AssemblyInitializer {
                 }
             }
             throw HandlerNotFoundException(
-                String.format(
-                    "Could not find event handler for [%s] of [%s]",
-                    eventType.javaClass.name,
-                    aggregateRootType.javaClass.name
-                )
+                "Could not find event handler for [${eventType.javaClass.name}] of [${aggregateRootType.javaClass.name}]"
             )
         }
     }

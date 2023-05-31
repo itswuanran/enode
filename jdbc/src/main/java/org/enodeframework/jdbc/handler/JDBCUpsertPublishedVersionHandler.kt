@@ -18,16 +18,12 @@ open class JDBCUpsertPublishedVersionHandler(
     private val logger = LoggerFactory.getLogger(JDBCUpsertPublishedVersionHandler::class.java)
 
     val future = CompletableFuture<Int>()
-
     override fun handle(ar: AsyncResult<RowSet<Row>>) {
-
         if (ar.succeeded()) {
             if (ar.result().rowCount() == 0) {
                 future.completeExceptionally(
                     PublishedVersionStoreException(
-                        String.format(
-                            "version update rows is 0. %s", msg
-                        )
+                        "version update rows is 0. $msg"
                     )
                 )
                 return
@@ -35,22 +31,24 @@ open class JDBCUpsertPublishedVersionHandler(
             future.complete(ar.result().rowCount())
             return
         }
-        val ex = ar.cause()
-        var throwable = ex
-        if (ex is SQLException) {
-            throwable = ex;
+        val throwable = ar.cause()
+        var message = ""
+        if (throwable is SQLException) {
+            message = throwable.message ?: ""
         }
-        if (ex.cause is SQLException) {
-            throwable = ex.cause
+        if (throwable.cause is SQLException) {
+            message = (throwable.cause as SQLException).message ?: ""
         }
-        logger.error("Upsert aggregate published version has exception. {}", msg, throwable)
-        if (throwable.message?.contains(options.publishedUkName) == true) {
+        if (message.contains(options.publishedUkName)) {
             future.complete(1)
             return
         }
+        logger.error("Upsert aggregate published version has exception. {}", msg, throwable)
         if (throwable is SQLException) {
             future.completeExceptionally(IORuntimeException(msg, throwable))
+            return
         }
+        future.completeExceptionally(PublishedVersionStoreException(msg, throwable))
         return
     }
 }

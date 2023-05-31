@@ -200,11 +200,7 @@ class DefaultMessageDispatcher(
                 logger.debug("message handled success, messages: {}", serializeService.serialize(message))
             }
         }, {
-            String.format(
-                "[message: %s, handlerType: %s]",
-                serializeService.serialize(message),
-                handlerProxy.getInnerObject().javaClass.name
-            )
+            "[message: ${serializeService.serialize(message)}, handlerType: ${handlerProxy.getInnerObject().javaClass.name}]"
         }, null, retryTimes, true)
     }
 
@@ -229,11 +225,7 @@ class DefaultMessageDispatcher(
                 logger.debug("TwoMessage handled success, messages: {}", serializeService.serialize(messages))
             }
         }, {
-            String.format(
-                "[messages: %s, handlerType: %s]",
-                serializeService.serialize(messages),
-                handlerProxy.getInnerObject().javaClass.name
-            )
+            "[messages: ${serializeService.serialize(messages)}, handlerType: ${handlerProxy.getInnerObject().javaClass.name}]"
         }, null, retryTimes, true)
     }
 
@@ -259,11 +251,7 @@ class DefaultMessageDispatcher(
                 logger.debug("ThreeMessage handled success, messages: {}", serializeService.serialize(messages))
             }
         }, {
-            String.format(
-                "[messages: %s, handlerType: %s]",
-                serializeService.serialize(messages),
-                handlerProxy.getInnerObject().javaClass.name
-            )
+            "[messages: ${serializeService.serialize(messages)}, handlerType: ${handlerProxy.getInnerObject().javaClass.name}]"
         }, null, retryTimes, true)
     }
 

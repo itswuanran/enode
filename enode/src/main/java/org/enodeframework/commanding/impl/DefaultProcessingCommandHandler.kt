@@ -55,11 +55,8 @@ class DefaultProcessingCommandHandler(
     override fun handleAsync(processingCommand: ProcessingCommand): CompletableFuture<Boolean> {
         val command = processingCommand.message
         if (Strings.isNullOrEmpty(command.aggregateRootId)) {
-            val errorMessage = String.format(
-                "The aggregateRootId of command cannot be null or empty. commandType:%s, commandId:%s",
-                command.javaClass.name,
-                command.id
-            )
+            val errorMessage =
+                "The aggregateRootId of command cannot be null or empty. commandType:${command.javaClass.name}, commandId:${command.id}"
             logger.error(errorMessage)
             return completeCommand(processingCommand, CommandStatus.Failed, String::class.java.name, errorMessage)
         }
@@ -100,11 +97,8 @@ class DefaultProcessingCommandHandler(
             }
 
             HandlerFindStatus.NotFound -> {
-                val errorMessage = String.format(
-                    "No command handler found of command. commandType:%s, commandId:%s",
-                    command.javaClass.name,
-                    command.id
-                )
+                val errorMessage =
+                    "No command handler found of command. commandType:${command.javaClass.name}, commandId:${command.id}"
                 logger.error(errorMessage)
                 return completeCommand(processingCommand, CommandStatus.Failed, String::class.java.name, errorMessage)
             }
@@ -191,13 +185,7 @@ class DefaultProcessingCommandHandler(
                 }
             }
         }, {
-            String.format(
-                "[command:[id:%s,type:%s],handlerType:%s,aggregateRootId:%s]",
-                command.id,
-                command.javaClass.name,
-                commandHandler.getInnerObject().javaClass.name,
-                command.aggregateRootId
-            )
+            "[command:[id:${command.id},type:${command.javaClass.name}],handlerType:${commandHandler.getInnerObject().javaClass.name},aggregateRootId:${command.aggregateRootId}]"
         }, { ex: Throwable, errorMessage: String ->
             handleExceptionAsync(
                 processingCommand, commandHandler, ex, errorMessage, 0
@@ -218,11 +206,8 @@ class DefaultProcessingCommandHandler(
             if (events.size > 0) {
                 dirtyAggregateRootCount++
                 if (dirtyAggregateRootCount > 1) {
-                    val errorMessage = String.format(
-                        "Detected more than one aggregate created or modified by command. commandType:%s, commandId:%s",
-                        command.javaClass.name,
-                        command.id
-                    )
+                    val errorMessage =
+                        "Detected more than one aggregate created or modified by command. commandType:${command.javaClass.name}, commandId:${command.id}"
                     logger.error(errorMessage)
                     return completeCommand(
                         processingCommand, CommandStatus.Failed, String::class.java.name, errorMessage
@@ -280,7 +265,7 @@ class DefaultProcessingCommandHandler(
                 ).whenComplete { _, _ -> future.complete(true) }
             }
         }, {
-            String.format("[commandId:%s]", command.id)
+            "[commandId: ${command.id}]"
         }, null, retryTimes, true)
         return future
     }
@@ -322,14 +307,7 @@ class DefaultProcessingCommandHandler(
                 }
             }
         }, {
-            String.format(
-                "[command:[id:%s,type:%s],handlerType:%s,aggregateRootId:%s] %s",
-                command.id,
-                command.javaClass.name,
-                commandHandler.getInnerObject().javaClass.name,
-                command.aggregateRootId,
-                errorMessage
-            )
+            "[command:[id:${command.id},type:${command.javaClass.name}],handlerType:${commandHandler.getInnerObject().javaClass.name},aggregateRootId:${command.aggregateRootId}] $errorMessage"
         }, null, retryTimes, true)
         return future
     }
@@ -391,13 +369,7 @@ class DefaultProcessingCommandHandler(
                 processingCommand, CommandStatus.Success, message.javaClass.name, serializeService.serialize(message)
             ).whenComplete { _, _ -> future.complete(true) }
         }, {
-            String.format(
-                "[application message:[id:%s,type:%s],command:[id:%s,type:%s]]",
-                message.id,
-                message.javaClass.name,
-                command.id,
-                command.javaClass.name
-            )
+            "[application message:[id:${message.id},type:${message.javaClass.name}],command:[id:${command.id},type:${command.javaClass.name}]]"
         }, null, retryTimes, true)
         return future
     }
