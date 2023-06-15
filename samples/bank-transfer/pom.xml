@@ -10,6 +10,9 @@
     </parent>
     <artifactId>bank-transfer</artifactId>
     <packaging>pom</packaging>
+    <properties>
+        <springdoc-openapi.version>1.7.0</springdoc-openapi.version>
+    </properties>
     <modules>
         <module>command-consumer</module>
         <module>event-consumer</module>
@@ -33,12 +36,12 @@
             <dependency>
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-webflux-ui</artifactId>
-                <version>1.5.13</version>
+                <version>${springdoc-openapi.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-ui</artifactId>
-                <version>1.5.13</version>
+                <version>${springdoc-openapi.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

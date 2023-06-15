@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.enodeframework.common.extensions;
 
 import com.google.common.base.Strings;
@@ -12,34 +30,36 @@ public class SnowFlake {
     /**
      * 起始的时间戳
      */
-    private final static long START_STAMP = 1480166465631L;
+    private static final long START_STAMP = 1480166465631L;
 
     /**
      * 序列号占用的位数
      */
-    private final static long SEQUENCE_BIT = 12;
+    private static final long SEQUENCE_BIT = 12;
     /**
      * 机器标识占用的位数
      */
-    private final static long MACHINE_BIT = 5;
+    private static final long MACHINE_BIT = 5;
     /**
      * 数据中心占用的位数
      */
-    private final static long DATACENTER_BIT = 5;
+    private static final long DATACENTER_BIT = 5;
 
     /**
      * 每一部分的最大值
      */
-    private final static long MAX_DATACENTER_NUM = ~(-1L << DATACENTER_BIT);
-    private final static long MAX_MACHINE_NUM = ~(-1L << MACHINE_BIT);
-    private final static long MAX_SEQUENCE = ~(-1L << SEQUENCE_BIT);
+    private static final long MAX_DATACENTER_NUM = ~(-1L << DATACENTER_BIT);
+
+    private static final long MAX_MACHINE_NUM = ~(-1L << MACHINE_BIT);
+    private static final long MAX_SEQUENCE = ~(-1L << SEQUENCE_BIT);
 
     /**
      * 每一部分向左的位移
      */
-    private final static long MACHINE_LEFT = SEQUENCE_BIT;
-    private final static long DATACENTER_LEFT = SEQUENCE_BIT + MACHINE_BIT;
-    private final static long TIMESTAMP_LEFT = DATACENTER_LEFT + DATACENTER_BIT;
+    private static final long MACHINE_LEFT = SEQUENCE_BIT;
+
+    private static final long DATACENTER_LEFT = SEQUENCE_BIT + MACHINE_BIT;
+    private static final long TIMESTAMP_LEFT = DATACENTER_LEFT + DATACENTER_BIT;
     /**
      * 数据中心
      */
@@ -98,7 +118,9 @@ public class SnowFlake {
             } else {
                 byte[] mac = network.getHardwareAddress();
                 if (null != mac) {
-                    id = ((0x000000FF & (long) mac[mac.length - 1]) | (0x0000FF00 & (((long) mac[mac.length - 2]) << 8))) >> 6;
+                    id = ((0x000000FF & (long) mac[mac.length - 1])
+                        | (0x0000FF00 & (((long) mac[mac.length - 2]) << 8)))
+                        >> 6;
                     id = id % (MAX_DATACENTER_NUM + 1);
                 }
             }
@@ -106,7 +128,6 @@ public class SnowFlake {
         }
         return id;
     }
-
 
     /**
      * 产生下一个ID
@@ -128,7 +149,10 @@ public class SnowFlake {
             sequence = 0L;
         }
         lastStamp = currStamp;
-        return (currStamp - START_STAMP) << TIMESTAMP_LEFT | datacenterId << DATACENTER_LEFT | machineId << MACHINE_LEFT | sequence;
+        return (currStamp - START_STAMP) << TIMESTAMP_LEFT
+            | datacenterId << DATACENTER_LEFT
+            | machineId << MACHINE_LEFT
+            | sequence;
     }
 
     private long getNextMill() {
