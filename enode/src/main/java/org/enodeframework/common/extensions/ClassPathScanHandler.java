@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.enodeframework.common.extensions;
 
 import org.reflections.Reflections;
@@ -112,7 +130,8 @@ public class ClassPathScanHandler {
         }
         String package2Path = packageName.replace('.', '/');
         try {
-            Enumeration<URL> dirs = Thread.currentThread().getContextClassLoader().getResources(package2Path);
+            Enumeration<URL> dirs =
+                Thread.currentThread().getContextClassLoader().getResources(package2Path);
             while (dirs.hasMoreElements()) {
                 URL url = dirs.nextElement();
                 String protocol = url.getProtocol();
@@ -139,7 +158,8 @@ public class ClassPathScanHandler {
      * @param recursive   whether to search recursive.
      * @param classes     set of the found classes.
      */
-    private void doScanPackageClassesByJar(String basePackage, URL url, final boolean recursive, Set<Class<?>> classes) {
+    private void doScanPackageClassesByJar(
+        String basePackage, URL url, final boolean recursive, Set<Class<?>> classes) {
         String package2Path = basePackage.replace('.', '/');
         JarFile jar;
         try {
@@ -168,7 +188,8 @@ public class ClassPathScanHandler {
                     String className = name.replace('/', '.');
                     className = className.substring(0, className.length() - 6);
                     try {
-                        classes.add(Thread.currentThread().getContextClassLoader().loadClass(className));
+                        classes.add(
+                            Thread.currentThread().getContextClassLoader().loadClass(className));
                     } catch (ClassNotFoundException e) {
                         LOGGER.error("Class.forName error:URL is {}", url.getPath());
                     }
@@ -201,12 +222,13 @@ public class ClassPathScanHandler {
         }
         for (File file : files) {
             if (file.isDirectory()) {
-                doScanPackageClassesByFile(classes, packageName + "." + file.getName(), file.getAbsolutePath(), recursive);
+                doScanPackageClassesByFile(
+                    classes, packageName + "." + file.getName(), file.getAbsolutePath(), recursive);
             } else {
-                String className = file.getName().substring(0,
-                    file.getName().length() - CLASS_EXTENSION_NAME.length());
+                String className = file.getName().substring(0, file.getName().length() - CLASS_EXTENSION_NAME.length());
                 try {
-                    classes.add(Thread.currentThread().getContextClassLoader().loadClass(packageName + '.' + className));
+                    classes.add(
+                        Thread.currentThread().getContextClassLoader().loadClass(packageName + '.' + className));
                 } catch (ClassNotFoundException e) {
                     LOGGER.error("IOException error:");
                 }

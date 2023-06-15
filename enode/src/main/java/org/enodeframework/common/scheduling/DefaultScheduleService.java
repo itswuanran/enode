@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.enodeframework.common.scheduling;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -22,7 +40,12 @@ public class DefaultScheduleService implements ScheduleService {
     private final ScheduledExecutorService scheduledThreadPool;
 
     public DefaultScheduleService() {
-        scheduledThreadPool = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors(), new ThreadFactoryBuilder().setDaemon(true).setNameFormat("ScheduleService-%d").build());
+        scheduledThreadPool = new ScheduledThreadPoolExecutor(
+            Runtime.getRuntime().availableProcessors(),
+            new ThreadFactoryBuilder()
+                .setDaemon(true)
+                .setNameFormat("ScheduleService-%d")
+                .build());
     }
 
     @Override
@@ -31,7 +54,8 @@ public class DefaultScheduleService implements ScheduleService {
             if (taskDict.containsKey(name)) {
                 return;
             }
-            ScheduledFuture<?> scheduledFuture = scheduledThreadPool.scheduleWithFixedDelay(new TaskCallback(name), dueTime, period, TimeUnit.MILLISECONDS);
+            ScheduledFuture<?> scheduledFuture = scheduledThreadPool.scheduleWithFixedDelay(
+                new TaskCallback(name), dueTime, period, TimeUnit.MILLISECONDS);
             taskDict.put(name, new TimerBasedTask(name, action, scheduledFuture, dueTime, period, false));
         }
     }
@@ -56,7 +80,13 @@ public class DefaultScheduleService implements ScheduleService {
         private int period;
         private boolean stopped;
 
-        public TimerBasedTask(String name, Action action, ScheduledFuture<?> scheduledFuture, int dueTime, int period, boolean stopped) {
+        public TimerBasedTask(
+            String name,
+            Action action,
+            ScheduledFuture<?> scheduledFuture,
+            int dueTime,
+            int period,
+            boolean stopped) {
             this.name = name;
             this.action = action;
             this.scheduledFuture = scheduledFuture;
@@ -130,7 +160,12 @@ public class DefaultScheduleService implements ScheduleService {
                         task.action.apply();
                     }
                 } catch (Exception ex) {
-                    logger.error("Task has exception, name: {}, due: {}, period: {}", task.getName(), task.getDueTime(), task.getPeriod(), ex);
+                    logger.error(
+                        "Task has exception, name: {}, due: {}, period: {}",
+                        task.getName(),
+                        task.getDueTime(),
+                        task.getPeriod(),
+                        ex);
                 }
             }
         }
