@@ -246,7 +246,6 @@ class DefaultEventCommittingService(
                             context.processingCommand.message.id,
                             context.eventStream.aggregateRootId,
                             "Duplicate aggregate creation.",
-                            String::class.java.name
                         )
                         completeCommand(context.processingCommand, commandResult).whenComplete { _, _ ->
                             future.complete(true)
@@ -265,7 +264,6 @@ class DefaultEventCommittingService(
                         context.processingCommand.message.id,
                         context.eventStream.aggregateRootId,
                         "Duplicate aggregate creation, but we cannot find the existing eventstream from eventstore.",
-                        String::class.java.name
                     )
                     completeCommand(context.processingCommand, commandResult).whenComplete { _, _ ->
                         future.complete(
@@ -296,7 +294,6 @@ class DefaultEventCommittingService(
                 processingCommand.message.id,
                 eventStream.aggregateRootId,
                 commandHandleResult,
-                String::class.java.name
             )
             completeCommand(processingCommand, commandResult).whenComplete { _, _ ->
                 future.complete(true)

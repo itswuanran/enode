@@ -36,14 +36,14 @@ public class EnodeMySQLEventStoreAutoConfig {
         EventSerializer eventSerializer,
         SerializeService serializeService) {
         MySQLEventStore eventStore = new MySQLEventStore(
-            pool, DefaultEventStoreConfiguration.Driver.mysql(), eventSerializer, serializeService);
+            pool, DefaultEventStoreOptions.Driver.mysql(), eventSerializer, serializeService);
         return eventStore;
     }
 
     @Bean
     public MySQLPublishedVersionStore mysqlPublishedVersionStore(@Qualifier("enodeMySQLPool") MySQLPool pool) {
         MySQLPublishedVersionStore publishedVersionStore =
-            new MySQLPublishedVersionStore(pool, DefaultEventStoreConfiguration.Driver.mysql());
+            new MySQLPublishedVersionStore(pool, DefaultEventStoreOptions.Driver.mysql());
         return publishedVersionStore;
     }
 }

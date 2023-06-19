@@ -22,41 +22,62 @@ import com.aliyun.openservices.ons.api.Action;
 import com.aliyun.openservices.ons.api.ConsumeContext;
 import com.aliyun.openservices.ons.api.Message;
 import com.aliyun.openservices.ons.api.MessageListener;
+import com.aliyun.openservices.ons.api.batch.BatchMessageListener;
+import org.enodeframework.common.extensions.SysProperties;
 import org.enodeframework.common.io.Task;
 import org.enodeframework.queue.MessageHandler;
+import org.enodeframework.queue.MessageHandlerHolder;
 import org.enodeframework.queue.QueueMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.Map;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 /**
  * @author anruence@gmail.com
  */
-public class OnsMessageListener implements MessageListener {
+public class OnsMessageListener implements MessageListener, BatchMessageListener {
 
-    private static final Logger logger = LoggerFactory.getLogger(OnsMessageListener.class);
+    private final MessageHandlerHolder messageHandlerHolder;
 
-    private final Map<Character, MessageHandler> messageHandlerMap;
-
-    public OnsMessageListener(Map<Character, MessageHandler> messageHandlerMap) {
-        this.messageHandlerMap = messageHandlerMap;
+    public OnsMessageListener(MessageHandlerHolder messageHandlerHolder) {
+        this.messageHandlerHolder = messageHandlerHolder;
     }
 
     @Override
     public Action consume(Message msg, ConsumeContext consumeContext) {
-        QueueMessage queueMessage = OnsTool.covertToQueueMessage(msg);
-        MessageHandler messageHandler = messageHandlerMap.get(queueMessage.getType());
-        if (messageHandler == null) {
-            logger.error("No messageHandler for message: {}.", queueMessage);
-            return Action.CommitMessage;
-        }
+        QueueMessage queueMessage = this.covertToQueueMessage(msg);
+        MessageHandler messageHandler = messageHandlerHolder.chooseMessageHandler(queueMessage.getType());
         CountDownLatch latch = new CountDownLatch(1);
         messageHandler.handle(queueMessage, message -> {
             latch.countDown();
         });
         Task.await(latch);
         return Action.CommitMessage;
+    }
+
+    @Override
+    public Action consume(List<Message> messages, ConsumeContext consumeContext) {
+        CountDownLatch latch = new CountDownLatch(messages.size());
+        messages.forEach(msg -> {
+            QueueMessage queueMessage = this.covertToQueueMessage(msg);
+            MessageHandler messageHandler = messageHandlerHolder.chooseMessageHandler(queueMessage.getType());
+            messageHandler.handle(queueMessage, message -> {
+                latch.countDown();
+            });
+        });
+        Task.await(latch);
+        return Action.CommitMessage;
+    }
+
+    private QueueMessage covertToQueueMessage(Message messageExt) {
+        QueueMessage queueMessage = new QueueMessage();
+        String mType = messageExt.getUserProperties(SysProperties.MESSAGE_TYPE_KEY);
+        queueMessage.setBody(messageExt.getBody());
+        queueMessage.setType(mType);
+        queueMessage.setTopic(messageExt.getTopic());
+        queueMessage.setTag(messageExt.getTag());
+        queueMessage.setRouteKey(messageExt.getShardingKey());
+        queueMessage.setKey(messageExt.getKey());
+        return queueMessage;
     }
 }

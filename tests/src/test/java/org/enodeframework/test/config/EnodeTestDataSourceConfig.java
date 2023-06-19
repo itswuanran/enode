@@ -11,8 +11,8 @@ import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.PoolOptions;
 import org.enodeframework.jdbc.JDBCEventStore;
 import org.enodeframework.jdbc.JDBCPublishedVersionStore;
-import org.enodeframework.queue.DefaultSendReplyService;
-import org.enodeframework.queue.command.DefaultCommandResultProcessor;
+import org.enodeframework.vertx.message.TcpSendReplyService;
+import org.enodeframework.vertx.message.TcpReplyMessageListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -40,23 +40,27 @@ public class EnodeTestDataSourceConfig {
     @Value("${spring.enode.datasource.pg.password:}")
     private String pgPassword;
 
-    @Autowired
-    private DefaultCommandResultProcessor commandResultProcessor;
-
-    @Autowired
-    private DefaultSendReplyService sendReplyService;
-
     @Autowired(required = false)
     private JDBCEventStore jdbcEventStore;
 
     @Autowired(required = false)
     private JDBCPublishedVersionStore jdbcPublishedVersionStore;
 
+    @Autowired(required = false)
+    private TcpSendReplyService tcpSendReplyService;
+
+    @Autowired(required = false)
+    private TcpReplyMessageListener tcpServerListener;
+
     @Bean
     public Vertx vertx() {
         Vertx vertx = Vertx.vertx();
-        vertx.deployVerticle(commandResultProcessor);
-        vertx.deployVerticle(sendReplyService);
+        if (tcpSendReplyService != null) {
+            vertx.deployVerticle(tcpSendReplyService);
+        }
+        if (tcpServerListener != null) {
+            vertx.deployVerticle(tcpServerListener);
+        }
         if (jdbcEventStore != null) {
             vertx.deployVerticle(jdbcEventStore);
         }

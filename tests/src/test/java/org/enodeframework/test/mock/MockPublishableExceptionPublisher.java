@@ -9,7 +9,7 @@ import org.enodeframework.queue.SendMessageResult;
 import java.util.concurrent.CompletableFuture;
 
 public class MockPublishableExceptionPublisher implements MessagePublisher<DomainExceptionMessage> {
-    private static final CompletableFuture<SendMessageResult> successResultTask = CompletableFuture.completedFuture(new SendMessageResult("", ""));
+    private static final CompletableFuture<SendMessageResult> successResultTask = CompletableFuture.completedFuture(new SendMessageResult(""));
     private int expectFailedCount = 0;
     private int currentFailedCount = 0;
     private FailedType failedType;

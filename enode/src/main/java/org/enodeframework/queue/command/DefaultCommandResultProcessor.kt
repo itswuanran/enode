@@ -3,13 +3,7 @@ package org.enodeframework.queue.command
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.RemovalCause
-import io.vertx.core.AbstractVerticle
-import io.vertx.core.eventbus.Message
-import io.vertx.core.json.JsonObject
-import io.vertx.core.net.NetServerOptions
-import io.vertx.ext.bridge.BridgeOptions
-import io.vertx.ext.bridge.PermittedOptions
-import io.vertx.ext.eventbus.bridge.tcp.TcpEventBusBridge
+import org.enodeframework.commanding.CommandOptions
 import org.enodeframework.commanding.CommandMessage
 import org.enodeframework.commanding.CommandResult
 import org.enodeframework.commanding.CommandReturnType
@@ -19,7 +13,7 @@ import org.enodeframework.common.extensions.SystemClock
 import org.enodeframework.common.scheduling.ScheduleService
 import org.enodeframework.common.scheduling.Worker
 import org.enodeframework.common.serializing.SerializeService
-import org.enodeframework.queue.domainevent.DomainEventHandledMessage
+import org.enodeframework.queue.reply.GenericReplyMessage
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.BlockingQueue
@@ -33,34 +27,14 @@ import java.util.concurrent.TimeUnit
 class DefaultCommandResultProcessor(
     private val scheduleService: ScheduleService,
     private val serializeService: SerializeService,
-    private val serverOptions: NetServerOptions,
+    private val commandOptions: CommandOptions,
     private val completionSourceTimeout: Int
-) : AbstractVerticle(), CommandResultProcessor {
+) : CommandResultProcessor {
     private val scanExpireCommandTaskName: String =
         "CleanTimeoutCommandTask_" + SystemClock.now() + Random().nextInt(5000)
     private val commandTaskDict: Cache<String, CommandTaskCompletionSource>
-    private val commandExecutedMessageLocalQueue: BlockingQueue<CommandResult>
-    private val domainEventHandledMessageLocalQueue: BlockingQueue<DomainEventHandledMessage>
+    private val commandExecutedMessageLocalQueue: BlockingQueue<GenericReplyMessage>
     private val commandExecutedMessageWorker: Worker
-    private val domainEventHandledMessageWorker: Worker
-    private lateinit var tcpEventBusBridge: TcpEventBusBridge
-    private var started = false
-
-    private fun startServer() {
-        val address = getBindAddress()
-        vertx.eventBus().consumer(address) { msg: Message<JsonObject> ->
-            processRequestInternal(msg.body())
-        }
-        val bridgeOptions = BridgeOptions()
-        bridgeOptions.addInboundPermitted(PermittedOptions().setAddress(address))
-        bridgeOptions.addOutboundPermitted(PermittedOptions().setAddress(address))
-        tcpEventBusBridge = TcpEventBusBridge.create(vertx, bridgeOptions, serverOptions)
-        tcpEventBusBridge.listen(serverOptions.port).onComplete { res ->
-            if (!res.succeeded()) {
-                logger.error("vertx netServer start failed. addr: {}", address, res.cause())
-            }
-        }
-    }
 
     override fun registerProcessingCommand(
         command: CommandMessage,
@@ -68,11 +42,8 @@ class DefaultCommandResultProcessor(
         taskCompletionSource: CompletableFuture<CommandResult>
     ) {
         if (commandTaskDict.asMap().putIfAbsent(
-                command.id, CommandTaskCompletionSource(
-                    command.aggregateRootId,
-                    commandReturnType,
-                    taskCompletionSource
-                )
+                command.id,
+                CommandTaskCompletionSource(command.aggregateRootId, commandReturnType, taskCompletionSource)
             ) != null
         ) {
             throw DuplicateCommandRegisterException(
@@ -81,56 +52,43 @@ class DefaultCommandResultProcessor(
         }
     }
 
-    override fun start() {
-        if (started) {
+    override fun processReplyMessage(replyMessage: GenericReplyMessage) {
+        val code = replyMessage.returnType
+        if (replyMessage.status == CommandStatus.SendFailed.value) {
+            processFailedSendingCommand(replyMessage)
             return
         }
-        startServer()
-        commandExecutedMessageWorker.start()
-        domainEventHandledMessageWorker.start()
-        scheduleService.startTask(
-            scanExpireCommandTaskName,
-            { commandTaskDict.cleanUp() },
-            completionSourceTimeout,
-            completionSourceTimeout
-        )
-        started = true
-    }
-
-    override fun stop() {
-        scheduleService.stopTask(scanExpireCommandTaskName)
-        commandExecutedMessageWorker.stop()
-        domainEventHandledMessageWorker.stop()
-        tcpEventBusBridge.close()
-    }
-
-    override fun getBindAddress(): String {
-        return String.format("enode://%s:%d", serverOptions.host, serverOptions.port)
-    }
-
-    private fun processRequestInternal(reply: JsonObject) {
-        val code = reply.getInteger("code", 0)
-        if (code == CommandReturnType.CommandExecuted.value) {
-            val result = reply.getJsonObject("commandResult")
-            commandExecutedMessageLocalQueue.add(result.mapTo(CommandResult::class.java))
-        } else if (code == CommandReturnType.EventHandled.value) {
-            val message = reply.getJsonObject("eventHandledMessage")
-            domainEventHandledMessageLocalQueue.add(message.mapTo(DomainEventHandledMessage::class.java))
+        if (code == CommandReturnType.CommandExecuted.value || code == CommandReturnType.EventHandled.value) {
+            commandExecutedMessageLocalQueue.add(replyMessage)
         }
     }
 
-    /**
-     * https://stackoverflow.com/questions/10626720/guava-cachebuilder-removal-listener
-     * Caches built with CacheBuilder do not perform cleanup and evict values "automatically," or instantly
-     * after a value expires, or anything of the sort. Instead, it performs small amounts of maintenance
-     * during write operations, or during occasional read operations if writes are rare.
-     *
-     *
-     * The reason for this is as follows: if we wanted to perform Cache maintenance continuously, we would need
-     * to create a thread, and its operations would be competing with user operations for shared locks.
-     * Additionally, some environments restrict the creation of threads, which would make CacheBuilder unusable in that environment.
-     */
-    private fun processExecutedCommandMessage(commandResult: CommandResult) {
+    override fun replyAddress(): String {
+        return commandOptions.address()
+    }
+
+    fun start() {
+        commandExecutedMessageWorker.start()
+        scheduleService.startTask(
+            scanExpireCommandTaskName, { commandTaskDict.cleanUp() }, completionSourceTimeout, completionSourceTimeout
+        )
+    }
+
+    fun stop() {
+        scheduleService.stopTask(scanExpireCommandTaskName)
+        commandExecutedMessageWorker.stop()
+    }
+
+    private fun processExecutedCommandMessage(message: GenericReplyMessage) {
+        val code = message.returnType
+        if (code == CommandReturnType.CommandExecuted.value) {
+            processExecutedCommandMessageInternal(message.asCommandResult())
+        } else if (code == CommandReturnType.EventHandled.value) {
+            processDomainEventHandledMessage(message)
+        }
+    }
+
+    private fun processExecutedCommandMessageInternal(commandResult: CommandResult) {
         val commandTaskCompletionSource = commandTaskDict.asMap()[commandResult.commandId]
         if (commandTaskCompletionSource == null) {
             if (logger.isDebugEnabled) {
@@ -151,13 +109,12 @@ class DefaultCommandResultProcessor(
                 }
             }
         } else if (commandTaskCompletionSource.commandReturnType == CommandReturnType.EventHandled) {
-            if (CommandStatus.Failed == commandResult.status || CommandStatus.NothingChanged == commandResult.status) {
+            if (CommandStatus.Failed == commandResult.status || CommandStatus.NoChange == commandResult.status) {
                 commandTaskDict.asMap().remove(commandResult.commandId)
                 if (commandTaskCompletionSource.taskCompletionSource.complete(commandResult)) {
                     if (logger.isDebugEnabled) {
                         logger.debug(
-                            "Command result return EventHandled, {}",
-                            serializeService.serialize(commandResult)
+                            "Command result return EventHandled, {}", serializeService.serialize(commandResult)
                         )
                     }
                 }
@@ -173,29 +130,27 @@ class DefaultCommandResultProcessor(
                 commandId,
                 commandTaskCompletionSource.aggregateRootId,
                 "Wait command notify timeout.",
-                String::class.java.name
             )
             // 任务超时失败
             commandTaskCompletionSource.taskCompletionSource.complete(commandResult)
         }
     }
 
-    override fun processFailedSendingCommand(command: CommandMessage) {
-        val commandTaskCompletionSource = commandTaskDict.asMap().remove(command.id)
+    fun processFailedSendingCommand(command: GenericReplyMessage) {
+        val commandTaskCompletionSource = commandTaskDict.asMap().remove(command.commandId)
         if (commandTaskCompletionSource != null) {
             val commandResult = CommandResult(
                 CommandStatus.Failed,
-                command.id,
+                command.commandId,
                 command.aggregateRootId,
                 "Failed to send the command.",
-                String::class.java.name
             )
             // 发送失败消息
             commandTaskCompletionSource.taskCompletionSource.complete(commandResult)
         }
     }
 
-    private fun processDomainEventHandledMessage(message: DomainEventHandledMessage) {
+    private fun processDomainEventHandledMessage(message: GenericReplyMessage) {
         val commandTaskCompletionSource = commandTaskDict.asMap()[message.commandId]
         if (commandTaskCompletionSource != null) {
             if (CommandReturnType.EventHandled != commandTaskCompletionSource.commandReturnType) {
@@ -207,8 +162,7 @@ class DefaultCommandResultProcessor(
                 CommandStatus.Success,
                 message.commandId,
                 message.aggregateRootId,
-                message.commandResult,
-                ""
+                message.result,
             )
             commandTaskCompletionSource.taskCompletionSource.complete(commandResult)
             if (logger.isDebugEnabled) {
@@ -220,23 +174,15 @@ class DefaultCommandResultProcessor(
     private val logger = LoggerFactory.getLogger(DefaultCommandResultProcessor::class.java)
 
     init {
-        commandTaskDict = CacheBuilder.newBuilder()
-            .removalListener { notification ->
-                if (notification.cause == RemovalCause.EXPIRED) {
-                    processTimeoutCommand(notification.key!!, notification.value)
-                }
-            }.expireAfterWrite(completionSourceTimeout.toLong(), TimeUnit.MILLISECONDS)
-            .build()
+        commandTaskDict = CacheBuilder.newBuilder().removalListener { notification ->
+            if (notification.cause == RemovalCause.EXPIRED) {
+                processTimeoutCommand(notification.key!!, notification.value)
+            }
+        }.expireAfterWrite(completionSourceTimeout.toLong(), TimeUnit.MILLISECONDS).build()
         commandExecutedMessageLocalQueue = LinkedBlockingQueue()
-        domainEventHandledMessageLocalQueue = LinkedBlockingQueue()
         commandExecutedMessageWorker = Worker("ProcessExecutedCommandMessage") {
             processExecutedCommandMessage(
                 commandExecutedMessageLocalQueue.take()
-            )
-        }
-        domainEventHandledMessageWorker = Worker("ProcessDomainEventHandledMessage") {
-            processDomainEventHandledMessage(
-                domainEventHandledMessageLocalQueue.take()
             )
         }
     }

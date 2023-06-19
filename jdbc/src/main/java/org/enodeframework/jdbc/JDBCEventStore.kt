@@ -11,7 +11,7 @@ import org.enodeframework.eventing.DomainEventStream
 import org.enodeframework.eventing.EventAppendResult
 import org.enodeframework.eventing.EventSerializer
 import org.enodeframework.eventing.EventStore
-import org.enodeframework.eventing.EventStoreConfiguration
+import org.enodeframework.eventing.EventStoreOptions
 import org.enodeframework.jdbc.handler.JDBCAddDomainEventsHandler
 import org.enodeframework.jdbc.handler.JDBCFindDomainEventsHandler
 import java.util.concurrent.CompletableFuture
@@ -22,14 +22,14 @@ import javax.sql.DataSource
  */
 open class JDBCEventStore(
     dataSource: DataSource,
-    options: EventStoreConfiguration,
+    options: EventStoreOptions,
     eventSerializer: EventSerializer,
     serializeService: SerializeService
 ) : AbstractVerticle(), EventStore {
 
     private val eventSerializer: EventSerializer
     private val serializeService: SerializeService
-    private val options: EventStoreConfiguration
+    private val options: EventStoreOptions
     private val dataSource: DataSource
     private lateinit var sqlClient: JDBCPool
 

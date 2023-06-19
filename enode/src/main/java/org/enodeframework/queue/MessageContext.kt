@@ -1,6 +1,6 @@
 package org.enodeframework.queue
 
-interface MessageContext {
+fun interface MessageContext {
     /**
      * 消息处理后执行
      */

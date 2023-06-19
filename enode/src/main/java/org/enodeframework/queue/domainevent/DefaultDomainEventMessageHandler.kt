@@ -1,6 +1,8 @@
 package org.enodeframework.queue.domainevent
 
 import com.google.common.base.Strings
+import org.enodeframework.commanding.CommandReturnType
+import org.enodeframework.commanding.CommandStatus
 import org.enodeframework.common.extensions.SysProperties
 import org.enodeframework.common.io.Task
 import org.enodeframework.common.serializing.SerializeService
@@ -17,18 +19,24 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 
 class DefaultDomainEventMessageHandler(
-    val sendReplyService: SendReplyService,
+    private val sendReplyService: SendReplyService,
     private val domainEventMessageProcessor: ProcessingEventProcessor,
     private val eventSerializer: EventSerializer,
-    private val serializeService: SerializeService
+    private val serializeService: SerializeService,
+    private var isSendEventHandledMessage: Boolean = true
 ) : MessageHandler {
-    private val logger = LoggerFactory.getLogger(DefaultDomainEventMessageHandler::class.java)
+    constructor(
+        sendReplyService: SendReplyService,
+        domainEventMessageProcessor: ProcessingEventProcessor,
+        eventSerializer: EventSerializer,
+        serializeService: SerializeService
+    ) : this(sendReplyService, domainEventMessageProcessor, eventSerializer, serializeService, true)
 
-    var isSendEventHandledMessage = true
+    private val logger = LoggerFactory.getLogger(DefaultDomainEventMessageHandler::class.java)
 
     override fun handle(queueMessage: QueueMessage, context: MessageContext) {
         logger.info("Received event stream message: {}", queueMessage)
-        val message = serializeService.deserialize(queueMessage.body, GenericDomainEventMessage::class.java)
+        val message = serializeService.deserializeBytes(queueMessage.body, GenericDomainEventMessage::class.java)
         val domainEventStreamMessage = convertToDomainEventStream(message)
         val processContext = DomainEventStreamProcessContext(this, domainEventStreamMessage, queueMessage, context)
         val processingMessage = ProcessingEvent(domainEventStreamMessage, processContext)
@@ -49,7 +57,7 @@ class DefaultDomainEventMessageHandler(
         return domainEventStreamMessage
     }
 
-    internal class DomainEventStreamProcessContext(
+    class DomainEventStreamProcessContext(
         private val eventConsumer: DefaultDomainEventMessageHandler,
         private val domainEventStreamMessage: DomainEventStream,
         private val queueMessage: QueueMessage,
@@ -65,11 +73,14 @@ class DefaultDomainEventMessageHandler(
                 return Task.completedTask
             }
             val commandResult = domainEventStreamMessage.items[SysProperties.ITEMS_COMMAND_RESULT_KEY] as String?
-            val domainEventHandledMessage = DomainEventHandledMessage()
-            domainEventHandledMessage.commandId = domainEventStreamMessage.commandId
-            domainEventHandledMessage.aggregateRootId = domainEventStreamMessage.aggregateRootId
-            domainEventHandledMessage.commandResult = commandResult ?: ""
-            return eventConsumer.sendReplyService.sendEventReply(domainEventHandledMessage, address!!)
+            val replyMessage = DomainEventHandledMessage()
+            replyMessage.commandId = domainEventStreamMessage.commandId
+            replyMessage.aggregateRootId = domainEventStreamMessage.aggregateRootId
+            replyMessage.result = commandResult ?: ""
+            replyMessage.address = address ?: ""
+            replyMessage.status = CommandStatus.Success
+            replyMessage.returnType = CommandReturnType.EventHandled
+            return eventConsumer.sendReplyService.send(replyMessage).thenApply { true }
         }
     }
 

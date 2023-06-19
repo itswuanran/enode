@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import io.vertx.core.Vertx;
 import org.enodeframework.jdbc.JDBCEventStore;
 import org.enodeframework.jdbc.JDBCPublishedVersionStore;
-import org.enodeframework.queue.DefaultSendReplyService;
 import org.enodeframework.queue.command.DefaultCommandResultProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,8 +25,6 @@ public class EventAppConfig {
     @Autowired
     private DefaultCommandResultProcessor commandResultProcessor;
     @Autowired
-    private DefaultSendReplyService sendReplyService;
-    @Autowired
     private JDBCEventStore jdbcEventStore;
     @Autowired
     private JDBCPublishedVersionStore jdbcPublishedVersionStore;
@@ -46,8 +43,6 @@ public class EventAppConfig {
     @Bean
     public Vertx vertx() {
         Vertx vertx = Vertx.vertx();
-        vertx.deployVerticle(commandResultProcessor);
-        vertx.deployVerticle(sendReplyService);
         vertx.deployVerticle(jdbcEventStore);
         vertx.deployVerticle(jdbcPublishedVersionStore);
         return vertx;

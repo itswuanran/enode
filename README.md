@@ -45,7 +45,6 @@
 - 先进的`Saga`机制，以事件驱动的流程管理器（`Process Manager`）的方式支持一个用户操作跨多个聚合根的业务场景，如订单处理，从而避免分布式事务的使用
 - 基于`ES`（`Event Sourcing`）的思想持久化`C`端的聚合根的状态，让`C`端的数据持久化变得通用化，具有一切`ES`的优点
 - 在设计上完全与IoC容器解耦，同时保留了扩展性，目前适配了SpringBoot
--
 
 通过基于分布式消息队列横向扩展的方式实现系统的可伸缩性（基于队列的动态扩容/缩容），接口抽象极简，只要求最基础的队列能力，目前适配了`Kafka`、`RocketMQ（ONS）`、`Pulsar`
 
@@ -76,6 +75,11 @@
 
 `enode`在使用便利性了做了很多尝试和努力，而且针对消息队列和`EventStore`的实现对开发者都是开放的，同时和`Spring`高度集成，开箱即用。
 
+## 重新思考CommandBus
+为了支持CommandBus同步返回结果，目前使用的TCP server的方式返回，在分布式系统中会出现一种网状调用，复杂的调用关系很难跟踪，同时维护困难。为了架构的简洁，引入消息通道 来支撑点对点的消息通信。
+
+原有的 server更像一种观察者模式，引入消息通道后，增加缓冲区，是一种标准的生产-消费模型
+
 ## 启动配置
 
 新增`@EnableEnode`注解，可自动配置`Bean`，简化了接入方式。
@@ -94,16 +98,19 @@ public class App {
 ```
 
 ### `Spring Boot`启动配置文件
-
-如果需要使用`RokcetMQ`和`ONS`的`tag`功能，相应的配置`spring.enode.mq.tag.*`属性即可：
+依赖的系统配置属性
 
 ```properties
-# enode eventstore (memory, mysql, tidb, pg, mongo)
-spring.enode.eventstore=mongo
-# enode messagequeue (kafka, pulsar, rocketmq, ons)
+# enode eventstore (memory,mysql,pg,mongo,jdbc-mysql,jdbc-pg)
+spring.enode.eventstore=mysql
+# enode message queue (kafka,rocketmq,ons,pulsar,amqp)
 spring.enode.mq=kafka
 spring.enode.mq.topic.command=EnodeBankCommandTopic
 spring.enode.mq.topic.event=EnodeBankEventTopic
+
+# enode reply queue typo (tcp,redis,kafka,rocketmq,ons,pulsar,amqp)
+spring.enode.reply=tcp
+spring.enode.reply.topic=EnodeBankReplyTopic
 ```
 
 ### `kafka bean`配置
@@ -589,6 +596,9 @@ aggregateRootType.getDeclaredConstructor().newInstance();
 `event`的订阅者可能有很多个，所以`enode`
 只要求有一个订阅者处理完事件后发送结果给发送命令的人即可，通过`defaultDomainEventMessageHandler`
 中`sendEventHandledMessage`参数来设置是否发送，最终来决定由哪个订阅者来发送命令处理结果。
+
+### application和exception消息的topic不见了
+消息队列经过几次重构，把application和exception消息全部整合到domain event队列中去了，减少消息接入的复杂度
 
 ## 参考项目
 

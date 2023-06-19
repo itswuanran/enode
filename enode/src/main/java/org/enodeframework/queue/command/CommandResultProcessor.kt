@@ -3,6 +3,7 @@ package org.enodeframework.queue.command
 import org.enodeframework.commanding.CommandMessage
 import org.enodeframework.commanding.CommandResult
 import org.enodeframework.commanding.CommandReturnType
+import org.enodeframework.queue.reply.GenericReplyMessage
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -15,7 +16,7 @@ interface CommandResultProcessor {
         taskCompletionSource: CompletableFuture<CommandResult>
     )
 
-    fun getBindAddress(): String
+    fun processReplyMessage(replyMessage: GenericReplyMessage)
 
-    fun processFailedSendingCommand(command: CommandMessage)
+    fun replyAddress(): String
 }
