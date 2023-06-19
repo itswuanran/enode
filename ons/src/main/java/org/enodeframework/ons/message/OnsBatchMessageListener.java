@@ -39,9 +39,9 @@ public class OnsBatchMessageListener implements BatchMessageListener {
 
     private static final Logger logger = LoggerFactory.getLogger(OnsBatchMessageListener.class);
 
-    private final Map<Character, MessageHandler> messageHandlerMap;
+    private final Map<String, MessageHandler> messageHandlerMap;
 
-    public OnsBatchMessageListener(Map<Character, MessageHandler> messageHandlerMap) {
+    public OnsBatchMessageListener(Map<String, MessageHandler> messageHandlerMap) {
         this.messageHandlerMap = messageHandlerMap;
     }
 

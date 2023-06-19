@@ -4,8 +4,8 @@ import com.zaxxer.hikari.HikariDataSource;
 import io.vertx.core.Vertx;
 import org.enodeframework.jdbc.JDBCEventStore;
 import org.enodeframework.jdbc.JDBCPublishedVersionStore;
-import org.enodeframework.queue.DefaultSendReplyService;
 import org.enodeframework.queue.command.DefaultCommandResultProcessor;
+import org.enodeframework.rocketmq.message.RocketMQSendReplyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -26,7 +26,7 @@ public class EventAppConfig {
     @Autowired
     private DefaultCommandResultProcessor commandResultProcessor;
     @Autowired
-    private DefaultSendReplyService sendReplyService;
+    private RocketMQSendReplyService sendReplyService;
     @Autowired
     private JDBCEventStore jdbcEventStore;
     @Autowired
@@ -46,8 +46,6 @@ public class EventAppConfig {
     @Bean
     public Vertx vertx() {
         Vertx vertx = Vertx.vertx();
-        vertx.deployVerticle(commandResultProcessor);
-        vertx.deployVerticle(sendReplyService);
         vertx.deployVerticle(jdbcEventStore);
         vertx.deployVerticle(jdbcPublishedVersionStore);
         return vertx;

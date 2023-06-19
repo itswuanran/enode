@@ -26,6 +26,7 @@ import org.apache.rocketmq.client.producer.selector.SelectMessageQueueByHash;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.enodeframework.common.exception.IORuntimeException;
+import org.enodeframework.common.extensions.SysProperties;
 import org.enodeframework.queue.QueueMessage;
 import org.enodeframework.queue.SendMessageResult;
 import org.enodeframework.queue.SendMessageService;
@@ -76,11 +77,8 @@ public class RocketMQSendMessageService implements SendMessageService {
     }
 
     private Message covertToProducerRecord(QueueMessage queueMessage) {
-        Message message = new Message(
-            queueMessage.getTopic(),
-            queueMessage.getTag(),
-            queueMessage.getKey(),
-            queueMessage.getBodyAndType().getBytes(StandardCharsets.UTF_8));
+        Message message = new Message(queueMessage.getTopic(), queueMessage.getTag(), queueMessage.getKey(), queueMessage.getBody().getBytes(StandardCharsets.UTF_8));
+        message.putUserProperty(SysProperties.MESSAGE_TYPE_KEY, queueMessage.getType());
         return message;
     }
 }

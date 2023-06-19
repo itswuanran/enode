@@ -20,7 +20,10 @@ package org.enodeframework.kafka;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.internals.RecordHeader;
 import org.enodeframework.common.exception.IORuntimeException;
+import org.enodeframework.common.extensions.SysProperties;
 import org.enodeframework.queue.QueueMessage;
 import org.enodeframework.queue.SendMessageResult;
 import org.enodeframework.queue.SendMessageService;
@@ -66,6 +69,9 @@ public class KafkaSendMessageService implements SendMessageService {
     }
 
     private ProducerRecord<String, String> covertToProducerRecord(QueueMessage queueMessage) {
-        return new ProducerRecord<>(queueMessage.getTopic(), queueMessage.getRouteKey(), queueMessage.getBodyAndType());
+        ProducerRecord<String, String> record = new ProducerRecord<>(queueMessage.getTopic(), queueMessage.getRouteKey(), queueMessage.getBody());
+        Header mTypeHeader = new RecordHeader(SysProperties.MESSAGE_TYPE_KEY, queueMessage.getType().getBytes());
+        record.headers().add(mTypeHeader);
+        return record;
     }
 }

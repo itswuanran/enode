@@ -20,6 +20,7 @@ package org.enode.pulsar.message;
 
 import org.apache.pulsar.client.api.Producer;
 import org.enodeframework.common.exception.IORuntimeException;
+import org.enodeframework.common.extensions.SysProperties;
 import org.enodeframework.queue.QueueMessage;
 import org.enodeframework.queue.SendMessageResult;
 import org.enodeframework.queue.SendMessageService;
@@ -36,9 +37,9 @@ public class PulsarSendMessageService implements SendMessageService {
 
     private static final Logger logger = LoggerFactory.getLogger(PulsarSendMessageService.class);
 
-    private final Map<Character, Producer<byte[]>> producerMap;
+    private final Map<String, Producer<byte[]>> producerMap;
 
-    public PulsarSendMessageService(Map<Character, Producer<byte[]>> producerMap) {
+    public PulsarSendMessageService(Map<String, Producer<byte[]>> producerMap) {
         this.producerMap = producerMap;
     }
 
@@ -55,7 +56,8 @@ public class PulsarSendMessageService implements SendMessageService {
         }
         producer.newMessage()
             .key(queueMessage.getRouteKey())
-            .value(queueMessage.getBodyAndType().getBytes())
+            .property(SysProperties.MESSAGE_TYPE_KEY, queueMessage.getType())
+            .value(queueMessage.getBody().getBytes())
             .orderingKey(queueMessage.getKey().getBytes())
             .sendAsync()
             .whenComplete((messageId, throwable) -> {

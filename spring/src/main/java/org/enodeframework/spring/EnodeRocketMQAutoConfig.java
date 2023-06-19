@@ -40,7 +40,7 @@ public class EnodeRocketMQAutoConfig {
         MessageHandler defaultPublishableExceptionMessageHandler,
         @Qualifier(value = "defaultApplicationMessageHandler") MessageHandler defaultApplicationMessageHandler,
         @Qualifier(value = "defaultDomainEventMessageHandler") MessageHandler defaultDomainEventMessageHandler) {
-        Map<Character, MessageHandler> messageHandlerMap = new HashMap<>();
+        Map<String, MessageHandler> messageHandlerMap = new HashMap<>();
         messageHandlerMap.put(MessageTypeCode.DomainEventMessage.getValue(), defaultDomainEventMessageHandler);
         messageHandlerMap.put(MessageTypeCode.ApplicationMessage.getValue(), defaultApplicationMessageHandler);
         messageHandlerMap.put(MessageTypeCode.ExceptionMessage.getValue(), defaultPublishableExceptionMessageHandler);
@@ -51,8 +51,17 @@ public class EnodeRocketMQAutoConfig {
     @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "command")
     public RocketMQMessageListener rocketMQCommandListener(
         @Qualifier(value = "defaultCommandMessageHandler") MessageHandler defaultCommandMessageHandler) {
-        Map<Character, MessageHandler> messageHandlerMap = new HashMap<>();
+        Map<String, MessageHandler> messageHandlerMap = new HashMap<>();
         messageHandlerMap.put(MessageTypeCode.CommandMessage.getValue(), defaultCommandMessageHandler);
+        return new RocketMQMessageListener(messageHandlerMap);
+    }
+
+    @Bean(name = "rocketMQReplyListener")
+    @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "reply")
+    public RocketMQMessageListener rocketMQReplyListener(
+        @Qualifier(value = "defaultReplyMessageHandler") MessageHandler defaultReplyMessageHandler) {
+        Map<String, MessageHandler> messageHandlerMap = new HashMap<>();
+        messageHandlerMap.put(MessageTypeCode.ReplyMessage.getValue(), defaultReplyMessageHandler);
         return new RocketMQMessageListener(messageHandlerMap);
     }
 

@@ -19,6 +19,7 @@
 package org.enodeframework.kafka;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.enodeframework.common.extensions.SysProperties;
 import org.enodeframework.queue.MessageHandler;
 import org.enodeframework.queue.QueueMessage;
 import org.slf4j.Logger;
@@ -27,6 +28,7 @@ import org.springframework.kafka.listener.AcknowledgingMessageListener;
 import org.springframework.kafka.support.Acknowledgment;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author anruence@gmail.com
@@ -35,9 +37,9 @@ public class KafkaMessageListener implements AcknowledgingMessageListener<String
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaMessageListener.class);
 
-    private final Map<Character, MessageHandler> messageHandlerMap;
+    private final Map<String, MessageHandler> messageHandlerMap;
 
-    public KafkaMessageListener(Map<Character, MessageHandler> messageHandlerMap) {
+    public KafkaMessageListener(Map<String, MessageHandler> messageHandlerMap) {
         this.messageHandlerMap = messageHandlerMap;
     }
 
@@ -63,10 +65,10 @@ public class KafkaMessageListener implements AcknowledgingMessageListener<String
     }
 
     private QueueMessage covertToQueueMessage(ConsumerRecord<String, String> record) {
+        String mType = Optional.ofNullable(record.headers().lastHeader(SysProperties.MESSAGE_TYPE_KEY)).map(x -> new String(x.value())).orElse("");
         QueueMessage queueMessage = new QueueMessage();
-        int length = record.value().length();
-        queueMessage.setBody(record.value().substring(0, length - 2));
-        queueMessage.setType(record.value().charAt(length - 1));
+        queueMessage.setBody(record.value());
+        queueMessage.setType(mType);
         queueMessage.setTopic(record.topic());
         queueMessage.setRouteKey(record.key());
         queueMessage.setKey(record.key());

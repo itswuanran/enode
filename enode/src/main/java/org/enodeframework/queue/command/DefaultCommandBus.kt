@@ -11,6 +11,7 @@ import org.enodeframework.queue.MessageTypeCode
 import org.enodeframework.queue.QueueMessage
 import org.enodeframework.queue.SendMessageResult
 import org.enodeframework.queue.SendMessageService
+import org.enodeframework.queue.reply.GenericReplyMessage
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -36,8 +37,7 @@ class DefaultCommandBus(
     }
 
     override fun executeAsync(
-        command: CommandMessage,
-        commandReturnType: CommandReturnType
+        command: CommandMessage, commandReturnType: CommandReturnType
     ): CompletableFuture<CommandResult> {
         val taskCompletionSource = CompletableFuture<CommandResult>()
         try {
@@ -45,7 +45,12 @@ class DefaultCommandBus(
             commandResultProcessor.registerProcessingCommand(command, commandReturnType, taskCompletionSource)
             val sendMessageAsync = sendMessageService.sendMessageAsync(buildCommandMessage(command, true))
             sendMessageAsync.exceptionally { ex: Throwable ->
-                commandResultProcessor.processFailedSendingCommand(command)
+                val replyMessage = GenericReplyMessage()
+                replyMessage.commandId = command.id
+                replyMessage.aggregateRootId = command.aggregateRootId
+                replyMessage.returnType = commandReturnType.value
+                replyMessage.result = ex.message ?: ""
+                commandResultProcessor.processReplyMessage(replyMessage)
                 taskCompletionSource.completeExceptionally(ex)
                 null
             }
@@ -69,7 +74,7 @@ class DefaultCommandBus(
         val commandData = serializeService.serialize(command)
         val genericCommandMessage = GenericCommandMessage()
         if (needReply) {
-            genericCommandMessage.replyAddress = commandResultProcessor.getBindAddress()
+            genericCommandMessage.replyAddress = commandResultProcessor.uniqueReplyAddress()
         }
         genericCommandMessage.commandData = commandData
         genericCommandMessage.commandType = command.javaClass.name

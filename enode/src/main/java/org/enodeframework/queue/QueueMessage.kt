@@ -36,18 +36,10 @@ class QueueMessage : Serializable {
      * 消息类型
      * [MessageTypeCode]
      */
-    var type: Char = MessageTypeCode.Default.value
-    val bodyAndType: String
-        get() = "$body|$type"
+    var type: String = MessageTypeCode.Default.value
 
     override fun toString(): String {
-        return MoreObjects.toStringHelper(this)
-            .add("body", body)
-            .add("topic", topic)
-            .add("tag", tag)
-            .add("routeKey", routeKey)
-            .add("key", key)
-            .add("type", type)
-            .toString()
+        return MoreObjects.toStringHelper(this).add("body", body).add("topic", topic).add("tag", tag)
+            .add("routeKey", routeKey).add("key", key).add("type", type).toString()
     }
 }

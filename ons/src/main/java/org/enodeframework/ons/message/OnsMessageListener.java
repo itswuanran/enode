@@ -38,9 +38,9 @@ public class OnsMessageListener implements MessageListener {
 
     private static final Logger logger = LoggerFactory.getLogger(OnsMessageListener.class);
 
-    private final Map<Character, MessageHandler> messageHandlerMap;
+    private final Map<String, MessageHandler> messageHandlerMap;
 
-    public OnsMessageListener(Map<Character, MessageHandler> messageHandlerMap) {
+    public OnsMessageListener(Map<String, MessageHandler> messageHandlerMap) {
         this.messageHandlerMap = messageHandlerMap;
     }
 

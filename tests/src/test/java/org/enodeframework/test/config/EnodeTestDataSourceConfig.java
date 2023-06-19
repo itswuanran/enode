@@ -11,7 +11,7 @@ import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.PoolOptions;
 import org.enodeframework.jdbc.JDBCEventStore;
 import org.enodeframework.jdbc.JDBCPublishedVersionStore;
-import org.enodeframework.queue.DefaultSendReplyService;
+import org.enodeframework.rocketmq.message.RocketMQSendReplyService;
 import org.enodeframework.queue.command.DefaultCommandResultProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,7 +44,7 @@ public class EnodeTestDataSourceConfig {
     private DefaultCommandResultProcessor commandResultProcessor;
 
     @Autowired
-    private DefaultSendReplyService sendReplyService;
+    private RocketMQSendReplyService sendReplyService;
 
     @Autowired(required = false)
     private JDBCEventStore jdbcEventStore;

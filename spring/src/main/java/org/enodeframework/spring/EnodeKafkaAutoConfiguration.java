@@ -20,6 +20,7 @@ package org.enodeframework.spring;
 
 import org.enodeframework.kafka.KafkaMessageListener;
 import org.enodeframework.kafka.KafkaSendMessageService;
+import org.enodeframework.kafka.KafkaSendReplyService;
 import org.enodeframework.queue.MessageHandler;
 import org.enodeframework.queue.MessageTypeCode;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -35,12 +36,8 @@ public class EnodeKafkaAutoConfiguration {
 
     @Bean(name = "kafkaDomainEventListener")
     @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "event")
-    public KafkaMessageListener publishableExceptionListener(
-        @Qualifier(value = "defaultPublishableExceptionMessageHandler")
-        MessageHandler defaultPublishableExceptionMessageHandler,
-        @Qualifier(value = "defaultApplicationMessageHandler") MessageHandler defaultApplicationMessageHandler,
-        @Qualifier(value = "defaultDomainEventMessageHandler") MessageHandler defaultDomainEventMessageHandler) {
-        Map<Character, MessageHandler> messageHandlerMap = new HashMap<>();
+    public KafkaMessageListener publishableExceptionListener(@Qualifier(value = "defaultPublishableExceptionMessageHandler") MessageHandler defaultPublishableExceptionMessageHandler, @Qualifier(value = "defaultApplicationMessageHandler") MessageHandler defaultApplicationMessageHandler, @Qualifier(value = "defaultDomainEventMessageHandler") MessageHandler defaultDomainEventMessageHandler) {
+        Map<String, MessageHandler> messageHandlerMap = new HashMap<>();
         messageHandlerMap.put(MessageTypeCode.DomainEventMessage.getValue(), defaultDomainEventMessageHandler);
         messageHandlerMap.put(MessageTypeCode.ApplicationMessage.getValue(), defaultApplicationMessageHandler);
         messageHandlerMap.put(MessageTypeCode.ExceptionMessage.getValue(), defaultPublishableExceptionMessageHandler);
@@ -49,16 +46,27 @@ public class EnodeKafkaAutoConfiguration {
 
     @Bean(name = "kafkaCommandListener")
     @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "command")
-    public KafkaMessageListener commandListener(
-        @Qualifier(value = "defaultCommandMessageHandler") MessageHandler defaultCommandMessageHandler) {
-        Map<Character, MessageHandler> messageHandlerMap = new HashMap<>();
+    public KafkaMessageListener commandListener(@Qualifier(value = "defaultCommandMessageHandler") MessageHandler defaultCommandMessageHandler) {
+        Map<String, MessageHandler> messageHandlerMap = new HashMap<>();
         messageHandlerMap.put(MessageTypeCode.CommandMessage.getValue(), defaultCommandMessageHandler);
         return new KafkaMessageListener(messageHandlerMap);
     }
 
     @Bean(name = "kafkaSendMessageService")
-    public KafkaSendMessageService kafkaSendMessageService(
-        @Qualifier(value = "enodeKafkaTemplate") KafkaTemplate<String, String> kafkaTemplate) {
+    public KafkaSendMessageService kafkaSendMessageService(@Qualifier(value = "enodeKafkaTemplate") KafkaTemplate<String, String> kafkaTemplate) {
         return new KafkaSendMessageService(kafkaTemplate);
+    }
+
+    @Bean(name = "kafkaSendReplyService")
+    public KafkaSendReplyService kafkaSendReplyService() {
+        return new KafkaSendReplyService();
+    }
+
+    @Bean(name = "kafkaReplyListener")
+    @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "reply")
+    public KafkaMessageListener replyListener(@Qualifier(value = "defaultReplyMessageHandler") MessageHandler defaultReplyMessageHandler) {
+        Map<String, MessageHandler> messageHandlerMap = new HashMap<>();
+        messageHandlerMap.put(MessageTypeCode.ReplyMessage.getValue(), defaultReplyMessageHandler);
+        return new KafkaMessageListener(messageHandlerMap);
     }
 }

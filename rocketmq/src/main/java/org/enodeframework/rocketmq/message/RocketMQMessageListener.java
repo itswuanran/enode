@@ -22,6 +22,7 @@ import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.common.message.MessageExt;
+import org.enodeframework.common.extensions.SysProperties;
 import org.enodeframework.common.io.Task;
 import org.enodeframework.queue.MessageHandler;
 import org.enodeframework.queue.QueueMessage;
@@ -40,9 +41,9 @@ public class RocketMQMessageListener implements MessageListenerConcurrently {
 
     private static final Logger logger = LoggerFactory.getLogger(RocketMQMessageListener.class);
 
-    private final Map<Character, MessageHandler> messageHandlerMap;
+    private final Map<String, MessageHandler> messageHandlerMap;
 
-    public RocketMQMessageListener(Map<Character, MessageHandler> messageHandlerMap) {
+    public RocketMQMessageListener(Map<String, MessageHandler> messageHandlerMap) {
         this.messageHandlerMap = messageHandlerMap;
     }
 
@@ -68,9 +69,9 @@ public class RocketMQMessageListener implements MessageListenerConcurrently {
     private QueueMessage covertToQueueMessage(MessageExt messageExt) {
         QueueMessage queueMessage = new QueueMessage();
         String value = new String(messageExt.getBody(), StandardCharsets.UTF_8);
-        int length = value.length();
-        queueMessage.setBody(value.substring(0, length - 2));
-        queueMessage.setType(value.charAt(length - 1));
+        String mType = messageExt.getUserProperty(SysProperties.MESSAGE_TYPE_KEY);
+        queueMessage.setBody(value);
+        queueMessage.setType(mType);
         queueMessage.setTopic(messageExt.getTopic());
         queueMessage.setTag(messageExt.getTags());
         queueMessage.setKey(messageExt.getKeys());

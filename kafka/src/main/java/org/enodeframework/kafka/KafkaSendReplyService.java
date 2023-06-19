@@ -16,18 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.enodeframework.common.extensions;
+package org.enodeframework.kafka;
+
+import org.enodeframework.messaging.ReplyMessage;
+import org.enodeframework.queue.SendMessageResult;
+import org.enodeframework.queue.SendReplyService;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author anruence@gmail.com
  */
-public class SysProperties {
-    /**
-     * 聚合根方法执行时声明的name
-     */
-    public static final String AGGREGATE_ROOT_HANDLE_METHOD_NAME_PREFIX = "handle";
+public class KafkaSendReplyService implements SendReplyService {
 
-    public static final String ITEMS_COMMAND_RESULT_KEY = "COMMAND_RESULT";
-    public static final String MESSAGE_TYPE_KEY = "MESSAGE_TYPE";
-    public static final String ITEMS_COMMAND_REPLY_ADDRESS_KEY = "COMMAND_REPLY_ADDRESS";
+    @NotNull
+    @Override
+    public CompletableFuture<SendMessageResult> send(@NotNull ReplyMessage message) {
+        // TODO
+        return null;
+    }
 }

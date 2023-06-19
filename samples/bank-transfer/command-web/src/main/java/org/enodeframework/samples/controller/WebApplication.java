@@ -2,7 +2,7 @@ package org.enodeframework.samples.controller;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
-import org.enodeframework.queue.DefaultSendReplyService;
+import org.enodeframework.rocketmq.message.RocketMQSendReplyService;
 import org.enodeframework.queue.command.DefaultCommandResultProcessor;
 import org.enodeframework.spring.EnableEnode;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,7 @@ public class WebApplication {
     @Autowired
     private DefaultCommandResultProcessor commandResultProcessor;
     @Autowired
-    private DefaultSendReplyService sendReplyService;
+    private RocketMQSendReplyService sendReplyService;
 
     public static void main(String[] args) {
         SpringApplication.run(WebApplication.class, args);
@@ -28,9 +28,6 @@ public class WebApplication {
     public Vertx vertx() {
         VertxOptions options = new VertxOptions();
         Vertx vertx = Vertx.vertx();
-        vertx.isClustered();
-        vertx.deployVerticle(commandResultProcessor);
-        vertx.deployVerticle(sendReplyService);
         return vertx;
     }
 }

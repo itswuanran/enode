@@ -54,7 +54,7 @@ public class EnodePulsarAutoConfig {
         MessageHandler defaultPublishableExceptionMessageHandler,
         @Qualifier(value = "defaultApplicationMessageHandler") MessageHandler defaultApplicationMessageHandler,
         @Qualifier(value = "defaultDomainEventMessageHandler") MessageHandler defaultDomainEventMessageHandler) {
-        Map<Character, MessageHandler> messageHandlerMap = new HashMap<>();
+        Map<String, MessageHandler> messageHandlerMap = new HashMap<>();
         messageHandlerMap.put(MessageTypeCode.DomainEventMessage.getValue(), defaultDomainEventMessageHandler);
         messageHandlerMap.put(MessageTypeCode.ApplicationMessage.getValue(), defaultApplicationMessageHandler);
         messageHandlerMap.put(MessageTypeCode.ExceptionMessage.getValue(), defaultPublishableExceptionMessageHandler);
@@ -65,14 +65,24 @@ public class EnodePulsarAutoConfig {
     @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "command")
     public PulsarMessageListener pulsarCommandListener(
         @Qualifier(value = "defaultCommandMessageHandler") MessageHandler defaultCommandMessageHandler) {
-        Map<Character, MessageHandler> messageHandlerMap = new HashMap<>();
+        Map<String, MessageHandler> messageHandlerMap = new HashMap<>();
         messageHandlerMap.put(MessageTypeCode.CommandMessage.getValue(), defaultCommandMessageHandler);
+        return new PulsarMessageListener(messageHandlerMap);
+    }
+
+
+    @Bean(name = "pulsarReplyListener")
+    @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "reply")
+    public PulsarMessageListener pulsarReplyListener(
+        @Qualifier(value = "defaultReplyMessageHandler") MessageHandler defaultReplyMessageHandler) {
+        Map<String, MessageHandler> messageHandlerMap = new HashMap<>();
+        messageHandlerMap.put(MessageTypeCode.ReplyMessage.getValue(), defaultReplyMessageHandler);
         return new PulsarMessageListener(messageHandlerMap);
     }
 
     @Bean(name = "pulsarSendMessageService")
     public PulsarSendMessageService pulsarSendMessageService() {
-        Map<Character, Producer<byte[]>> producers = Maps.newHashMap();
+        Map<String, Producer<byte[]>> producers = Maps.newHashMap();
         producers.put(MessageTypeCode.CommandMessage.getValue(), enodePulsarCommandProducer);
         producers.put(MessageTypeCode.DomainEventMessage.getValue(), enodePulsarDomainEventProducer);
         producers.put(MessageTypeCode.ExceptionMessage.getValue(), enodePulsarPublishableExceptionProducer);

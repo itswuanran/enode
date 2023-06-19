@@ -271,7 +271,7 @@ public class EnodeCoreTest extends AbstractTest {
         command.setAggregateRootId(IdGenerator.id());
         CommandResult commandResult = Task.await(commandService.executeAsync(command));
         Assert.assertNotNull(commandResult);
-        Assert.assertEquals(CommandStatus.NothingChanged, commandResult.getStatus());
+        Assert.assertEquals(CommandStatus.NoChange, commandResult.getStatus());
     }
 
     @Test
@@ -358,7 +358,7 @@ public class EnodeCoreTest extends AbstractTest {
         command.setAggregateRootId(IdGenerator.id());
         CommandResult commandResult = Task.await(commandService.executeAsync(command));
         Assert.assertNotNull(commandResult);
-        Assert.assertEquals(CommandStatus.NothingChanged, commandResult.getStatus());
+        Assert.assertEquals(CommandStatus.NoChange, commandResult.getStatus());
         Assert.assertEquals("ResultFromBaseCommand", commandResult.getResult());
         command = new ChildCommand();
         command.setAggregateRootId(IdGenerator.id());
@@ -366,7 +366,7 @@ public class EnodeCoreTest extends AbstractTest {
         Assert.assertNotNull(commandResult);
 
 
-        Assert.assertEquals(CommandStatus.NothingChanged, commandResult.getStatus());
+        Assert.assertEquals(CommandStatus.NoChange, commandResult.getStatus());
         Assert.assertEquals("ResultFromChildCommand", commandResult.getResult());
     }
 
@@ -393,7 +393,7 @@ public class EnodeCoreTest extends AbstractTest {
         command1.setShouldThrowIOException(true);
         commandResult = Task.await(commandService.executeAsync(command1));
         Assert.assertNotNull(commandResult);
-        Assert.assertEquals(CommandStatus.NothingChanged, commandResult.getStatus());
+        Assert.assertEquals(CommandStatus.NoChange, commandResult.getStatus());
     }
 
     @Test
@@ -453,12 +453,12 @@ public class EnodeCoreTest extends AbstractTest {
         command.setAggregateRootId(IdGenerator.id());
         CommandResult commandResult = Task.await(commandService.executeAsync(command));
         Assert.assertNotNull(commandResult);
-        Assert.assertEquals(CommandStatus.NothingChanged, commandResult.getStatus());
+        Assert.assertEquals(CommandStatus.NoChange, commandResult.getStatus());
         command = new AsyncHandlerChildCommand();
         command.setAggregateRootId(IdGenerator.id());
         commandResult = Task.await(commandService.executeAsync(command));
         Assert.assertNotNull(commandResult);
-        Assert.assertEquals(CommandStatus.NothingChanged, commandResult.getStatus());
+        Assert.assertEquals(CommandStatus.NoChange, commandResult.getStatus());
     }
 
     /**

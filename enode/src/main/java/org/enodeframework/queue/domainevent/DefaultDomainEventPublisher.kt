@@ -18,9 +18,9 @@ class DefaultDomainEventPublisher(
     private val sendMessageService: SendMessageService,
     private val serializeService: SerializeService
 ) : MessagePublisher<DomainEventStream> {
-    protected fun createDomainEventStreamMessage(eventStream: DomainEventStream): QueueMessage {
-        Assert.nonNull(eventStream.aggregateRootId, "aggregateRootId")
+    private fun createDomainEventStreamMessage(eventStream: DomainEventStream): QueueMessage {
         Assert.nonNull(topic, "topic")
+        Assert.nonNull(eventStream.aggregateRootId, "aggregateRootId")
         val message = GenericDomainEventMessage()
         message.id = eventStream.id
         message.commandId = eventStream.commandId

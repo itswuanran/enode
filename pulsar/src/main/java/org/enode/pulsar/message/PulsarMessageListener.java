@@ -37,10 +37,11 @@ import java.util.Map;
 public class PulsarMessageListener implements MessageListener<byte[]> {
 
     private static final Logger logger = LoggerFactory.getLogger(PulsarMessageListener.class);
+    public static String MessageKey = "MessageType";
 
-    private final Map<Character, MessageHandler> messageHandlerMap;
+    private final Map<String, MessageHandler> messageHandlerMap;
 
-    public PulsarMessageListener(Map<Character, MessageHandler> messageHandlerMap) {
+    public PulsarMessageListener(Map<String, MessageHandler> messageHandlerMap) {
         this.messageHandlerMap = messageHandlerMap;
     }
 
@@ -65,10 +66,9 @@ public class PulsarMessageListener implements MessageListener<byte[]> {
     private QueueMessage toQueueMessage(Message<byte[]> messageExt) {
         QueueMessage queueMessage = new QueueMessage();
         String value = new String(messageExt.getValue(), StandardCharsets.UTF_8);
-        int length = value.length();
-        // 格式为{}|1
-        queueMessage.setBody(value.substring(0, length - 2));
-        queueMessage.setType(value.charAt(length - 1));
+        String mType = messageExt.getProperty(MessageKey);
+        queueMessage.setBody(value);
+        queueMessage.setType(mType);
         queueMessage.setTopic(messageExt.getTopicName());
         queueMessage.setRouteKey(messageExt.getKey());
         queueMessage.setKey(new String(messageExt.getOrderingKey(), StandardCharsets.UTF_8));
