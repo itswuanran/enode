@@ -5,12 +5,14 @@ import org.enodeframework.commanding.CommandBus
 import org.enodeframework.commanding.CommandMessage
 import org.enodeframework.commanding.CommandResult
 import org.enodeframework.commanding.CommandReturnType
+import org.enodeframework.commanding.CommandStatus
 import org.enodeframework.common.serializing.SerializeService
 import org.enodeframework.common.utils.Assert
 import org.enodeframework.queue.MessageTypeCode
 import org.enodeframework.queue.QueueMessage
 import org.enodeframework.queue.SendMessageResult
 import org.enodeframework.queue.SendMessageService
+import org.enodeframework.queue.reply.GenericReplyMessage
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -36,18 +38,23 @@ class DefaultCommandBus(
     }
 
     override fun executeAsync(
-        command: CommandMessage,
-        commandReturnType: CommandReturnType
+        command: CommandMessage, commandReturnType: CommandReturnType
     ): CompletableFuture<CommandResult> {
         val taskCompletionSource = CompletableFuture<CommandResult>()
         try {
             Assert.nonNull(commandResultProcessor, "commandResultProcessor")
             commandResultProcessor.registerProcessingCommand(command, commandReturnType, taskCompletionSource)
-            val sendMessageAsync = sendMessageService.sendMessageAsync(buildCommandMessage(command, true))
-            sendMessageAsync.exceptionally { ex: Throwable ->
-                commandResultProcessor.processFailedSendingCommand(command)
-                taskCompletionSource.completeExceptionally(ex)
-                null
+            sendMessageService.sendMessageAsync(buildCommandMessage(command, true)).whenComplete { _, ex: Throwable? ->
+                if (ex != null) {
+                    val replyMessage = GenericReplyMessage()
+                    replyMessage.status = CommandStatus.SendFailed.value
+                    replyMessage.commandId = command.id
+                    replyMessage.aggregateRootId = command.aggregateRootId
+                    replyMessage.returnType = commandReturnType.value
+                    replyMessage.result = ex.message ?: ""
+                    commandResultProcessor.processReplyMessage(replyMessage)
+                    taskCompletionSource.completeExceptionally(ex)
+                }
             }
         } catch (ex: Exception) {
             taskCompletionSource.completeExceptionally(ex)
@@ -69,11 +76,11 @@ class DefaultCommandBus(
         val commandData = serializeService.serialize(command)
         val genericCommandMessage = GenericCommandMessage()
         if (needReply) {
-            genericCommandMessage.replyAddress = commandResultProcessor.getBindAddress()
+            genericCommandMessage.replyAddress = commandResultProcessor.replyAddress()
         }
         genericCommandMessage.commandData = commandData
         genericCommandMessage.commandType = command.javaClass.name
-        val messageData = serializeService.serialize(genericCommandMessage)
+        val messageData = serializeService.serializeBytes(genericCommandMessage)
         val queueMessage = QueueMessage()
         queueMessage.topic = topic
         queueMessage.tag = tag

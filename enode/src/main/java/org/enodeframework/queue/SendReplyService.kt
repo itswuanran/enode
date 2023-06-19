@@ -1,17 +1,11 @@
 package org.enodeframework.queue
 
-import org.enodeframework.commanding.CommandResult
-import org.enodeframework.queue.domainevent.DomainEventHandledMessage
+import org.enodeframework.messaging.ReplyMessage
 import java.util.concurrent.CompletableFuture
 
 interface SendReplyService {
     /**
-     * Send command handle result
+     * Send command event handle result
      */
-    fun sendCommandReply(commandResult: CommandResult, address: String): CompletableFuture<Boolean>
-
-    /**
-     * Send event handle result
-     */
-    fun sendEventReply(eventHandledMessage: DomainEventHandledMessage, address: String): CompletableFuture<Boolean>
+    fun send(message: ReplyMessage): CompletableFuture<SendMessageResult>
 }

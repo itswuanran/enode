@@ -28,11 +28,6 @@ class CommandResult {
     var result: String = ""
         private set
 
-    /**
-     * Represents the command result data type.
-     */
-    var resultType: String = ""
-        private set
 
     constructor()
 
@@ -44,12 +39,10 @@ class CommandResult {
         commandId: String,
         aggregateRootId: String,
         result: String,
-        resultType: String
     ) {
         this.status = status
         this.commandId = commandId
         this.aggregateRootId = aggregateRootId
         this.result = result
-        this.resultType = resultType
     }
 }

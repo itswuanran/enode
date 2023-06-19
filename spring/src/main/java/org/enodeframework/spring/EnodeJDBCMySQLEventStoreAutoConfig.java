@@ -37,7 +37,7 @@ public class EnodeJDBCMySQLEventStoreAutoConfig {
         EventSerializer eventSerializer,
         SerializeService serializeService) {
         JDBCEventStore eventStore = new JDBCEventStore(
-            enodeMySQLDataSource, DefaultEventStoreConfiguration.Driver.mysql(), eventSerializer, serializeService);
+            enodeMySQLDataSource, DefaultEventStoreOptions.Driver.mysql(), eventSerializer, serializeService);
         return eventStore;
     }
 
@@ -45,7 +45,7 @@ public class EnodeJDBCMySQLEventStoreAutoConfig {
     public JDBCPublishedVersionStore jdbcPublishedVersionStore(
         @Qualifier("enodeMySQLDataSource") DataSource enodeMySQLDataSource) {
         JDBCPublishedVersionStore publishedVersionStore =
-            new JDBCPublishedVersionStore(enodeMySQLDataSource, DefaultEventStoreConfiguration.Driver.mysql());
+            new JDBCPublishedVersionStore(enodeMySQLDataSource, DefaultEventStoreOptions.Driver.mysql());
         return publishedVersionStore;
     }
 }

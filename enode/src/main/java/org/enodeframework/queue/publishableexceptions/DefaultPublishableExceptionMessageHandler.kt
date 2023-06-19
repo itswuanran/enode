@@ -20,7 +20,7 @@ class DefaultPublishableExceptionMessageHandler(
     override fun handle(queueMessage: QueueMessage, context: MessageContext) {
         logger.info("Received domain exception message: {}", queueMessage)
         val exceptionMessage =
-            serializeService.deserialize(queueMessage.body, GenericPublishableExceptionMessage::class.java)
+            serializeService.deserializeBytes(queueMessage.body, GenericPublishableExceptionMessage::class.java)
         val exceptionType = typeNameProvider.getType(exceptionMessage.exceptionType)
         val exception: DomainExceptionMessage = try {
             exceptionType.getDeclaredConstructor().newInstance() as DomainExceptionMessage

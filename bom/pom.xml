@@ -104,6 +104,21 @@
                 <artifactId>enode-metrics</artifactId>
                 <version>${revision}</version>
             </dependency>
+            <dependency>
+                <groupId>org.enodeframework</groupId>
+                <artifactId>enode-tcp</artifactId>
+                <version>${revision}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.enodeframework</groupId>
+                <artifactId>enode-redis</artifactId>
+                <version>${revision}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.enodeframework</groupId>
+                <artifactId>enode-amqp</artifactId>
+                <version>${revision}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <build>

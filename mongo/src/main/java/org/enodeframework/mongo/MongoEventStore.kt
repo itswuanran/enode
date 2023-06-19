@@ -14,7 +14,7 @@ import org.enodeframework.eventing.DomainEventStream
 import org.enodeframework.eventing.EventAppendResult
 import org.enodeframework.eventing.EventSerializer
 import org.enodeframework.eventing.EventStore
-import org.enodeframework.eventing.EventStoreConfiguration
+import org.enodeframework.eventing.EventStoreOptions
 import org.enodeframework.mongo.handler.MongoAddDomainEventsHandler
 import org.enodeframework.mongo.handler.MongoFindDomainEventsHandler
 import java.util.concurrent.CompletableFuture
@@ -24,7 +24,7 @@ import java.util.concurrent.CompletableFuture
  */
 open class MongoEventStore(
     private val mongoClient: MongoClient,
-    private val options: EventStoreConfiguration,
+    private val options: EventStoreOptions,
     private val eventSerializer: EventSerializer,
     private val serializeService: SerializeService
 ) : EventStore {

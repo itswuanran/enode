@@ -6,11 +6,6 @@ import java.io.Serializable
 /**
  * @author anruence@gmail.com
  */
-class SendMessageResult(var id: String, result: Any) : Serializable {
-
-    var items: MutableMap<String, Any> = Maps.newHashMap()
-
-    init {
-        this.items["result"] = result
-    }
+class SendMessageResult(var id: String, var items: MutableMap<String, Any>) : Serializable {
+    constructor(id: String) : this(id, Maps.newHashMap())
 }

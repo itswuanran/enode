@@ -57,6 +57,14 @@
         </dependency>
         <dependency>
             <groupId>org.enodeframework</groupId>
+            <artifactId>enode-tcp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.enodeframework</groupId>
+            <artifactId>enode-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.enodeframework</groupId>
             <artifactId>enode-mongo</artifactId>
         </dependency>
         <dependency>
@@ -74,6 +82,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

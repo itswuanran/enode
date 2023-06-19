@@ -18,58 +18,69 @@
  */
 package org.enodeframework.kafka;
 
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.enodeframework.common.extensions.SysProperties;
 import org.enodeframework.queue.MessageHandler;
+import org.enodeframework.queue.MessageHandlerHolder;
 import org.enodeframework.queue.QueueMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.kafka.listener.AcknowledgingConsumerAwareMessageListener;
 import org.springframework.kafka.listener.AcknowledgingMessageListener;
+import org.springframework.kafka.listener.ConsumerAwareMessageListener;
 import org.springframework.kafka.support.Acknowledgment;
+import org.springframework.lang.Nullable;
 
-import java.util.Map;
+import javax.annotation.Nonnull;
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 /**
  * @author anruence@gmail.com
  */
-public class KafkaMessageListener implements AcknowledgingMessageListener<String, String> {
+public class KafkaMessageListener implements AcknowledgingMessageListener<String, String>, ConsumerAwareMessageListener<String, String>, AcknowledgingConsumerAwareMessageListener<String, String> {
 
-    private static final Logger logger = LoggerFactory.getLogger(KafkaMessageListener.class);
+    private final MessageHandlerHolder messageHandlerHolder;
 
-    private final Map<Character, MessageHandler> messageHandlerMap;
-
-    public KafkaMessageListener(Map<Character, MessageHandler> messageHandlerMap) {
-        this.messageHandlerMap = messageHandlerMap;
+    public KafkaMessageListener(MessageHandlerHolder messageHandlerHolder) {
+        this.messageHandlerHolder = messageHandlerHolder;
     }
 
-    /**
-     * Invoked with data from kafka.
-     *
-     * @param data           the data to be processed.
-     * @param acknowledgment the acknowledgment.
-     */
     @Override
-    public void onMessage(ConsumerRecord<String, String> data, Acknowledgment acknowledgment) {
+    public void onMessage(@Nonnull ConsumerRecord<String, String> data) {
+        onMessage(data, null, null);
+    }
+
+    @Override
+    public void onMessage(@Nonnull ConsumerRecord<String, String> data, @Nullable Consumer<?, ?> consumer) {
+        onMessage(data, null, null);
+    }
+
+    @Override
+    public void onMessage(@Nonnull ConsumerRecord<String, String> data, @Nullable Acknowledgment acknowledgment) {
+        onMessage(data, acknowledgment, null);
+    }
+
+    private QueueMessage covertToQueueMessage(ConsumerRecord<String, String> record) {
+        String mType = Optional.ofNullable(record.headers().lastHeader(SysProperties.MESSAGE_TYPE_KEY)).map(x -> new String(x.value())).orElse("");
+        String tag = Optional.ofNullable(record.headers().lastHeader(SysProperties.MESSAGE_TAG_KEY)).map(x -> new String(x.value())).orElse("");
+        QueueMessage queueMessage = new QueueMessage();
+        queueMessage.setBody(record.value().getBytes(StandardCharsets.UTF_8));
+        queueMessage.setType(mType);
+        queueMessage.setTag(tag);
+        queueMessage.setTopic(record.topic());
+        queueMessage.setRouteKey(record.key());
+        queueMessage.setKey(record.key());
+        return queueMessage;
+    }
+
+    @Override
+    public void onMessage(ConsumerRecord<String, String> data, @Nullable Acknowledgment acknowledgment, @Nullable Consumer<?, ?> consumer) {
         QueueMessage queueMessage = this.covertToQueueMessage(data);
-        MessageHandler messageHandler = messageHandlerMap.get(queueMessage.getType());
-        if (messageHandler == null) {
-            logger.error("No messageHandler for message: {}.", queueMessage);
-            return;
-        }
+        MessageHandler messageHandler = messageHandlerHolder.chooseMessageHandler(queueMessage.getType());
         messageHandler.handle(queueMessage, context -> {
             if (acknowledgment != null) {
                 acknowledgment.acknowledge();
             }
         });
-    }
-
-    private QueueMessage covertToQueueMessage(ConsumerRecord<String, String> record) {
-        QueueMessage queueMessage = new QueueMessage();
-        int length = record.value().length();
-        queueMessage.setBody(record.value().substring(0, length - 2));
-        queueMessage.setType(record.value().charAt(length - 1));
-        queueMessage.setTopic(record.topic());
-        queueMessage.setRouteKey(record.key());
-        queueMessage.setKey(record.key());
-        return queueMessage;
     }
 }

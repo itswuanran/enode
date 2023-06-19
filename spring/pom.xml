@@ -63,6 +63,21 @@
         </dependency>
         <dependency>
             <groupId>org.enodeframework</groupId>
+            <artifactId>enode-tcp</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.enodeframework</groupId>
+            <artifactId>enode-redis</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.enodeframework</groupId>
+            <artifactId>enode-amqp</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.enodeframework</groupId>
             <artifactId>enode-metrics</artifactId>
             <scope>provided</scope>
         </dependency>

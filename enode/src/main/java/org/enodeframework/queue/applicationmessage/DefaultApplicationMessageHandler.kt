@@ -16,7 +16,7 @@ class DefaultApplicationMessageHandler(
 ) : MessageHandler {
     override fun handle(queueMessage: QueueMessage, context: MessageContext) {
         logger.info("Received application message: {}", queueMessage)
-        val appDataMessage = serializeService.deserialize(queueMessage.body, GenericApplicationMessage::class.java)
+        val appDataMessage = serializeService.deserializeBytes(queueMessage.body, GenericApplicationMessage::class.java)
         val applicationMessageType = typeNameProvider.getType(appDataMessage.applicationMessageType)
         val message = serializeService.deserialize(
             appDataMessage.applicationMessageData,

@@ -4,6 +4,7 @@ import com.google.common.base.Strings
 import kotlinx.coroutines.future.await
 import org.enodeframework.commanding.CommandExecuteContext
 import org.enodeframework.commanding.CommandResult
+import org.enodeframework.commanding.CommandReturnType
 import org.enodeframework.common.exception.AggregateRootAlreadyExistException
 import org.enodeframework.common.exception.AggregateRootNotFoundException
 import org.enodeframework.common.io.Task
@@ -15,6 +16,7 @@ import org.enodeframework.messaging.ApplicationMessage
 import org.enodeframework.queue.MessageContext
 import org.enodeframework.queue.QueueMessage
 import org.enodeframework.queue.SendReplyService
+import org.enodeframework.queue.command.CommandHandledMessage
 import org.enodeframework.queue.command.GenericCommandMessage
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
@@ -42,9 +44,17 @@ class DefaultCommandExecuteContext(
     override var applicationMessage: ApplicationMessage? = null
     override fun onCommandExecutedAsync(commandResult: CommandResult): CompletableFuture<Boolean> {
         messageContext.onMessageHandled(queueMessage)
-        return if (Strings.isNullOrEmpty(genericCommandMessage.replyAddress)) {
-            Task.completedTask
-        } else sendReplyService.sendCommandReply(commandResult, genericCommandMessage.replyAddress)
+        if (Strings.isNullOrEmpty(genericCommandMessage.replyAddress)) {
+            return Task.completedTask
+        }
+        val message = CommandHandledMessage()
+        message.commandId = commandResult.commandId
+        message.returnType = CommandReturnType.CommandExecuted
+        message.aggregateRootId = commandResult.aggregateRootId
+        message.status = commandResult.status
+        message.result = commandResult.result
+        message.address = genericCommandMessage.replyAddress
+        return sendReplyService.send(message).thenCompose { Task.completedTask }
     }
 
     override suspend fun add(aggregateRoot: AggregateRoot) {

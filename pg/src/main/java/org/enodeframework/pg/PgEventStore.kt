@@ -10,7 +10,7 @@ import org.enodeframework.eventing.DomainEventStream
 import org.enodeframework.eventing.EventAppendResult
 import org.enodeframework.eventing.EventSerializer
 import org.enodeframework.eventing.EventStore
-import org.enodeframework.eventing.EventStoreConfiguration
+import org.enodeframework.eventing.EventStoreOptions
 import org.enodeframework.pg.handler.PgAddDomainEventsHandler
 import org.enodeframework.pg.handler.PgFindDomainEventsHandler
 import java.util.concurrent.CompletableFuture
@@ -20,14 +20,14 @@ import java.util.concurrent.CompletableFuture
  */
 open class PgEventStore(
     pgPool: PgPool,
-    options: EventStoreConfiguration,
+    options: EventStoreOptions,
     eventSerializer: EventSerializer,
     serializeService: SerializeService
 ) : EventStore {
 
     private val eventSerializer: EventSerializer
     private val serializeService: SerializeService
-    private val options: EventStoreConfiguration
+    private val options: EventStoreOptions
     private val pgPool: PgPool
 
     override fun batchAppendAsync(eventStreams: List<DomainEventStream>): CompletableFuture<EventAppendResult> {

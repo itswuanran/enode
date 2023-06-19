@@ -259,7 +259,7 @@ class DefaultProcessingCommandHandler(
             } else {
                 completeCommand(
                     processingCommand,
-                    CommandStatus.NothingChanged,
+                    CommandStatus.NoChange,
                     String::class.java.name,
                     processingCommand.commandExecuteContext.result
                 ).whenComplete { _, _ -> future.complete(true) }
@@ -403,7 +403,6 @@ class DefaultProcessingCommandHandler(
             processingCommand.message.id,
             processingCommand.message.aggregateRootId,
             result,
-            resultType
         )
         return processingCommand.mailBox.completeMessage(processingCommand, commandResult)
     }

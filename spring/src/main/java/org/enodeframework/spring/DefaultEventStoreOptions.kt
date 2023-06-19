@@ -1,7 +1,7 @@
 package org.enodeframework.spring
 
 import com.google.common.base.Strings
-import org.enodeframework.eventing.EventStoreConfiguration
+import org.enodeframework.eventing.EventStoreOptions
 import java.util.regex.Pattern
 
 /**
@@ -9,7 +9,7 @@ import java.util.regex.Pattern
  *
  * @author anruence@gmail.com
  */
-class DefaultEventStoreConfiguration : EventStoreConfiguration {
+class DefaultEventStoreOptions : EventStoreOptions {
     /**
      * E11000 duplicate key error collection: enode.event_stream index: aggregateRootId_1_commandId_1 dup key: { aggregateRootId: "5ee8b610d7671114741829c7", commandId: "5ee8b61bd7671114741829cf" }
      */
@@ -59,8 +59,8 @@ class DefaultEventStoreConfiguration : EventStoreConfiguration {
 
     companion object Driver {
 
-        fun mysql(): DefaultEventStoreConfiguration {
-            val option = DefaultEventStoreConfiguration()
+        fun mysql(): DefaultEventStoreOptions {
+            val option = DefaultEventStoreOptions()
             option.dbName = "enode"
             option.eventTableName = "event_stream"
             option.publishedTableName = "published_version"
@@ -70,8 +70,8 @@ class DefaultEventStoreConfiguration : EventStoreConfiguration {
             return option
         }
 
-        fun mongo(): DefaultEventStoreConfiguration {
-            val option = DefaultEventStoreConfiguration()
+        fun mongo(): DefaultEventStoreOptions {
+            val option = DefaultEventStoreOptions()
             option.dbName = "enode"
             option.eventTableName = "event_stream"
             option.publishedTableName = "published_version"
@@ -81,8 +81,8 @@ class DefaultEventStoreConfiguration : EventStoreConfiguration {
             return option
         }
 
-        fun pg(): DefaultEventStoreConfiguration {
-            val option = DefaultEventStoreConfiguration()
+        fun pg(): DefaultEventStoreOptions {
+            val option = DefaultEventStoreOptions()
             option.dbName = "enode"
             option.eventTableName = "event_stream"
             option.publishedTableName = "published_version"

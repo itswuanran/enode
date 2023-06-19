@@ -12,13 +12,13 @@ import org.enodeframework.common.exception.EventStoreException
 import org.enodeframework.common.exception.IORuntimeException
 import org.enodeframework.eventing.AggregateEventAppendResult
 import org.enodeframework.eventing.EventAppendStatus
-import org.enodeframework.eventing.EventStoreConfiguration
+import org.enodeframework.eventing.EventStoreOptions
 import org.enodeframework.mongo.MongoEventStore
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 
 class MongoAddDomainEventsHandler(
-    private val options: EventStoreConfiguration,
+    private val options: EventStoreOptions,
     private val msg: String,
 ) : Handler<AsyncResult<MongoClientBulkWriteResult>> {
 

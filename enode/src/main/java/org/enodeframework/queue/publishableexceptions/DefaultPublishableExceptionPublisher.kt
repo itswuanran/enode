@@ -28,7 +28,7 @@ class DefaultPublishableExceptionPublisher(
         exceptionMessage.timestamp = exception.timestamp
         exceptionMessage.serializableInfo = serializableInfo
         exceptionMessage.items = exception.items
-        val data = serializeService.serialize(exceptionMessage)
+        val data = serializeService.serializeBytes(exceptionMessage)
         val routeKey = exception.id
         val queueMessage = QueueMessage()
         queueMessage.topic = topic
