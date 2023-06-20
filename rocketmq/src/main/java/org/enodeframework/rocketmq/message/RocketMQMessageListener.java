@@ -20,31 +20,29 @@ package org.enodeframework.rocketmq.message;
 
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
+import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyContext;
+import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
+import org.apache.rocketmq.client.consumer.listener.MessageListenerOrderly;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.enodeframework.common.extensions.SysProperties;
 import org.enodeframework.common.io.Task;
 import org.enodeframework.queue.MessageHandler;
+import org.enodeframework.queue.MessageHandlerHolder;
 import org.enodeframework.queue.QueueMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
 /**
  * @author anruence@gmail.com
  */
-public class RocketMQMessageListener implements MessageListenerConcurrently {
+public class RocketMQMessageListener implements MessageListenerConcurrently, MessageListenerOrderly {
 
-    private static final Logger logger = LoggerFactory.getLogger(RocketMQMessageListener.class);
+    private final MessageHandlerHolder messageHandlerHolder;
 
-    private final Map<String, MessageHandler> messageHandlerMap;
-
-    public RocketMQMessageListener(Map<String, MessageHandler> messageHandlerMap) {
-        this.messageHandlerMap = messageHandlerMap;
+    public RocketMQMessageListener(MessageHandlerHolder messageHandlerHolder) {
+        this.messageHandlerHolder = messageHandlerHolder;
     }
 
     @Override
@@ -52,12 +50,7 @@ public class RocketMQMessageListener implements MessageListenerConcurrently {
         CountDownLatch latch = new CountDownLatch(msgs.size());
         msgs.forEach(msg -> {
             QueueMessage queueMessage = this.covertToQueueMessage(msg);
-            MessageHandler messageHandler = messageHandlerMap.get(queueMessage.getType());
-            if (messageHandler == null) {
-                logger.error("No messageHandler for message: {}.", queueMessage);
-                latch.countDown();
-                return;
-            }
+            MessageHandler messageHandler = messageHandlerHolder.chooseMessageHandle(queueMessage.getType());
             messageHandler.handle(queueMessage, message -> {
                 latch.countDown();
             });
@@ -68,13 +61,26 @@ public class RocketMQMessageListener implements MessageListenerConcurrently {
 
     private QueueMessage covertToQueueMessage(MessageExt messageExt) {
         QueueMessage queueMessage = new QueueMessage();
-        String value = new String(messageExt.getBody(), StandardCharsets.UTF_8);
         String mType = messageExt.getUserProperty(SysProperties.MESSAGE_TYPE_KEY);
-        queueMessage.setBody(value);
+        queueMessage.setBody(messageExt.getBody());
         queueMessage.setType(mType);
         queueMessage.setTopic(messageExt.getTopic());
         queueMessage.setTag(messageExt.getTags());
         queueMessage.setKey(messageExt.getKeys());
         return queueMessage;
+    }
+
+    @Override
+    public ConsumeOrderlyStatus consumeMessage(List<MessageExt> msgs, ConsumeOrderlyContext context) {
+        CountDownLatch latch = new CountDownLatch(msgs.size());
+        msgs.forEach(msg -> {
+            QueueMessage queueMessage = this.covertToQueueMessage(msg);
+            MessageHandler messageHandler = messageHandlerHolder.chooseMessageHandle(queueMessage.getType());
+            messageHandler.handle(queueMessage, message -> {
+                latch.countDown();
+            });
+        });
+        Task.await(latch);
+        return ConsumeOrderlyStatus.SUCCESS;
     }
 }

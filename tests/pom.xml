@@ -57,6 +57,11 @@
         </dependency>
         <dependency>
             <groupId>org.enodeframework</groupId>
+            <artifactId>enode-vertx-tcp</artifactId>
+            <version>1.1.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.enodeframework</groupId>
             <artifactId>enode-mongo</artifactId>
         </dependency>
         <dependency>

@@ -28,7 +28,7 @@ class DefaultCommandMessageHandler(
 
     override fun handle(queueMessage: QueueMessage, context: MessageContext) {
         logger.info("Received command message: {}", queueMessage)
-        val commandMessage = serializeService.deserialize(queueMessage.body, GenericCommandMessage::class.java)
+        val commandMessage = serializeService.deserializeBytes(queueMessage.body, GenericCommandMessage::class.java)
         val commandType = typeNameProvider.getType(commandMessage.commandType)
         val command = serializeService.deserialize(commandMessage.commandData, commandType) as CommandMessage
         val commandExecuteContext = DefaultCommandExecuteContext(

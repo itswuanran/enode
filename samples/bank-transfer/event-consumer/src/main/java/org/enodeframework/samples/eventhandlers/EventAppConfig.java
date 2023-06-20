@@ -5,7 +5,6 @@ import io.vertx.core.Vertx;
 import org.enodeframework.jdbc.JDBCEventStore;
 import org.enodeframework.jdbc.JDBCPublishedVersionStore;
 import org.enodeframework.queue.command.DefaultCommandResultProcessor;
-import org.enodeframework.rocketmq.message.RocketMQSendReplyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -25,8 +24,6 @@ public class EventAppConfig {
     private String password;
     @Autowired
     private DefaultCommandResultProcessor commandResultProcessor;
-    @Autowired
-    private RocketMQSendReplyService sendReplyService;
     @Autowired
     private JDBCEventStore jdbcEventStore;
     @Autowired

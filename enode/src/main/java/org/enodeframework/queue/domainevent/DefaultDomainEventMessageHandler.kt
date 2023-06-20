@@ -18,18 +18,24 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 
 class DefaultDomainEventMessageHandler(
-    val sendReplyService: SendReplyService,
+    private val sendReplyService: SendReplyService,
     private val domainEventMessageProcessor: ProcessingEventProcessor,
     private val eventSerializer: EventSerializer,
-    private val serializeService: SerializeService
+    private val serializeService: SerializeService,
+    private var isSendEventHandledMessage: Boolean = true
 ) : MessageHandler {
-    private val logger = LoggerFactory.getLogger(DefaultDomainEventMessageHandler::class.java)
+    constructor(
+        sendReplyService: SendReplyService,
+        domainEventMessageProcessor: ProcessingEventProcessor,
+        eventSerializer: EventSerializer,
+        serializeService: SerializeService
+    ) : this(sendReplyService, domainEventMessageProcessor, eventSerializer, serializeService, true)
 
-    var isSendEventHandledMessage = true
+    private val logger = LoggerFactory.getLogger(DefaultDomainEventMessageHandler::class.java)
 
     override fun handle(queueMessage: QueueMessage, context: MessageContext) {
         logger.info("Received event stream message: {}", queueMessage)
-        val message = serializeService.deserialize(queueMessage.body, GenericDomainEventMessage::class.java)
+        val message = serializeService.deserializeBytes(queueMessage.body, GenericDomainEventMessage::class.java)
         val domainEventStreamMessage = convertToDomainEventStream(message)
         val processContext = DomainEventStreamProcessContext(this, domainEventStreamMessage, queueMessage, context)
         val processingMessage = ProcessingEvent(domainEventStreamMessage, processContext)
@@ -72,7 +78,8 @@ class DefaultDomainEventMessageHandler(
             replyMessage.result = commandResult ?: ""
             replyMessage.address = address ?: ""
             replyMessage.returnType = CommandReturnType.EventHandled
-            return eventConsumer.sendReplyService.send(replyMessage).thenCompose { Task.completedTask }
+            eventConsumer.sendReplyService.send(replyMessage)
+            return Task.completedTask
         }
     }
 

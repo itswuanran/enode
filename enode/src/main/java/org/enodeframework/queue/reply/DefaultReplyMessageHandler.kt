@@ -10,11 +10,15 @@ import org.slf4j.LoggerFactory
 class DefaultReplyMessageHandler(
     private val commandResultProcessor: CommandResultProcessor, private val serializeService: SerializeService
 ) : MessageHandler {
+
     private val logger = LoggerFactory.getLogger(DefaultReplyMessageHandler::class.java)
 
     override fun handle(queueMessage: QueueMessage, context: MessageContext) {
+        if (queueMessage.tag != commandResultProcessor.uniqueReplyAddress()) {
+            logger.warn("Received reply message belongs others: {}", queueMessage)
+        }
         logger.info("Received reply message: {}", queueMessage)
-        val replyMessage = serializeService.deserialize(queueMessage.body, GenericReplyMessage::class.java)
+        val replyMessage = serializeService.deserializeBytes(queueMessage.body, GenericReplyMessage::class.java)
         commandResultProcessor.processReplyMessage(replyMessage)
     }
 }

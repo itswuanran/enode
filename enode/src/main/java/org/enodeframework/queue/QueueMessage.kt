@@ -1,6 +1,7 @@
 package org.enodeframework.queue
 
 import com.google.common.base.MoreObjects
+import com.google.common.collect.Maps
 import java.io.Serializable
 
 /**
@@ -10,7 +11,7 @@ class QueueMessage : Serializable {
     /**
      * 消息体
      */
-    var body: String = ""
+    var body: ByteArray = ByteArray(0)
 
     /**
      * topic
@@ -37,6 +38,19 @@ class QueueMessage : Serializable {
      * [MessageTypeCode]
      */
     var type: String = MessageTypeCode.Default.value
+
+    /**
+     * 扩展信息
+     */
+    var items: MutableMap<String, String> = Maps.newHashMap()
+
+    fun bodyAsStr(): String {
+        return body.decodeToString()
+    }
+
+    fun channel(): String {
+        return "$topic#$tag"
+    }
 
     override fun toString(): String {
         return MoreObjects.toStringHelper(this).add("body", body).add("topic", topic).add("tag", tag)

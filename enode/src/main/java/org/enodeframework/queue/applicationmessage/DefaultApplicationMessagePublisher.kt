@@ -24,7 +24,7 @@ class DefaultApplicationMessagePublisher(
         val applicationMessage = GenericApplicationMessage()
         applicationMessage.applicationMessageData = appMessageData
         applicationMessage.applicationMessageType = typeNameProvider.getTypeName(message.javaClass)
-        val data = serializeService.serialize(applicationMessage)
+        val data = serializeService.serializeBytes(applicationMessage)
         val routeKey = message.id
         val queueMessage = QueueMessage()
         queueMessage.body = data

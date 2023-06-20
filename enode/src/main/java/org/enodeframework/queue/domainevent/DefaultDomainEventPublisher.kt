@@ -30,7 +30,7 @@ class DefaultDomainEventPublisher(
         message.version = eventStream.version
         message.events = eventSerializer.serialize(eventStream.events)
         message.items = eventStream.items
-        val data = serializeService.serialize(message)
+        val data = serializeService.serializeBytes(message)
         val routeKey = message.aggregateRootId
         val queueMessage = QueueMessage()
         queueMessage.topic = topic

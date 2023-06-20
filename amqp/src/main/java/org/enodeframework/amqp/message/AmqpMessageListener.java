@@ -16,17 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.enodeframework.ons.message;
+package org.enodeframework.amqp.message;
 
-import com.aliyun.openservices.ons.api.Action;
-import com.aliyun.openservices.ons.api.ConsumeContext;
-import com.aliyun.openservices.ons.api.Message;
-import com.aliyun.openservices.ons.api.batch.BatchMessageListener;
+import com.google.common.collect.Lists;
+import org.enodeframework.common.extensions.SysProperties;
 import org.enodeframework.common.io.Task;
 import org.enodeframework.queue.MessageHandler;
 import org.enodeframework.queue.QueueMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.BatchMessageListener;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageListener;
+import org.springframework.amqp.core.MessageProperties;
 
 import java.util.List;
 import java.util.Map;
@@ -35,32 +37,44 @@ import java.util.concurrent.CountDownLatch;
 /**
  * @author anruence@gmail.com
  */
-public class OnsBatchMessageListener implements BatchMessageListener {
-
-    private static final Logger logger = LoggerFactory.getLogger(OnsBatchMessageListener.class);
-
+public class AmqpMessageListener implements MessageListener, BatchMessageListener {
+    private static final Logger logger = LoggerFactory.getLogger(AmqpMessageListener.class);
     private final Map<String, MessageHandler> messageHandlerMap;
 
-    public OnsBatchMessageListener(Map<String, MessageHandler> messageHandlerMap) {
+    public AmqpMessageListener(Map<String, MessageHandler> messageHandlerMap) {
         this.messageHandlerMap = messageHandlerMap;
     }
 
     @Override
-    public Action consume(List<Message> messages, ConsumeContext context) {
+    public void onMessage(Message message) {
+        onMessageBatch(Lists.newArrayList(message));
+    }
+
+    @Override
+    public void onMessageBatch(List<Message> messages) {
         CountDownLatch latch = new CountDownLatch(messages.size());
-        messages.forEach(msg -> {
-            QueueMessage queueMessage = OnsTool.covertToQueueMessage(msg);
+        messages.forEach(message -> {
+            QueueMessage queueMessage = this.covertToQueueMessage(message);
             MessageHandler messageHandler = messageHandlerMap.get(queueMessage.getType());
             if (messageHandler == null) {
                 logger.error("No messageHandler for message: {}.", queueMessage);
                 latch.countDown();
                 return;
             }
-            messageHandler.handle(queueMessage, message -> {
+            messageHandler.handle(queueMessage, context -> {
                 latch.countDown();
             });
         });
         Task.await(latch);
-        return Action.CommitMessage;
+    }
+
+    private QueueMessage covertToQueueMessage(Message record) {
+        MessageProperties props = record.getMessageProperties();
+        QueueMessage queueMessage = new QueueMessage();
+        queueMessage.setBody(record.getBody());
+        queueMessage.setTag(props.getConsumerTag());
+        queueMessage.setTopic(props.getConsumerQueue());
+        queueMessage.setType(props.getHeader(SysProperties.MESSAGE_TYPE_KEY));
+        return queueMessage;
     }
 }

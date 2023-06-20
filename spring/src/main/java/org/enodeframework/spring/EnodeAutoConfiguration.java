@@ -19,6 +19,8 @@
 package org.enodeframework.spring;
 
 import com.google.common.collect.Maps;
+import io.vertx.core.VertxOptions;
+import io.vertx.core.net.NetServerOptions;
 import kotlinx.coroutines.Dispatchers;
 import org.enodeframework.commanding.CommandHandlerProvider;
 import org.enodeframework.commanding.CommandProcessor;
@@ -79,6 +81,8 @@ import org.enodeframework.queue.domainevent.DefaultDomainEventPublisher;
 import org.enodeframework.queue.publishableexceptions.DefaultPublishableExceptionMessageHandler;
 import org.enodeframework.queue.publishableexceptions.DefaultPublishableExceptionPublisher;
 import org.enodeframework.queue.reply.DefaultReplyMessageHandler;
+import org.enodeframework.vertx.message.TcpSendReplyService;
+import org.enodeframework.vertx.message.TcpServerListener;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -96,12 +100,6 @@ public class EnodeAutoConfiguration {
 
     @Value("${spring.enode.mq.topic.event:}")
     private String eventTopic;
-
-    @Value("${spring.enode.mq.topic.application:}")
-    private String applicationTopic;
-
-    @Value("${spring.enode.mq.topic.exception:}")
-    private String exceptionTopic;
 
     @Value("${spring.enode.server.port:2019}")
     private int port;
@@ -235,12 +233,12 @@ public class EnodeAutoConfiguration {
 
     @Bean(name = "defaultApplicationMessagePublisher")
     public DefaultApplicationMessagePublisher defaultApplicationMessagePublisher(SendMessageService sendMessageService, SerializeService serializeService, TypeNameProvider typeNameProvider) {
-        return new DefaultApplicationMessagePublisher(applicationTopic, "", sendMessageService, serializeService, typeNameProvider);
+        return new DefaultApplicationMessagePublisher(eventTopic, "", sendMessageService, serializeService, typeNameProvider);
     }
 
     @Bean(name = "defaultPublishableExceptionPublisher")
     public DefaultPublishableExceptionPublisher defaultPublishableExceptionPublisher(SendMessageService sendMessageService, SerializeService serializeService, TypeNameProvider typeNameProvider) {
-        return new DefaultPublishableExceptionPublisher(exceptionTopic, "", sendMessageService, serializeService, typeNameProvider);
+        return new DefaultPublishableExceptionPublisher(eventTopic, "", sendMessageService, serializeService, typeNameProvider);
     }
 
     @Bean(name = "defaultCommandMessageHandler")
@@ -267,4 +265,20 @@ public class EnodeAutoConfiguration {
     public DefaultApplicationMessageHandler defaultApplicationMessageHandler(TypeNameProvider typeNameProvider, MessageDispatcher messageDispatcher, SerializeService serializeService) {
         return new DefaultApplicationMessageHandler(typeNameProvider, messageDispatcher, serializeService);
     }
+
+
+    @Bean(name = "tcpServerListener")
+    public TcpServerListener tcpServerListener(CommandResultProcessor commandResultProcessor, SerializeService serializeService) throws Exception {
+        NetServerOptions option = new NetServerOptions();
+        option.setHost(InetAddress.getLocalHost().getHostAddress());
+        option.setPort(port);
+        return new TcpServerListener(commandResultProcessor, option);
+    }
+
+    @Bean(name = "tcpSendReplyService")
+    public TcpSendReplyService tcpSendReplyService() throws Exception {
+        return new TcpSendReplyService(new VertxOptions());
+    }
 }
+
+

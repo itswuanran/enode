@@ -17,9 +17,25 @@ class DefaultSerializeService : SerializeService {
         }
     }
 
+    override fun <T> deserializeBytes(value: ByteArray, type: Class<T>): T {
+        return try {
+            MAPPER.readValue(value, type)
+        } catch (e: JsonProcessingException) {
+            throw EnodeException(e)
+        }
+    }
+
     override fun serialize(target: Any): String {
         return try {
             MAPPER.writeValueAsString(target)
+        } catch (e: JsonProcessingException) {
+            throw EnodeException(e)
+        }
+    }
+
+    override fun serializeBytes(target: Any): ByteArray {
+        return try {
+            MAPPER.writeValueAsBytes(target)
         } catch (e: JsonProcessingException) {
             throw EnodeException(e)
         }

@@ -94,7 +94,7 @@ public class App {
 
 ### `Spring Boot`启动配置文件
 
-如果需要使用`RokcetMQ`和`ONS`的`tag`功能，相应的配置`spring.enode.mq.tag.*`属性即可：
+如果需要使用`RokcetMQ`和`ONS`的`tag`功能，相应的配置`spring.enode.mq.topic.event.tag.*`属性即可：
 
 ```properties
 # enode eventstore (memory, mysql, tidb, pg, mongo)
@@ -103,6 +103,9 @@ spring.enode.eventstore=mongo
 spring.enode.mq=kafka
 spring.enode.mq.topic.command=EnodeBankCommandTopic
 spring.enode.mq.topic.event=EnodeBankEventTopic
+spring.enode.mq.topic.event.tag.app-=app
+spring.enode.mq.topic.event.tag.exception-=exception
+spring.enode.mq.topic.event.tag.event-=domainevent
 ```
 
 ### `kafka bean`配置

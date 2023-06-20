@@ -5,6 +5,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.enodeframework.kafka.KafkaMessageListener;
+import org.enodeframework.queue.command.CommandResultProcessor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -31,6 +32,9 @@ public class EnodeTestKafkaConfig {
     @Value("${spring.enode.mq.topic.event}")
     private String eventTopic;
 
+    @Value("${spring.enode.mq.topic.reply}")
+    private String replyTopic;
+
     @Bean
     public ConsumerFactory<String, String> consumerFactory() {
         Map<String, Object> props = new HashMap<>();
@@ -50,6 +54,17 @@ public class EnodeTestKafkaConfig {
         ContainerProperties properties = new ContainerProperties(commandTopic);
         properties.setGroupId(Constants.DEFAULT_CONSUMER_GROUP);
         properties.setMessageListener(kafkaCommandListener);
+        properties.setMissingTopicsFatal(false);
+        return new ConcurrentMessageListenerContainer<>(consumerFactory, properties);
+    }
+
+    @Bean
+    public ConcurrentMessageListenerContainer<String, String> replyListenerContainer(
+        CommandResultProcessor commandResultProcessor,
+        @Qualifier("kafkaReplyListener") KafkaMessageListener kafkaReplyListener, ConsumerFactory<String, String> consumerFactory) {
+        ContainerProperties properties = new ContainerProperties(replyTopic);
+        properties.setGroupId(Constants.DEFAULT_CONSUMER_GROUP + "#" + commandResultProcessor.uniqueReplyAddress());
+        properties.setMessageListener(kafkaReplyListener);
         properties.setMissingTopicsFatal(false);
         return new ConcurrentMessageListenerContainer<>(consumerFactory, properties);
     }
@@ -81,6 +96,10 @@ public class EnodeTestKafkaConfig {
 
     @Bean(name = "enodeKafkaTemplate")
     public KafkaTemplate<String, String> enodeKafkaTemplate() {
+        return new KafkaTemplate<>(producerFactory());
+    }
+    @Bean(name = "enodeReplyKafkaTemplate")
+    public KafkaTemplate<String, String> enodeReplyKafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 }

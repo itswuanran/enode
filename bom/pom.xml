@@ -76,6 +76,11 @@
             </dependency>
             <dependency>
                 <groupId>org.enodeframework</groupId>
+                <artifactId>enode-vertx-tcp</artifactId>
+                <version>${revision}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.enodeframework</groupId>
                 <artifactId>enode-pg</artifactId>
                 <version>${revision}</version>
             </dependency>

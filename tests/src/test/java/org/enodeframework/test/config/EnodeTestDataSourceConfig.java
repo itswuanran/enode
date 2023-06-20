@@ -2,23 +2,29 @@ package org.enodeframework.test.config;
 
 import com.zaxxer.hikari.HikariDataSource;
 import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.net.NetServerOptions;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.mysqlclient.MySQLConnectOptions;
 import io.vertx.mysqlclient.MySQLPool;
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.PoolOptions;
+import org.enodeframework.common.serializing.SerializeService;
 import org.enodeframework.jdbc.JDBCEventStore;
 import org.enodeframework.jdbc.JDBCPublishedVersionStore;
-import org.enodeframework.rocketmq.message.RocketMQSendReplyService;
+import org.enodeframework.queue.command.CommandResultProcessor;
 import org.enodeframework.queue.command.DefaultCommandResultProcessor;
+import org.enodeframework.vertx.message.TcpSendReplyService;
+import org.enodeframework.vertx.message.TcpServerListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
 import javax.sql.DataSource;
+import java.net.InetAddress;
 
 public class EnodeTestDataSourceConfig {
 
@@ -43,20 +49,23 @@ public class EnodeTestDataSourceConfig {
     @Autowired
     private DefaultCommandResultProcessor commandResultProcessor;
 
-    @Autowired
-    private RocketMQSendReplyService sendReplyService;
-
     @Autowired(required = false)
     private JDBCEventStore jdbcEventStore;
 
     @Autowired(required = false)
     private JDBCPublishedVersionStore jdbcPublishedVersionStore;
 
+    @Autowired
+    private TcpSendReplyService tcpSendReplyService;
+
+    @Autowired
+    private TcpServerListener tcpServerListener;
+
     @Bean
     public Vertx vertx() {
         Vertx vertx = Vertx.vertx();
-        vertx.deployVerticle(commandResultProcessor);
-        vertx.deployVerticle(sendReplyService);
+        vertx.deployVerticle(tcpSendReplyService);
+        vertx.deployVerticle(tcpServerListener);
         if (jdbcEventStore != null) {
             vertx.deployVerticle(jdbcEventStore);
         }

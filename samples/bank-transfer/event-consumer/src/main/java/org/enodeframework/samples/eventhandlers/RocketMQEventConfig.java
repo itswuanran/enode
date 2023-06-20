@@ -35,7 +35,7 @@ public class RocketMQEventConfig {
         DefaultMQPushConsumer defaultMQPushConsumer = new DefaultMQPushConsumer();
         defaultMQPushConsumer.setConsumerGroup(QueueProperties.DEFAULT_CONSUMER_GROUP0);
         defaultMQPushConsumer.setNamesrvAddr(QueueProperties.NAMESRVADDR);
-        defaultMQPushConsumer.subscribe(eventTopic, "*");
+        defaultMQPushConsumer.subscribe(eventTopic, "");
         defaultMQPushConsumer.setMessageListener(rocketMQDomainEventListener);
         return defaultMQPushConsumer;
     }

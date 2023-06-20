@@ -22,17 +22,13 @@ import com.aliyun.openservices.ons.api.Producer;
 import org.enodeframework.common.serializing.SerializeService;
 import org.enodeframework.ons.message.OnsMessageListener;
 import org.enodeframework.ons.message.OnsSendMessageService;
-import org.enodeframework.ons.message.OnsSendReplyService;
 import org.enodeframework.queue.MessageHandler;
+import org.enodeframework.queue.MessageHandlerHolder;
 import org.enodeframework.queue.MessageTypeCode;
-import org.enodeframework.queue.SendMessageService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @ConditionalOnProperty(prefix = "spring.enode", name = "mq", havingValue = "ons")
 public class EnodeOnsAutoConfig {
@@ -45,7 +41,7 @@ public class EnodeOnsAutoConfig {
         @Qualifier(value = "defaultPublishableExceptionMessageHandler") MessageHandler defaultPublishableExceptionMessageHandler,
         @Qualifier(value = "defaultApplicationMessageHandler") MessageHandler defaultApplicationMessageHandler,
         @Qualifier(value = "defaultDomainEventMessageHandler") MessageHandler defaultDomainEventMessageHandler) {
-        Map<String, MessageHandler> messageHandlerMap = new HashMap<>();
+        MessageHandlerHolder messageHandlerMap = new MessageHandlerHolder();
         messageHandlerMap.put(MessageTypeCode.DomainEventMessage.getValue(), defaultDomainEventMessageHandler);
         messageHandlerMap.put(MessageTypeCode.ApplicationMessage.getValue(), defaultApplicationMessageHandler);
         messageHandlerMap.put(MessageTypeCode.ExceptionMessage.getValue(), defaultPublishableExceptionMessageHandler);
@@ -56,25 +52,20 @@ public class EnodeOnsAutoConfig {
     @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "command")
     public OnsMessageListener onsCommandListener(
         @Qualifier(value = "defaultCommandMessageHandler") MessageHandler defaultCommandMessageHandler) {
-        Map<String, MessageHandler> messageHandlerMap = new HashMap<>();
+        MessageHandlerHolder messageHandlerMap = new MessageHandlerHolder();
         messageHandlerMap.put(MessageTypeCode.CommandMessage.getValue(), defaultCommandMessageHandler);
         return new OnsMessageListener(messageHandlerMap);
     }
 
     @Bean(name = "onsSendMessageService")
-    public OnsSendMessageService onsSendMessageService(@Qualifier(value = "enodeOnsProducer") Producer producer) {
-        return new OnsSendMessageService(producer);
+    public OnsSendMessageService onsSendMessageService(@Qualifier(value = "enodeOnsProducer") Producer producer, SerializeService serializeService) {
+        return new OnsSendMessageService(replyTopic, producer, serializeService);
     }
 
-    @Bean(name = "onsSendReplyService")
-    public OnsSendReplyService onsSendReplyService(
-        @Qualifier(value = "onsSendMessageService") SendMessageService onsSendMessageService, SerializeService serializeService) {
-        return new OnsSendReplyService(replyTopic, onsSendMessageService, serializeService);
-    }
     @Bean(name = "onsReplyListener")
     public OnsMessageListener onsReplyListener(
         @Qualifier(value = "defaultReplyMessageHandler") MessageHandler defaultReplyMessageHandler) {
-        Map<String, MessageHandler> messageHandlerMap = new HashMap<>();
+        MessageHandlerHolder messageHandlerMap = new MessageHandlerHolder();
         messageHandlerMap.put(MessageTypeCode.ReplyMessage.getValue(), defaultReplyMessageHandler);
         return new OnsMessageListener(messageHandlerMap);
     }

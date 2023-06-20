@@ -78,7 +78,7 @@ class DefaultCommandBus(
         }
         genericCommandMessage.commandData = commandData
         genericCommandMessage.commandType = command.javaClass.name
-        val messageData = serializeService.serialize(genericCommandMessage)
+        val messageData = serializeService.serializeBytes(genericCommandMessage)
         val queueMessage = QueueMessage()
         queueMessage.topic = topic
         queueMessage.tag = tag

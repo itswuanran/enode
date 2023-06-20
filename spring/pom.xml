@@ -63,6 +63,11 @@
         </dependency>
         <dependency>
             <groupId>org.enodeframework</groupId>
+            <artifactId>enode-vertx-tcp</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.enodeframework</groupId>
             <artifactId>enode-metrics</artifactId>
             <scope>provided</scope>
         </dependency>
