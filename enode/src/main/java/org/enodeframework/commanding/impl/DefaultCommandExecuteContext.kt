@@ -49,7 +49,7 @@ class DefaultCommandExecuteContext(
         }
         val message = CommandHandledMessage()
         message.commandId = commandResult.commandId
-        message.returnType = CommandReturnType.EventHandled
+        message.returnType = CommandReturnType.CommandExecuted
         message.aggregateRootId = commandResult.aggregateRootId
         message.status = commandResult.status
         message.result = commandResult.result

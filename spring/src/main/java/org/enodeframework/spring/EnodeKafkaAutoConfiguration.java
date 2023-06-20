@@ -59,10 +59,10 @@ public class EnodeKafkaAutoConfiguration {
         return new KafkaSendMessageService(replyTopic, kafkaTemplate, serializeService);
     }
 
-//    @Bean(name = "kafkaSendReplyService")
-//    public KafkaSendReplyService kafkaSendReplyService(@Qualifier(value = "enodeReplyKafkaTemplate") KafkaTemplate<String, String> kafkaTemplate, SerializeService serializeService) {
-//        return new KafkaSendReplyService(replyTopic, kafkaTemplate, serializeService);
-//    }
+    @Bean(name = "kafkaSendReplyService")
+    public KafkaSendReplyService kafkaSendReplyService(@Qualifier(value = "enodeReplyKafkaTemplate") KafkaTemplate<String, String> kafkaTemplate, SerializeService serializeService) {
+        return new KafkaSendReplyService(replyTopic, kafkaTemplate, serializeService);
+    }
 
     @Bean(name = "kafkaReplyListener")
     @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "reply")

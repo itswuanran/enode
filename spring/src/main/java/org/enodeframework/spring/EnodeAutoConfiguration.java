@@ -266,8 +266,8 @@ public class EnodeAutoConfiguration {
         return new DefaultApplicationMessageHandler(typeNameProvider, messageDispatcher, serializeService);
     }
 
-
     @Bean(name = "tcpServerListener")
+    @ConditionalOnProperty(prefix = "spring.enode", name = "reply", havingValue = "tcp", matchIfMissing = false)
     public TcpServerListener tcpServerListener(CommandResultProcessor commandResultProcessor, SerializeService serializeService) throws Exception {
         NetServerOptions option = new NetServerOptions();
         option.setHost(InetAddress.getLocalHost().getHostAddress());
@@ -276,9 +276,11 @@ public class EnodeAutoConfiguration {
     }
 
     @Bean(name = "tcpSendReplyService")
+    @ConditionalOnProperty(prefix = "spring.enode", name = "reply", havingValue = "tcp", matchIfMissing = false)
     public TcpSendReplyService tcpSendReplyService() throws Exception {
         return new TcpSendReplyService(new VertxOptions());
     }
+
 }
 
 
