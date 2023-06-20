@@ -54,8 +54,7 @@ class DefaultCommandExecuteContext(
         message.status = commandResult.status
         message.result = commandResult.result
         message.address = genericCommandMessage.replyAddress
-        sendReplyService.send(message)
-        return Task.completedTask
+        return sendReplyService.send(message).thenCompose { Task.completedTask }
     }
 
     override suspend fun add(aggregateRoot: AggregateRoot) {

@@ -78,8 +78,7 @@ class DefaultDomainEventMessageHandler(
             replyMessage.result = commandResult ?: ""
             replyMessage.address = address ?: ""
             replyMessage.returnType = CommandReturnType.EventHandled
-            eventConsumer.sendReplyService.send(replyMessage)
-            return Task.completedTask
+            return eventConsumer.sendReplyService.send(replyMessage).thenCompose { Task.completedTask }
         }
     }
 

@@ -32,8 +32,11 @@ class DefaultCommandResultProcessor(
     private val scanExpireCommandTaskName: String =
         "CleanTimeoutCommandTask_" + SystemClock.now() + Random().nextInt(5000)
     private val commandTaskDict: Cache<String, CommandTaskCompletionSource>
-    private val commandExecutedMessageLocalQueue: BlockingQueue<GenericReplyMessage>
+    private val commandExecutedMessageLocalQueue: BlockingQueue<CommandResult>
+    private val domainEventHandledMessageLocalQueue: BlockingQueue<GenericReplyMessage>
     private val commandExecutedMessageWorker: Worker
+    private val domainEventHandledMessageWorker: Worker
+
 
     override fun registerProcessingCommand(
         command: CommandMessage,
@@ -42,7 +45,9 @@ class DefaultCommandResultProcessor(
     ) {
         if (commandTaskDict.asMap().putIfAbsent(
                 command.id, CommandTaskCompletionSource(
-                    command.aggregateRootId, commandReturnType, taskCompletionSource
+                    command.aggregateRootId,
+                    commandReturnType,
+                    taskCompletionSource
                 )
             ) != null
         ) {
@@ -52,61 +57,77 @@ class DefaultCommandResultProcessor(
         }
     }
 
-    fun start() {
-        commandExecutedMessageWorker.start()
-        scheduleService.startTask(
-            scanExpireCommandTaskName, { commandTaskDict.cleanUp() }, completionSourceTimeout, completionSourceTimeout
-        )
-    }
-
-    fun stop() {
-        scheduleService.stopTask(scanExpireCommandTaskName)
-        commandExecutedMessageWorker.stop()
+    override fun processReplyMessage(replyMessage: GenericReplyMessage) {
+        val code = replyMessage.returnType
+        if (code == CommandReturnType.CommandExecuted.value) {
+            val result = replyMessage.asCommandResult()
+            commandExecutedMessageLocalQueue.add(result)
+        } else if (code == CommandReturnType.EventHandled.value) {
+            domainEventHandledMessageLocalQueue.add(replyMessage)
+        }
     }
 
     override fun uniqueReplyAddress(): String {
         return uniqueAddress
     }
 
-    override fun processReplyMessage(replyMessage: GenericReplyMessage) {
-        if (replyMessage.returnType == CommandReturnType.CommandExecuted.value
-            || replyMessage.returnType == CommandReturnType.EventHandled.value
-        ) {
-            commandExecutedMessageLocalQueue.add(replyMessage)
-        }
+    fun start() {
+        commandExecutedMessageWorker.start()
+        domainEventHandledMessageWorker.start()
+        scheduleService.startTask(
+            scanExpireCommandTaskName,
+            { commandTaskDict.cleanUp() },
+            completionSourceTimeout,
+            completionSourceTimeout
+        )
     }
 
-    private fun processCommandReturnMessage(replyMessage: GenericReplyMessage) {
-        if (replyMessage.returnType == CommandReturnType.EventHandled.value) {
-            return processDomainEventHandledMessage(replyMessage)
-        }
-        return processExecutedCommandMessage(replyMessage)
+    fun stop() {
+        scheduleService.stopTask(scanExpireCommandTaskName)
+        commandExecutedMessageWorker.stop()
+        domainEventHandledMessageWorker.stop()
     }
 
-    private fun processExecutedCommandMessage(replyMessage: GenericReplyMessage) {
-        val commandTaskCompletionSource = commandTaskDict.asMap()[replyMessage.commandId]
+
+    /**
+     * https://stackoverflow.com/questions/10626720/guava-cachebuilder-removal-listener
+     * Caches built with CacheBuilder do not perform cleanup and evict values "automatically," or instantly
+     * after a value expires, or anything of the sort. Instead, it performs small amounts of maintenance
+     * during write operations, or during occasional read operations if writes are rare.
+     *
+     *
+     * The reason for this is as follows: if we wanted to perform Cache maintenance continuously, we would need
+     * to create a thread, and its operations would be competing with user operations for shared locks.
+     * Additionally, some environments restrict the creation of threads, which would make CacheBuilder unusable in that environment.
+     */
+    private fun processExecutedCommandMessage(commandResult: CommandResult) {
+        val commandTaskCompletionSource = commandTaskDict.asMap()[commandResult.commandId]
         if (commandTaskCompletionSource == null) {
             if (logger.isDebugEnabled) {
                 logger.debug(
-                    "Command result return, {}, but commandTaskCompletionSource maybe timeout expired.", replyMessage
+                    "Command result return, {}, but commandTaskCompletionSource maybe timeout expired.",
+                    serializeService.serialize(
+                        commandResult
+                    )
                 )
             }
             return
         }
         if (commandTaskCompletionSource.commandReturnType == CommandReturnType.CommandExecuted) {
-            commandTaskDict.asMap().remove(replyMessage.commandId)
-            if (commandTaskCompletionSource.taskCompletionSource.complete(replyMessage.asCommandResult())) {
+            commandTaskDict.asMap().remove(commandResult.commandId)
+            if (commandTaskCompletionSource.taskCompletionSource.complete(commandResult)) {
                 if (logger.isDebugEnabled) {
-                    logger.debug("Command result return CommandExecuted, {}", serializeService.serialize(replyMessage))
+                    logger.debug("Command result return CommandExecuted, {}", serializeService.serialize(commandResult))
                 }
             }
         } else if (commandTaskCompletionSource.commandReturnType == CommandReturnType.EventHandled) {
-            if (CommandStatus.Success.value != replyMessage.status) {
-                commandTaskDict.asMap().remove(replyMessage.commandId)
-                if (commandTaskCompletionSource.taskCompletionSource.complete(replyMessage.asCommandResult())) {
+            if (CommandStatus.Failed == commandResult.status || CommandStatus.NoChange == commandResult.status) {
+                commandTaskDict.asMap().remove(commandResult.commandId)
+                if (commandTaskCompletionSource.taskCompletionSource.complete(commandResult)) {
                     if (logger.isDebugEnabled) {
                         logger.debug(
-                            "Command result return EventHandled, {}", serializeService.serialize(replyMessage)
+                            "Command result return EventHandled, {}",
+                            serializeService.serialize(commandResult)
                         )
                     }
                 }
@@ -128,6 +149,20 @@ class DefaultCommandResultProcessor(
         }
     }
 
+    fun processFailedSendingCommand(command: CommandMessage) {
+        val commandTaskCompletionSource = commandTaskDict.asMap().remove(command.id)
+        if (commandTaskCompletionSource != null) {
+            val commandResult = CommandResult(
+                CommandStatus.Failed,
+                command.id,
+                command.aggregateRootId,
+                "Failed to send the command.",
+            )
+            // 发送失败消息
+            commandTaskCompletionSource.taskCompletionSource.complete(commandResult)
+        }
+    }
+
     private fun processDomainEventHandledMessage(message: GenericReplyMessage) {
         val commandTaskCompletionSource = commandTaskDict.asMap()[message.commandId]
         if (commandTaskCompletionSource != null) {
@@ -136,7 +171,13 @@ class DefaultCommandResultProcessor(
                 return
             }
             commandTaskDict.asMap().remove(message.commandId)
-            commandTaskCompletionSource.taskCompletionSource.complete(message.asCommandResult())
+            val commandResult = CommandResult(
+                CommandStatus.Success,
+                message.commandId,
+                message.aggregateRootId,
+                "",
+            )
+            commandTaskCompletionSource.taskCompletionSource.complete(commandResult)
             if (logger.isDebugEnabled) {
                 logger.debug("DomainEvent result return, {}", serializeService.serialize(message))
             }
@@ -146,15 +187,23 @@ class DefaultCommandResultProcessor(
     private val logger = LoggerFactory.getLogger(DefaultCommandResultProcessor::class.java)
 
     init {
-        commandTaskDict = CacheBuilder.newBuilder().removalListener { notification ->
-            if (notification.cause == RemovalCause.EXPIRED) {
-                processTimeoutCommand(notification.key!!, notification.value)
-            }
-        }.expireAfterWrite(completionSourceTimeout.toLong(), TimeUnit.MILLISECONDS).build()
+        commandTaskDict = CacheBuilder.newBuilder()
+            .removalListener { notification ->
+                if (notification.cause == RemovalCause.EXPIRED) {
+                    processTimeoutCommand(notification.key!!, notification.value)
+                }
+            }.expireAfterWrite(completionSourceTimeout.toLong(), TimeUnit.MILLISECONDS)
+            .build()
         commandExecutedMessageLocalQueue = LinkedBlockingQueue()
+        domainEventHandledMessageLocalQueue = LinkedBlockingQueue()
         commandExecutedMessageWorker = Worker("ProcessExecutedCommandMessage") {
-            processCommandReturnMessage(
+            processExecutedCommandMessage(
                 commandExecutedMessageLocalQueue.take()
+            )
+        }
+        domainEventHandledMessageWorker = Worker("ProcessDomainEventHandledMessage") {
+            processDomainEventHandledMessage(
+                domainEventHandledMessageLocalQueue.take()
             )
         }
     }
