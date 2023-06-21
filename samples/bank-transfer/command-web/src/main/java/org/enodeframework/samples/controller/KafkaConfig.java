@@ -54,7 +54,7 @@ public class KafkaConfig {
     @Bean
     public ConcurrentMessageListenerContainer<String, String> retryListenerContainer(CommandResultProcessor commandResultProcessor) {
         ContainerProperties properties = new ContainerProperties(replyTopic);
-        properties.setGroupId(DEFAULT_CONSUMER_GROUP0 + "#" + commandResultProcessor.ReplyAddress());
+        properties.setGroupId(DEFAULT_CONSUMER_GROUP0 + "#" + commandResultProcessor.replyAddress());
         properties.setMessageListener(kafkaReplyListener);
         properties.setMissingTopicsFatal(false);
         properties.setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);

@@ -4,6 +4,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.enodeframework.commanding.CommandConfiguration;
 import org.enodeframework.kafka.KafkaMessageListener;
 import org.enodeframework.queue.command.CommandResultProcessor;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,16 +54,18 @@ public class EnodeTestKafkaConfig {
         properties.setGroupId(Constants.DEFAULT_CONSUMER_GROUP1);
         properties.setMessageListener(kafkaCommandListener);
         properties.setMissingTopicsFatal(false);
+        properties.setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
         return new ConcurrentMessageListenerContainer<>(consumerFactory, properties);
     }
 
     @Bean
     @ConditionalOnProperty(prefix = "spring.enode", name = "reply", havingValue = "kafka")
-    public ConcurrentMessageListenerContainer<String, String> replyListenerContainer(CommandResultProcessor commandResultProcessor, KafkaMessageListener kafkaReplyListener, ConsumerFactory<String, String> consumerFactory) {
-        ContainerProperties properties = new ContainerProperties(replyTopic);
-        properties.setGroupId(Constants.DEFAULT_CONSUMER_GROUP2 + "#" + commandResultProcessor.ReplyAddress());
+    public ConcurrentMessageListenerContainer<String, String> replyListenerContainer(CommandConfiguration commandConfiguration, KafkaMessageListener kafkaReplyListener, ConsumerFactory<String, String> consumerFactory) {
+        ContainerProperties properties = new ContainerProperties(commandConfiguration.replyTo());
+        properties.setGroupId(Constants.DEFAULT_CONSUMER_GROUP2);
         properties.setMessageListener(kafkaReplyListener);
         properties.setMissingTopicsFatal(false);
+        properties.setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
         return new ConcurrentMessageListenerContainer<>(consumerFactory, properties);
     }
 
@@ -72,6 +75,7 @@ public class EnodeTestKafkaConfig {
         properties.setGroupId(Constants.DEFAULT_CONSUMER_GROUP3);
         properties.setMessageListener(kafkaDomainEventListener);
         properties.setMissingTopicsFatal(false);
+        properties.setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
         return new ConcurrentMessageListenerContainer<>(consumerFactory, properties);
     }
 
@@ -79,12 +83,10 @@ public class EnodeTestKafkaConfig {
     public ProducerFactory<String, String> producerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, Constants.KAFKA_SERVER);
-        props.put(ProducerConfig.RETRIES_CONFIG, 1);
+        props.put(ProducerConfig.RETRIES_CONFIG, 0);
         props.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
-        props.put(ProducerConfig.LINGER_MS_CONFIG, 100);
         props.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, 500);
         props.put(ProducerConfig.METADATA_MAX_AGE_CONFIG, 60000);
-        props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 1024000);
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         return new DefaultKafkaProducerFactory<>(props);

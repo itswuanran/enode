@@ -20,5 +20,6 @@ class NoOpMessageHandler : MessageHandler {
     private val logger = LoggerFactory.getLogger(NoOpMessageHandler::class.java)
     override fun handle(queueMessage: QueueMessage, context: MessageContext) {
         logger.error("Received no route message: {}", queueMessage)
+        context.onMessageHandled(queueMessage)
     }
 }

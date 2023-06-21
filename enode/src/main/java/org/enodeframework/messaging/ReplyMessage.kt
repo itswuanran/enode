@@ -43,7 +43,7 @@ interface ReplyMessage : Message {
 
     fun asPartQueueMessage(): QueueMessage {
         val queueMessage = QueueMessage()
-        queueMessage.key = "${this.commandId}_agg_cmd_${this.aggregateRootId}"
+        queueMessage.key = "${this.commandId}_cmd_agg_${this.aggregateRootId}"
         queueMessage.routeKey = this.commandId
         queueMessage.tag = this.address
         queueMessage.type = MessageTypeCode.ReplyMessage.value

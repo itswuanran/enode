@@ -51,7 +51,7 @@ public class KafkaSendReplyService implements SendReplyService {
     private QueueMessage buildQueueMessage(ReplyMessage replyMessage) {
         GenericReplyMessage message = replyMessage.asGenericReplyMessage();
         QueueMessage queueMessage = replyMessage.asPartQueueMessage();
-        queueMessage.setTopic(commandConfiguration.getReplyTopic());
+        queueMessage.setTopic(commandConfiguration.replyTo(replyMessage.getAddress()));
         queueMessage.setBody(serializeService.serializeBytes(message));
         queueMessage.setType(MessageTypeCode.ReplyMessage.getValue());
         return queueMessage;

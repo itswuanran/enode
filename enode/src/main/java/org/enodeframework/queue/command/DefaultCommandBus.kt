@@ -76,7 +76,7 @@ class DefaultCommandBus(
         val commandData = serializeService.serialize(command)
         val genericCommandMessage = GenericCommandMessage()
         if (needReply) {
-            genericCommandMessage.replyAddress = commandResultProcessor.ReplyAddress()
+            genericCommandMessage.replyAddress = commandResultProcessor.replyAddress()
         }
         genericCommandMessage.commandData = commandData
         genericCommandMessage.commandType = command.javaClass.name

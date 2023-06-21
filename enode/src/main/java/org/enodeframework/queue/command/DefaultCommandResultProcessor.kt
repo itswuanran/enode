@@ -63,7 +63,7 @@ class DefaultCommandResultProcessor(
         }
     }
 
-    override fun ReplyAddress(): String {
+    override fun replyAddress(): String {
         return "enode://${commandConfiguration.host}:${commandConfiguration.port}"
     }
 

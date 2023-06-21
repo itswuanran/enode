@@ -14,11 +14,9 @@ class DefaultReplyMessageHandler(
     private val logger = LoggerFactory.getLogger(DefaultReplyMessageHandler::class.java)
 
     override fun handle(queueMessage: QueueMessage, context: MessageContext) {
-        if (queueMessage.tag != commandResultProcessor.ReplyAddress()) {
-            logger.warn("Received reply message belongs others: {}", queueMessage)
-        }
         logger.info("Received reply message: {}", queueMessage)
         val replyMessage = serializeService.deserializeBytes(queueMessage.body, GenericReplyMessage::class.java)
         commandResultProcessor.processReplyMessage(replyMessage)
+        context.onMessageHandled(queueMessage)
     }
 }

@@ -57,7 +57,7 @@ class DefaultDomainEventMessageHandler(
         return domainEventStreamMessage
     }
 
-    internal class DomainEventStreamProcessContext(
+    class DomainEventStreamProcessContext(
         private val eventConsumer: DefaultDomainEventMessageHandler,
         private val domainEventStreamMessage: DomainEventStream,
         private val queueMessage: QueueMessage,
@@ -80,7 +80,7 @@ class DefaultDomainEventMessageHandler(
             replyMessage.address = address ?: ""
             replyMessage.status = CommandStatus.Success
             replyMessage.returnType = CommandReturnType.EventHandled
-            return eventConsumer.sendReplyService.send(replyMessage).thenCompose { Task.completedTask }
+            return eventConsumer.sendReplyService.send(replyMessage).thenApply { true }
         }
     }
 

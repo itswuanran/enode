@@ -24,7 +24,7 @@ class TcpServerListener(
     private val logger = LoggerFactory.getLogger(TcpServerListener::class.java)
 
     override fun start() {
-        val address = commandResultProcessor.ReplyAddress()
+        val address = commandResultProcessor.replyAddress()
         vertx.eventBus().consumer(address) { msg: Message<JsonObject> ->
             processRequestInternal(msg.body())
         }
