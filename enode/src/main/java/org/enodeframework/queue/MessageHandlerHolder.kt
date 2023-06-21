@@ -10,7 +10,7 @@ class MessageHandlerHolder(private val messageHandlerMap: MutableMap<String, Mes
         return this
     }
 
-    fun chooseMessageHandle(type: String): MessageHandler {
+    fun chooseMessageHandler(type: String): MessageHandler {
         val handler = messageHandlerMap[type]
         return handler ?: NoOpMessageHandler()
     }

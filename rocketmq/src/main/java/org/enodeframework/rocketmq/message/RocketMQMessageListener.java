@@ -50,7 +50,7 @@ public class RocketMQMessageListener implements MessageListenerConcurrently, Mes
         CountDownLatch latch = new CountDownLatch(msgs.size());
         msgs.forEach(msg -> {
             QueueMessage queueMessage = this.covertToQueueMessage(msg);
-            MessageHandler messageHandler = messageHandlerHolder.chooseMessageHandle(queueMessage.getType());
+            MessageHandler messageHandler = messageHandlerHolder.chooseMessageHandler(queueMessage.getType());
             messageHandler.handle(queueMessage, message -> {
                 latch.countDown();
             });
@@ -75,7 +75,7 @@ public class RocketMQMessageListener implements MessageListenerConcurrently, Mes
         CountDownLatch latch = new CountDownLatch(msgs.size());
         msgs.forEach(msg -> {
             QueueMessage queueMessage = this.covertToQueueMessage(msg);
-            MessageHandler messageHandler = messageHandlerHolder.chooseMessageHandle(queueMessage.getType());
+            MessageHandler messageHandler = messageHandlerHolder.chooseMessageHandler(queueMessage.getType());
             messageHandler.handle(queueMessage, message -> {
                 latch.countDown();
             });

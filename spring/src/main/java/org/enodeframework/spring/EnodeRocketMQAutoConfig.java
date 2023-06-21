@@ -20,9 +20,7 @@ package org.enodeframework.spring;
 
 import org.apache.rocketmq.client.producer.MQProducer;
 import org.enodeframework.common.serializing.SerializeService;
-import org.enodeframework.queue.MessageHandler;
 import org.enodeframework.queue.MessageHandlerHolder;
-import org.enodeframework.queue.MessageTypeCode;
 import org.enodeframework.rocketmq.message.RocketMQMessageListener;
 import org.enodeframework.rocketmq.message.RocketMQSendMessageService;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -37,39 +35,24 @@ public class EnodeRocketMQAutoConfig {
 
     @Bean(name = "rocketMQDomainEventListener")
     @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "event")
-    public RocketMQMessageListener rocketMQDomainEventListener(
-        @Qualifier(value = "defaultPublishableExceptionMessageHandler")
-        MessageHandler defaultPublishableExceptionMessageHandler,
-        @Qualifier(value = "defaultApplicationMessageHandler") MessageHandler defaultApplicationMessageHandler,
-        @Qualifier(value = "defaultDomainEventMessageHandler") MessageHandler defaultDomainEventMessageHandler) {
-        MessageHandlerHolder messageHandlerMap = new MessageHandlerHolder();
-        messageHandlerMap.put(MessageTypeCode.DomainEventMessage.getValue(), defaultDomainEventMessageHandler);
-        messageHandlerMap.put(MessageTypeCode.ApplicationMessage.getValue(), defaultApplicationMessageHandler);
-        messageHandlerMap.put(MessageTypeCode.ExceptionMessage.getValue(), defaultPublishableExceptionMessageHandler);
-        return new RocketMQMessageListener(messageHandlerMap);
+    public RocketMQMessageListener rocketMQDomainEventListener(MessageHandlerHolder messageHandlerHolder) {
+        return new RocketMQMessageListener(messageHandlerHolder);
     }
 
     @Bean(name = "rocketMQCommandListener")
     @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "command")
-    public RocketMQMessageListener rocketMQCommandListener(
-        @Qualifier(value = "defaultCommandMessageHandler") MessageHandler defaultCommandMessageHandler) {
-        MessageHandlerHolder messageHandlerMap = new MessageHandlerHolder();
-        messageHandlerMap.put(MessageTypeCode.CommandMessage.getValue(), defaultCommandMessageHandler);
-        return new RocketMQMessageListener(messageHandlerMap);
+    public RocketMQMessageListener rocketMQCommandListener(MessageHandlerHolder messageHandlerHolder) {
+        return new RocketMQMessageListener(messageHandlerHolder);
     }
 
     @Bean(name = "rocketMQReplyListener")
     @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "reply")
-    public RocketMQMessageListener rocketMQReplyListener(
-        @Qualifier(value = "defaultReplyMessageHandler") MessageHandler defaultReplyMessageHandler) {
-        MessageHandlerHolder messageHandlerMap = new MessageHandlerHolder();
-        messageHandlerMap.put(MessageTypeCode.ReplyMessage.getValue(), defaultReplyMessageHandler);
-        return new RocketMQMessageListener(messageHandlerMap);
+    public RocketMQMessageListener rocketMQReplyListener(MessageHandlerHolder messageHandlerHolder) {
+        return new RocketMQMessageListener(messageHandlerHolder);
     }
 
     @Bean(name = "rocketMQSendMessageService")
-    public RocketMQSendMessageService rocketMQSendMessageService(
-        @Qualifier(value = "enodeMQProducer") MQProducer mqProducer, SerializeService serializeService) {
+    public RocketMQSendMessageService rocketMQSendMessageService(@Qualifier(value = "enodeMQProducer") MQProducer mqProducer, SerializeService serializeService) {
         return new RocketMQSendMessageService(replyTopic, mqProducer, serializeService);
     }
 }

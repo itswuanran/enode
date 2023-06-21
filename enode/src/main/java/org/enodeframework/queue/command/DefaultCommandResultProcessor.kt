@@ -3,6 +3,7 @@ package org.enodeframework.queue.command
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.RemovalCause
+import org.enodeframework.commanding.CommandConfiguration
 import org.enodeframework.commanding.CommandMessage
 import org.enodeframework.commanding.CommandResult
 import org.enodeframework.commanding.CommandReturnType
@@ -26,7 +27,7 @@ import java.util.concurrent.TimeUnit
 class DefaultCommandResultProcessor(
     private val scheduleService: ScheduleService,
     private val serializeService: SerializeService,
-    private val uniqueAddress: String,
+    private val commandConfiguration: CommandConfiguration,
     private val completionSourceTimeout: Int
 ) : CommandResultProcessor {
     private val scanExpireCommandTaskName: String =
@@ -36,7 +37,6 @@ class DefaultCommandResultProcessor(
     private val domainEventHandledMessageLocalQueue: BlockingQueue<GenericReplyMessage>
     private val commandExecutedMessageWorker: Worker
     private val domainEventHandledMessageWorker: Worker
-
 
     override fun registerProcessingCommand(
         command: CommandMessage,
@@ -67,8 +67,8 @@ class DefaultCommandResultProcessor(
         }
     }
 
-    override fun uniqueReplyAddress(): String {
-        return uniqueAddress
+    override fun ReplyAddress(): String {
+        return "enode://${commandConfiguration.host}:${commandConfiguration.port}"
     }
 
     fun start() {

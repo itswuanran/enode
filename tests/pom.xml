@@ -58,7 +58,10 @@
         <dependency>
             <groupId>org.enodeframework</groupId>
             <artifactId>enode-vertx-tcp</artifactId>
-            <version>1.1.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.enodeframework</groupId>
+            <artifactId>enode-redis</artifactId>
         </dependency>
         <dependency>
             <groupId>org.enodeframework</groupId>
@@ -79,6 +82,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

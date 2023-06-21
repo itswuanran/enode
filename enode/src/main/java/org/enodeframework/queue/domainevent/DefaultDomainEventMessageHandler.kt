@@ -2,6 +2,7 @@ package org.enodeframework.queue.domainevent
 
 import com.google.common.base.Strings
 import org.enodeframework.commanding.CommandReturnType
+import org.enodeframework.commanding.CommandStatus
 import org.enodeframework.common.extensions.SysProperties
 import org.enodeframework.common.io.Task
 import org.enodeframework.common.serializing.SerializeService
@@ -77,6 +78,7 @@ class DefaultDomainEventMessageHandler(
             replyMessage.aggregateRootId = domainEventStreamMessage.aggregateRootId
             replyMessage.result = commandResult ?: ""
             replyMessage.address = address ?: ""
+            replyMessage.status = CommandStatus.Success
             replyMessage.returnType = CommandReturnType.EventHandled
             return eventConsumer.sendReplyService.send(replyMessage).thenCompose { Task.completedTask }
         }

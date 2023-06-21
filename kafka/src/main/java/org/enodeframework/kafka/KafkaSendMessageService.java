@@ -18,23 +18,20 @@
  */
 package org.enodeframework.kafka;
 
+import com.google.common.collect.Maps;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.enodeframework.common.exception.IORuntimeException;
 import org.enodeframework.common.extensions.SysProperties;
-import org.enodeframework.common.serializing.SerializeService;
-import org.enodeframework.messaging.ReplyMessage;
-import org.enodeframework.queue.MessageTypeCode;
 import org.enodeframework.queue.QueueMessage;
 import org.enodeframework.queue.SendMessageResult;
 import org.enodeframework.queue.SendMessageService;
-import org.enodeframework.queue.reply.GenericReplyMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -43,14 +40,10 @@ import java.util.concurrent.CompletableFuture;
 public class KafkaSendMessageService implements SendMessageService {
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaSendMessageService.class);
-    private final String replyTopic;
     private final KafkaTemplate<String, String> producer;
-    private final SerializeService serializeService;
 
-    public KafkaSendMessageService(String replyTopic, KafkaTemplate<String, String> producer, SerializeService serializeService) {
+    public KafkaSendMessageService(KafkaTemplate<String, String> producer) {
         this.producer = producer;
-        this.replyTopic = replyTopic;
-        this.serializeService = serializeService;
     }
 
     @Override
@@ -64,7 +57,9 @@ public class KafkaSendMessageService implements SendMessageService {
             if (logger.isDebugEnabled()) {
                 logger.debug("Async send message success, sendResult: {}, message: {}", result, queueMessage);
             }
-            return new SendMessageResult(msgId(result.getRecordMetadata()));
+            Map<String, Object> items = Maps.newHashMap();
+            items.put("result", result);
+            return new SendMessageResult("", items);
         });
     }
 
@@ -76,23 +71,5 @@ public class KafkaSendMessageService implements SendMessageService {
         return record;
     }
 
-    public CompletableFuture<SendMessageResult> send(ReplyMessage message) {
-        return sendMessageAsync(buildQueueMessage(message));
-    }
 
-    private QueueMessage buildQueueMessage(ReplyMessage replyMessage) {
-        GenericReplyMessage message = replyMessage.asGenericReplyMessage();
-        QueueMessage queueMessage = replyMessage.asPartQueueMessage();
-        queueMessage.setTopic(replyTopic);
-        queueMessage.setBody(serializeService.serializeBytes(message));
-        queueMessage.setType(MessageTypeCode.ReplyMessage.getValue());
-        return queueMessage;
-    }
-
-    private String msgId(RecordMetadata meta) {
-        if (meta == null) {
-            return "";
-        }
-        return String.format("%s:%d:%d", meta.topic(), meta.partition(), meta.offset());
-    }
 }

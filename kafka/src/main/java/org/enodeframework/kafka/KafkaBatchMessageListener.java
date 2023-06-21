@@ -25,8 +25,6 @@ import org.enodeframework.common.io.Task;
 import org.enodeframework.queue.MessageHandler;
 import org.enodeframework.queue.MessageHandlerHolder;
 import org.enodeframework.queue.QueueMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.kafka.listener.BatchAcknowledgingConsumerAwareMessageListener;
 import org.springframework.kafka.listener.BatchAcknowledgingMessageListener;
 import org.springframework.kafka.listener.BatchConsumerAwareMessageListener;
@@ -81,7 +79,7 @@ public class KafkaBatchMessageListener implements BatchAcknowledgingMessageListe
         CountDownLatch latch = new CountDownLatch(data.size());
         data.forEach(message -> {
             QueueMessage queueMessage = this.covertToQueueMessage(message);
-            MessageHandler messageHandler = messageHandlerHolder.chooseMessageHandle(queueMessage.getType());
+            MessageHandler messageHandler = messageHandlerHolder.chooseMessageHandler(queueMessage.getType());
             messageHandler.handle(queueMessage, context -> {
                 latch.countDown();
             });

@@ -19,5 +19,5 @@ interface CommandResultProcessor {
 
     fun processReplyMessage(replyMessage: GenericReplyMessage)
 
-    fun uniqueReplyAddress(): String
+    fun ReplyAddress(): String
 }

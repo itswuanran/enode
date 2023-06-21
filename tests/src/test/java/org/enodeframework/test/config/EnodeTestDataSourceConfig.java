@@ -11,7 +11,6 @@ import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.PoolOptions;
 import org.enodeframework.jdbc.JDBCEventStore;
 import org.enodeframework.jdbc.JDBCPublishedVersionStore;
-import org.enodeframework.queue.command.DefaultCommandResultProcessor;
 import org.enodeframework.vertx.message.TcpSendReplyService;
 import org.enodeframework.vertx.message.TcpServerListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,9 +39,6 @@ public class EnodeTestDataSourceConfig {
 
     @Value("${spring.enode.datasource.pg.password:}")
     private String pgPassword;
-
-    @Autowired
-    private DefaultCommandResultProcessor commandResultProcessor;
 
     @Autowired(required = false)
     private JDBCEventStore jdbcEventStore;

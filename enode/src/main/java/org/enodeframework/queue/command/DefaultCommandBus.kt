@@ -5,6 +5,7 @@ import org.enodeframework.commanding.CommandBus
 import org.enodeframework.commanding.CommandMessage
 import org.enodeframework.commanding.CommandResult
 import org.enodeframework.commanding.CommandReturnType
+import org.enodeframework.commanding.CommandStatus
 import org.enodeframework.common.serializing.SerializeService
 import org.enodeframework.common.utils.Assert
 import org.enodeframework.queue.MessageTypeCode
@@ -46,12 +47,12 @@ class DefaultCommandBus(
             val sendMessageAsync = sendMessageService.sendMessageAsync(buildCommandMessage(command, true))
             sendMessageAsync.exceptionally { ex: Throwable ->
                 val replyMessage = GenericReplyMessage()
+                replyMessage.status = CommandStatus.SendFailed.value
                 replyMessage.commandId = command.id
                 replyMessage.aggregateRootId = command.aggregateRootId
                 replyMessage.returnType = commandReturnType.value
                 replyMessage.result = ex.message ?: ""
                 commandResultProcessor.processReplyMessage(replyMessage)
-                taskCompletionSource.completeExceptionally(ex)
                 null
             }
         } catch (ex: Exception) {
@@ -74,7 +75,7 @@ class DefaultCommandBus(
         val commandData = serializeService.serialize(command)
         val genericCommandMessage = GenericCommandMessage()
         if (needReply) {
-            genericCommandMessage.replyAddress = commandResultProcessor.uniqueReplyAddress()
+            genericCommandMessage.replyAddress = commandResultProcessor.ReplyAddress()
         }
         genericCommandMessage.commandData = commandData
         genericCommandMessage.commandType = command.javaClass.name

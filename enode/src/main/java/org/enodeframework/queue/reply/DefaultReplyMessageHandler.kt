@@ -14,7 +14,7 @@ class DefaultReplyMessageHandler(
     private val logger = LoggerFactory.getLogger(DefaultReplyMessageHandler::class.java)
 
     override fun handle(queueMessage: QueueMessage, context: MessageContext) {
-        if (queueMessage.tag != commandResultProcessor.uniqueReplyAddress()) {
+        if (queueMessage.tag != commandResultProcessor.ReplyAddress()) {
             logger.warn("Received reply message belongs others: {}", queueMessage)
         }
         logger.info("Received reply message: {}", queueMessage)

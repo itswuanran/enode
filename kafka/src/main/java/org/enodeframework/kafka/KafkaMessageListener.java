@@ -62,9 +62,11 @@ public class KafkaMessageListener implements AcknowledgingMessageListener<String
 
     private QueueMessage covertToQueueMessage(ConsumerRecord<String, String> record) {
         String mType = Optional.ofNullable(record.headers().lastHeader(SysProperties.MESSAGE_TYPE_KEY)).map(x -> new String(x.value())).orElse("");
+        String tag = Optional.ofNullable(record.headers().lastHeader(SysProperties.MESSAGE_TAG_KEY)).map(x -> new String(x.value())).orElse("");
         QueueMessage queueMessage = new QueueMessage();
         queueMessage.setBody(record.value().getBytes(StandardCharsets.UTF_8));
         queueMessage.setType(mType);
+        queueMessage.setTag(tag);
         queueMessage.setTopic(record.topic());
         queueMessage.setRouteKey(record.key());
         queueMessage.setKey(record.key());
@@ -74,7 +76,7 @@ public class KafkaMessageListener implements AcknowledgingMessageListener<String
     @Override
     public void onMessage(ConsumerRecord<String, String> data, @Nullable Acknowledgment acknowledgment, @Nullable Consumer<?, ?> consumer) {
         QueueMessage queueMessage = this.covertToQueueMessage(data);
-        MessageHandler messageHandler = messageHandlerHolder.chooseMessageHandle(queueMessage.getType());
+        MessageHandler messageHandler = messageHandlerHolder.chooseMessageHandler(queueMessage.getType());
         messageHandler.handle(queueMessage, context -> {
             if (acknowledgment != null) {
                 acknowledgment.acknowledge();

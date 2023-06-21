@@ -27,9 +27,9 @@ public class SysProperties {
      */
     public static final String AGGREGATE_ROOT_HANDLE_METHOD_NAME_PREFIX = "handle";
     public static final String ITEMS_COMMAND_RESULT_KEY = "COMMAND_RESULT";
-    
-    public static final String MESSAGE_TYPE_KEY = "MESSAGE_TYPE";
-    public static final String MESSAGE_TAG_KEY = "ENODE_TAG";
+
+    public static final String MESSAGE_TYPE_KEY = "ETYPE";
+    public static final String MESSAGE_TAG_KEY = "ETAG";
     public static final String ITEMS_COMMAND_REPLY_ADDRESS_KEY = "COMMAND_REPLY_ADDRESS";
 
     public static final String CHANNEL_TAG_TPL = "%s#%s";

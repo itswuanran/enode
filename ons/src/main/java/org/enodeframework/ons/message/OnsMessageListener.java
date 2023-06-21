@@ -50,7 +50,7 @@ public class OnsMessageListener implements MessageListener, BatchMessageListener
     @Override
     public Action consume(Message msg, ConsumeContext consumeContext) {
         QueueMessage queueMessage = this.covertToQueueMessage(msg);
-        MessageHandler messageHandler = messageHandlerHolder.chooseMessageHandle(queueMessage.getType());
+        MessageHandler messageHandler = messageHandlerHolder.chooseMessageHandler(queueMessage.getType());
         CountDownLatch latch = new CountDownLatch(1);
         messageHandler.handle(queueMessage, message -> {
             latch.countDown();
@@ -64,7 +64,7 @@ public class OnsMessageListener implements MessageListener, BatchMessageListener
         CountDownLatch latch = new CountDownLatch(messages.size());
         messages.forEach(msg -> {
             QueueMessage queueMessage = this.covertToQueueMessage(msg);
-            MessageHandler messageHandler = messageHandlerHolder.chooseMessageHandle(queueMessage.getType());
+            MessageHandler messageHandler = messageHandlerHolder.chooseMessageHandler(queueMessage.getType());
             messageHandler.handle(queueMessage, message -> {
                 latch.countDown();
             });

@@ -19,9 +19,8 @@
 package org.enodeframework.spring;
 
 import com.google.common.collect.Maps;
-import io.vertx.core.VertxOptions;
-import io.vertx.core.net.NetServerOptions;
 import kotlinx.coroutines.Dispatchers;
+import org.enodeframework.commanding.CommandConfiguration;
 import org.enodeframework.commanding.CommandHandlerProvider;
 import org.enodeframework.commanding.CommandProcessor;
 import org.enodeframework.commanding.ProcessingCommandHandler;
@@ -68,6 +67,9 @@ import org.enodeframework.messaging.impl.DefaultMessageDispatcher;
 import org.enodeframework.messaging.impl.DefaultMessageHandlerProvider;
 import org.enodeframework.messaging.impl.DefaultThreeMessageHandlerProvider;
 import org.enodeframework.messaging.impl.DefaultTwoMessageHandlerProvider;
+import org.enodeframework.queue.MessageHandler;
+import org.enodeframework.queue.MessageHandlerHolder;
+import org.enodeframework.queue.MessageTypeCode;
 import org.enodeframework.queue.SendMessageService;
 import org.enodeframework.queue.SendReplyService;
 import org.enodeframework.queue.applicationmessage.DefaultApplicationMessageHandler;
@@ -81,8 +83,6 @@ import org.enodeframework.queue.domainevent.DefaultDomainEventPublisher;
 import org.enodeframework.queue.publishableexceptions.DefaultPublishableExceptionMessageHandler;
 import org.enodeframework.queue.publishableexceptions.DefaultPublishableExceptionPublisher;
 import org.enodeframework.queue.reply.DefaultReplyMessageHandler;
-import org.enodeframework.vertx.message.TcpSendReplyService;
-import org.enodeframework.vertx.message.TcpServerListener;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -101,16 +101,20 @@ public class EnodeAutoConfiguration {
     @Value("${spring.enode.mq.topic.event:}")
     private String eventTopic;
 
-    @Value("${spring.enode.server.port:2019}")
-    private int port;
-
     @Value("${spring.enode.server.wait.timeout:10000}")
     private int timeout;
 
+    @Value("${spring.enode.server.port:2019}")
+    private int port;
+
     @Bean(name = "defaultCommandResultProcessor", initMethod = "start", destroyMethod = "stop")
-    public DefaultCommandResultProcessor defaultCommandResultProcessor(ScheduleService scheduleService, SerializeService serializeService) throws Exception {
-        String uniqueAddress = String.format("enode://%s:%d", InetAddress.getLocalHost().getHostAddress(), port);
-        return new DefaultCommandResultProcessor(scheduleService, serializeService, uniqueAddress, timeout);
+    public DefaultCommandResultProcessor defaultCommandResultProcessor(CommandConfiguration commandConfiguration, ScheduleService scheduleService, SerializeService serializeService) throws Exception {
+        return new DefaultCommandResultProcessor(scheduleService, serializeService, commandConfiguration, timeout);
+    }
+
+    @Bean(name = "defaultCommandConfiguration")
+    public DefaultCommandConfiguration defaultCommandConfiguration() throws Exception {
+        return new DefaultCommandConfiguration("127.0.0.1", port);
     }
 
     @Bean(name = "defaultScheduleService")
@@ -241,6 +245,23 @@ public class EnodeAutoConfiguration {
         return new DefaultPublishableExceptionPublisher(eventTopic, "", sendMessageService, serializeService, typeNameProvider);
     }
 
+    @Bean(name = "messageHandlerHolder")
+    public MessageHandlerHolder messageHandlerHolder(
+        @Qualifier(value = "defaultPublishableExceptionMessageHandler") MessageHandler defaultPublishableExceptionMessageHandler,
+        @Qualifier(value = "defaultApplicationMessageHandler") MessageHandler defaultApplicationMessageHandler,
+        @Qualifier(value = "defaultDomainEventMessageHandler") MessageHandler defaultDomainEventMessageHandler,
+        @Qualifier(value = "defaultCommandMessageHandler") MessageHandler defaultCommandMessageHandler,
+        @Qualifier(value = "defaultReplyMessageHandler") MessageHandler defaultReplyMessageHandler
+    ) {
+        MessageHandlerHolder messageHandlerHolder = new MessageHandlerHolder();
+        messageHandlerHolder.put(MessageTypeCode.DomainEventMessage.getValue(), defaultDomainEventMessageHandler);
+        messageHandlerHolder.put(MessageTypeCode.ApplicationMessage.getValue(), defaultApplicationMessageHandler);
+        messageHandlerHolder.put(MessageTypeCode.ExceptionMessage.getValue(), defaultPublishableExceptionMessageHandler);
+        messageHandlerHolder.put(MessageTypeCode.CommandMessage.getValue(), defaultCommandMessageHandler);
+        messageHandlerHolder.put(MessageTypeCode.ReplyMessage.getValue(), defaultReplyMessageHandler);
+        return messageHandlerHolder;
+    }
+
     @Bean(name = "defaultCommandMessageHandler")
     public DefaultCommandMessageHandler defaultCommandMessageHandler(SendReplyService sendReplyService, TypeNameProvider typeNameProvider, CommandProcessor commandProcessor, Repository repository, AggregateStorage aggregateRootStorage, SerializeService serializeService) {
         return new DefaultCommandMessageHandler(sendReplyService, typeNameProvider, commandProcessor, repository, aggregateRootStorage, serializeService);
@@ -265,22 +286,6 @@ public class EnodeAutoConfiguration {
     public DefaultApplicationMessageHandler defaultApplicationMessageHandler(TypeNameProvider typeNameProvider, MessageDispatcher messageDispatcher, SerializeService serializeService) {
         return new DefaultApplicationMessageHandler(typeNameProvider, messageDispatcher, serializeService);
     }
-
-    @Bean(name = "tcpServerListener")
-    @ConditionalOnProperty(prefix = "spring.enode", name = "reply", havingValue = "tcp", matchIfMissing = false)
-    public TcpServerListener tcpServerListener(CommandResultProcessor commandResultProcessor, SerializeService serializeService) throws Exception {
-        NetServerOptions option = new NetServerOptions();
-        option.setHost(InetAddress.getLocalHost().getHostAddress());
-        option.setPort(port);
-        return new TcpServerListener(commandResultProcessor, option);
-    }
-
-    @Bean(name = "tcpSendReplyService")
-    @ConditionalOnProperty(prefix = "spring.enode", name = "reply", havingValue = "tcp", matchIfMissing = false)
-    public TcpSendReplyService tcpSendReplyService() throws Exception {
-        return new TcpSendReplyService(new VertxOptions());
-    }
-
 }
 
 

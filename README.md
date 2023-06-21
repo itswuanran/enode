@@ -103,9 +103,9 @@ spring.enode.eventstore=mongo
 spring.enode.mq=kafka
 spring.enode.mq.topic.command=EnodeBankCommandTopic
 spring.enode.mq.topic.event=EnodeBankEventTopic
-spring.enode.mq.topic.event.tag.app-=app
-spring.enode.mq.topic.event.tag.exception-=exception
-spring.enode.mq.topic.event.tag.event-=domainevent
+spring.enode.mq.topic.event.tag.app=app
+spring.enode.mq.topic.event.tag.exception=exception
+spring.enode.mq.topic.event.tag.event=event
 ```
 
 ### `kafka bean`配置

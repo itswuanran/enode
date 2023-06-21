@@ -18,7 +18,8 @@
  */
 package org.enodeframework.redis.message;
 
-import org.enodeframework.queue.MessageHandler;
+import org.enodeframework.queue.MessageHandlerHolder;
+import org.enodeframework.queue.MessageTypeCode;
 import org.enodeframework.queue.QueueMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,19 +33,21 @@ import java.nio.charset.StandardCharsets;
  */
 public class RedisReplyMessageListener implements MessageListener {
     private static final Logger logger = LoggerFactory.getLogger(RedisReplyMessageListener.class);
-    private final MessageHandler messageHandler;
+    private final MessageHandlerHolder messageHandlerHolder;
 
-    public RedisReplyMessageListener(MessageHandler messageHandler) {
-        this.messageHandler = messageHandler;
+    public RedisReplyMessageListener(MessageHandlerHolder messageHandlerHolder) {
+        this.messageHandlerHolder = messageHandlerHolder;
     }
 
     public QueueMessage convertQueueMessage(Message message) {
         QueueMessage queueMessage = new QueueMessage();
         String channel = new String(message.getChannel(), StandardCharsets.UTF_8);
         String[] topicTag = channel.split("#");
+        queueMessage.setType(MessageTypeCode.ReplyMessage.getValue());
         queueMessage.setTopic(channel);
         if (topicTag.length >= 2) {
             queueMessage.setTag(topicTag[1]);
+            queueMessage.setTopic(topicTag[0]);
         }
         queueMessage.setBody(message.getBody());
         return queueMessage;
@@ -52,8 +55,9 @@ public class RedisReplyMessageListener implements MessageListener {
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
-        logger.info("redis message channel{}", message.getBody());
-        messageHandler.handle(convertQueueMessage(message), x -> {
+        QueueMessage queueMessage = convertQueueMessage(message);
+        logger.info("receive redis message. {}", queueMessage);
+        messageHandlerHolder.chooseMessageHandler(queueMessage.getType()).handle(queueMessage, x -> {
         });
     }
 }

@@ -19,7 +19,7 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.amqp</groupId>
-            <artifactId>spring-rabbit</artifactId>
+            <artifactId>spring-amqp</artifactId>
         </dependency>
     </dependencies>
 </project>

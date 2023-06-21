@@ -76,11 +76,6 @@
             </dependency>
             <dependency>
                 <groupId>org.enodeframework</groupId>
-                <artifactId>enode-vertx-tcp</artifactId>
-                <version>${revision}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.enodeframework</groupId>
                 <artifactId>enode-pg</artifactId>
                 <version>${revision}</version>
             </dependency>
@@ -107,6 +102,21 @@
             <dependency>
                 <groupId>org.enodeframework</groupId>
                 <artifactId>enode-metrics</artifactId>
+                <version>${revision}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.enodeframework</groupId>
+                <artifactId>enode-vertx-tcp</artifactId>
+                <version>${revision}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.enodeframework</groupId>
+                <artifactId>enode-redis</artifactId>
+                <version>${revision}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.enodeframework</groupId>
+                <artifactId>enode-amqp</artifactId>
                 <version>${revision}</version>
             </dependency>
         </dependencies>

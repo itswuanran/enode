@@ -48,7 +48,7 @@ public class PulsarMessageListener implements MessageListener<byte[]> {
     @Override
     public void received(Consumer<byte[]> consumer, Message<byte[]> msg) {
         QueueMessage queueMessage = this.toQueueMessage(msg);
-        MessageHandler messageHandler = messageHandlerHolder.chooseMessageHandle(queueMessage.getType());
+        MessageHandler messageHandler = messageHandlerHolder.chooseMessageHandler(queueMessage.getType());
         messageHandler.handle(queueMessage, x -> {
             try {
                 consumer.acknowledge(msg);

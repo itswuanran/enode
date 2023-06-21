@@ -26,7 +26,7 @@ import org.enodeframework.queue.SendReplyService;
 import org.enodeframework.queue.reply.GenericReplyMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -35,12 +35,11 @@ import java.util.concurrent.CompletableFuture;
  */
 public class RedisSendReplyService implements SendReplyService {
     private final String channel;
-    private final ReactiveRedisTemplate<String, String> reactiveRedisTemplate;
+    private final ReactiveStringRedisTemplate reactiveRedisTemplate;
     private final SerializeService serializeService;
-
     private static final Logger logger = LoggerFactory.getLogger(RedisSendReplyService.class);
 
-    public RedisSendReplyService(String channel, ReactiveRedisTemplate<String, String> reactiveRedisTemplate, SerializeService serializeService) {
+    public RedisSendReplyService(String channel, ReactiveStringRedisTemplate reactiveRedisTemplate, SerializeService serializeService) {
         this.channel = channel;
         this.reactiveRedisTemplate = reactiveRedisTemplate;
         this.serializeService = serializeService;

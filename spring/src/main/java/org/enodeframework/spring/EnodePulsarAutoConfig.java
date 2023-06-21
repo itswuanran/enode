@@ -23,10 +23,8 @@ import org.apache.pulsar.client.api.Producer;
 import org.enodeframework.common.serializing.SerializeService;
 import org.enodeframework.pulsar.message.PulsarMessageListener;
 import org.enodeframework.pulsar.message.PulsarSendMessageService;
-import org.enodeframework.queue.MessageHandler;
 import org.enodeframework.queue.MessageHandlerHolder;
 import org.enodeframework.queue.MessageTypeCode;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
@@ -53,34 +51,14 @@ public class EnodePulsarAutoConfig {
 
     @Bean(name = "pulsarDomainEventListener")
     @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "event")
-    public PulsarMessageListener pulsarDomainEventListener(
-        @Qualifier(value = "defaultPublishableExceptionMessageHandler") MessageHandler defaultPublishableExceptionMessageHandler,
-        @Qualifier(value = "defaultApplicationMessageHandler") MessageHandler defaultApplicationMessageHandler,
-        @Qualifier(value = "defaultDomainEventMessageHandler") MessageHandler defaultDomainEventMessageHandler) {
-        MessageHandlerHolder holder = new MessageHandlerHolder();
-        holder.put(MessageTypeCode.DomainEventMessage.getValue(), defaultDomainEventMessageHandler);
-        holder.put(MessageTypeCode.ApplicationMessage.getValue(), defaultApplicationMessageHandler);
-        holder.put(MessageTypeCode.ExceptionMessage.getValue(), defaultPublishableExceptionMessageHandler);
-        return new PulsarMessageListener(holder);
+    public PulsarMessageListener pulsarDomainEventListener(MessageHandlerHolder messageHandlerHolder) {
+        return new PulsarMessageListener(messageHandlerHolder);
     }
 
     @Bean(name = "pulsarCommandListener")
     @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "command")
-    public PulsarMessageListener pulsarCommandListener(
-        @Qualifier(value = "defaultCommandMessageHandler") MessageHandler defaultCommandMessageHandler) {
-        MessageHandlerHolder holder = new MessageHandlerHolder();
-        holder.put(MessageTypeCode.CommandMessage.getValue(), defaultCommandMessageHandler);
-        return new PulsarMessageListener(holder);
-    }
-
-
-    @Bean(name = "pulsarReplyListener")
-    @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "reply")
-    public PulsarMessageListener pulsarReplyListener(
-        @Qualifier(value = "defaultReplyMessageHandler") MessageHandler defaultReplyMessageHandler) {
-        MessageHandlerHolder holder = new MessageHandlerHolder();
-        holder.put(MessageTypeCode.ReplyMessage.getValue(), defaultReplyMessageHandler);
-        return new PulsarMessageListener(holder);
+    public PulsarMessageListener pulsarCommandListener(MessageHandlerHolder messageHandlerHolder) {
+        return new PulsarMessageListener(messageHandlerHolder);
     }
 
     @Bean(name = "pulsarSendMessageService")
