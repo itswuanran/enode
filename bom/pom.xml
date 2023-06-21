@@ -106,7 +106,7 @@
             </dependency>
             <dependency>
                 <groupId>org.enodeframework</groupId>
-                <artifactId>enode-vertx-tcp</artifactId>
+                <artifactId>enode-tcp</artifactId>
                 <version>${revision}</version>
             </dependency>
             <dependency>

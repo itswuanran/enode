@@ -53,6 +53,7 @@ class DefaultCommandBus(
                 replyMessage.returnType = commandReturnType.value
                 replyMessage.result = ex.message ?: ""
                 commandResultProcessor.processReplyMessage(replyMessage)
+                taskCompletionSource.completeExceptionally(ex)
                 null
             }
         } catch (ex: Exception) {

@@ -55,8 +55,8 @@ public class RedisReplyMessageListener implements MessageListener {
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
+        logger.info("receive redis message. {}, pattern: {}", message, new String(pattern));
         QueueMessage queueMessage = convertQueueMessage(message);
-        logger.info("receive redis message. {}", queueMessage);
         messageHandlerHolder.chooseMessageHandler(queueMessage.getType()).handle(queueMessage, x -> {
         });
     }

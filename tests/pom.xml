@@ -57,7 +57,7 @@
         </dependency>
         <dependency>
             <groupId>org.enodeframework</groupId>
-            <artifactId>enode-vertx-tcp</artifactId>
+            <artifactId>enode-tcp</artifactId>
         </dependency>
         <dependency>
             <groupId>org.enodeframework</groupId>

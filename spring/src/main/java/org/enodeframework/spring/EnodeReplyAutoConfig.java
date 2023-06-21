@@ -22,7 +22,6 @@ import io.vertx.core.VertxOptions;
 import io.vertx.core.net.NetServerOptions;
 import org.enodeframework.commanding.CommandConfiguration;
 import org.enodeframework.common.serializing.SerializeService;
-import org.enodeframework.kafka.KafkaMessageListener;
 import org.enodeframework.kafka.KafkaSendMessageService;
 import org.enodeframework.kafka.KafkaSendReplyService;
 import org.enodeframework.pulsar.message.PulsarMessageListener;
@@ -36,7 +35,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 
 public class EnodeReplyAutoConfig {
@@ -84,11 +82,6 @@ public class EnodeReplyAutoConfig {
         @Bean(name = "kafkaSendReplyService")
         public KafkaSendReplyService kafkaSendReplyService(KafkaSendMessageService kafkaSendMessageService, SerializeService serializeService) {
             return new KafkaSendReplyService(replyTopic, kafkaSendMessageService, serializeService);
-        }
-
-        @Bean(name = "kafkaReplyListener")
-        public KafkaMessageListener kafkaReplyListener(MessageHandlerHolder messageHandlerHolder) {
-            return new KafkaMessageListener(messageHandlerHolder);
         }
     }
 

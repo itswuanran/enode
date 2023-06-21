@@ -248,7 +248,7 @@ public class EnodeCoreTest extends AbstractTest {
             ChangeTestAggregateTitleCommand updateCommand = new ChangeTestAggregateTitleCommand();
             updateCommand.setAggregateRootId(aggregateId);
             updateCommand.setTitle("Changed Note");
-            commandService.executeAsync(updateCommand).thenAccept(result -> {
+            commandService.executeAsync(updateCommand).whenComplete((result, ex) -> {
                 Assert.assertNotNull(result);
                 Assert.assertNotNull(result);
                 Assert.assertEquals(CommandStatus.Success, result.getStatus());
