@@ -18,6 +18,7 @@
  */
 package org.enodeframework.kafka;
 
+import org.enodeframework.commanding.CommandConfiguration;
 import org.enodeframework.common.serializing.SerializeService;
 import org.enodeframework.messaging.ReplyMessage;
 import org.enodeframework.queue.MessageTypeCode;
@@ -32,13 +33,13 @@ import java.util.concurrent.CompletableFuture;
  * @author anruence@gmail.com
  */
 public class KafkaSendReplyService implements SendReplyService {
-    private final String replyTopic;
+    private final CommandConfiguration commandConfiguration;
     private final KafkaSendMessageService sendMessageService;
     private final SerializeService serializeService;
 
-    public KafkaSendReplyService(String replyTopic, KafkaSendMessageService sendMessageService, SerializeService serializeService) {
+    public KafkaSendReplyService(CommandConfiguration commandConfiguration, KafkaSendMessageService sendMessageService, SerializeService serializeService) {
         this.sendMessageService = sendMessageService;
-        this.replyTopic = replyTopic;
+        this.commandConfiguration = commandConfiguration;
         this.serializeService = serializeService;
     }
 
@@ -50,7 +51,7 @@ public class KafkaSendReplyService implements SendReplyService {
     private QueueMessage buildQueueMessage(ReplyMessage replyMessage) {
         GenericReplyMessage message = replyMessage.asGenericReplyMessage();
         QueueMessage queueMessage = replyMessage.asPartQueueMessage();
-        queueMessage.setTopic(replyTopic);
+        queueMessage.setTopic(commandConfiguration.getReplyTopic());
         queueMessage.setBody(serializeService.serializeBytes(message));
         queueMessage.setType(MessageTypeCode.ReplyMessage.getValue());
         return queueMessage;

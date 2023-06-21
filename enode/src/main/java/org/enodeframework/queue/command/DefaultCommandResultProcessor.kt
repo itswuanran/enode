@@ -33,10 +33,8 @@ class DefaultCommandResultProcessor(
     private val scanExpireCommandTaskName: String =
         "CleanTimeoutCommandTask_" + SystemClock.now() + Random().nextInt(5000)
     private val commandTaskDict: Cache<String, CommandTaskCompletionSource>
-    private val commandExecutedMessageLocalQueue: BlockingQueue<CommandResult>
-    private val domainEventHandledMessageLocalQueue: BlockingQueue<GenericReplyMessage>
+    private val commandExecutedMessageLocalQueue: BlockingQueue<GenericReplyMessage>
     private val commandExecutedMessageWorker: Worker
-    private val domainEventHandledMessageWorker: Worker
 
     override fun registerProcessingCommand(
         command: CommandMessage,
@@ -44,9 +42,8 @@ class DefaultCommandResultProcessor(
         taskCompletionSource: CompletableFuture<CommandResult>
     ) {
         if (commandTaskDict.asMap().putIfAbsent(
-                command.id, CommandTaskCompletionSource(
-                    command.aggregateRootId, commandReturnType, taskCompletionSource
-                )
+                command.id,
+                CommandTaskCompletionSource(command.aggregateRootId, commandReturnType, taskCompletionSource)
             ) != null
         ) {
             throw DuplicateCommandRegisterException(
@@ -61,11 +58,8 @@ class DefaultCommandResultProcessor(
             processFailedSendingCommand(replyMessage)
             return
         }
-        if (code == CommandReturnType.CommandExecuted.value) {
-            val result = replyMessage.asCommandResult()
-            commandExecutedMessageLocalQueue.add(result)
-        } else if (code == CommandReturnType.EventHandled.value) {
-            domainEventHandledMessageLocalQueue.add(replyMessage)
+        if (code == CommandReturnType.CommandExecuted.value || code == CommandReturnType.EventHandled.value) {
+            commandExecutedMessageLocalQueue.add(replyMessage)
         }
     }
 
@@ -75,7 +69,6 @@ class DefaultCommandResultProcessor(
 
     fun start() {
         commandExecutedMessageWorker.start()
-        domainEventHandledMessageWorker.start()
         scheduleService.startTask(
             scanExpireCommandTaskName, { commandTaskDict.cleanUp() }, completionSourceTimeout, completionSourceTimeout
         )
@@ -84,10 +77,18 @@ class DefaultCommandResultProcessor(
     fun stop() {
         scheduleService.stopTask(scanExpireCommandTaskName)
         commandExecutedMessageWorker.stop()
-        domainEventHandledMessageWorker.stop()
     }
 
-    private fun processExecutedCommandMessage(commandResult: CommandResult) {
+    private fun processExecutedCommandMessage(message: GenericReplyMessage) {
+        val code = message.returnType
+        if (code == CommandReturnType.CommandExecuted.value) {
+            processExecutedCommandMessageInternal(message.asCommandResult())
+        } else if (code == CommandReturnType.EventHandled.value) {
+            processDomainEventHandledMessage(message)
+        }
+    }
+
+    private fun processExecutedCommandMessageInternal(commandResult: CommandResult) {
         val commandTaskCompletionSource = commandTaskDict.asMap()[commandResult.commandId]
         if (commandTaskCompletionSource == null) {
             if (logger.isDebugEnabled) {
@@ -179,15 +180,9 @@ class DefaultCommandResultProcessor(
             }
         }.expireAfterWrite(completionSourceTimeout.toLong(), TimeUnit.MILLISECONDS).build()
         commandExecutedMessageLocalQueue = LinkedBlockingQueue()
-        domainEventHandledMessageLocalQueue = LinkedBlockingQueue()
         commandExecutedMessageWorker = Worker("ProcessExecutedCommandMessage") {
             processExecutedCommandMessage(
                 commandExecutedMessageLocalQueue.take()
-            )
-        }
-        domainEventHandledMessageWorker = Worker("ProcessDomainEventHandledMessage") {
-            processDomainEventHandledMessage(
-                domainEventHandledMessageLocalQueue.take()
             )
         }
     }

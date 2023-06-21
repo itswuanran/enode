@@ -50,9 +50,11 @@ public class KafkaBatchMessageListener implements BatchAcknowledgingMessageListe
 
     private QueueMessage covertToQueueMessage(ConsumerRecord<String, String> record) {
         String mType = Optional.ofNullable(record.headers().lastHeader(SysProperties.MESSAGE_TYPE_KEY)).map(x -> new String(x.value())).orElse("");
+        String tag = Optional.ofNullable(record.headers().lastHeader(SysProperties.MESSAGE_TAG_KEY)).map(x -> new String(x.value())).orElse("");
         QueueMessage queueMessage = new QueueMessage();
         queueMessage.setBody(record.value().getBytes(StandardCharsets.UTF_8));
         queueMessage.setType(mType);
+        queueMessage.setTag(tag);
         queueMessage.setTopic(record.topic());
         queueMessage.setRouteKey(record.key());
         queueMessage.setKey(record.key());

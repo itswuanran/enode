@@ -18,7 +18,7 @@
  */
 package org.enodeframework.redis.message;
 
-import org.enodeframework.common.extensions.SysProperties;
+import org.enodeframework.commanding.CommandConfiguration;
 import org.enodeframework.common.serializing.SerializeService;
 import org.enodeframework.messaging.ReplyMessage;
 import org.enodeframework.queue.SendMessageResult;
@@ -34,13 +34,13 @@ import java.util.concurrent.CompletableFuture;
  * @author anruence@gmail.com
  */
 public class RedisSendReplyService implements SendReplyService {
-    private final String channel;
+    private final CommandConfiguration commandConfiguration;
     private final ReactiveStringRedisTemplate reactiveRedisTemplate;
     private final SerializeService serializeService;
     private static final Logger logger = LoggerFactory.getLogger(RedisSendReplyService.class);
 
-    public RedisSendReplyService(String channel, ReactiveStringRedisTemplate reactiveRedisTemplate, SerializeService serializeService) {
-        this.channel = channel;
+    public RedisSendReplyService(CommandConfiguration commandConfiguration, ReactiveStringRedisTemplate reactiveRedisTemplate, SerializeService serializeService) {
+        this.commandConfiguration = commandConfiguration;
         this.reactiveRedisTemplate = reactiveRedisTemplate;
         this.serializeService = serializeService;
     }
@@ -48,13 +48,12 @@ public class RedisSendReplyService implements SendReplyService {
     @Override
     public CompletableFuture<SendMessageResult> send(ReplyMessage message) {
         GenericReplyMessage genericReplyMessage = message.asGenericReplyMessage();
-        String destination = String.format(SysProperties.CHANNEL_TAG_TPL, channel, message.getAddress());
+        String destination = commandConfiguration.replyTo(message.getAddress());
         return reactiveRedisTemplate.convertAndSend(destination, serializeService.serialize(genericReplyMessage))
             .toFuture()
             .thenApply(x -> {
                 if (logger.isDebugEnabled()) {
-                    logger.debug(
-                        "Async send message success, sendResult: {}, message: {}", x, genericReplyMessage);
+                    logger.debug("Async send message success, sendResult: {}, message: {}", x, genericReplyMessage);
                 }
                 return new SendMessageResult(String.valueOf(x));
             });

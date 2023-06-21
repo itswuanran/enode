@@ -42,14 +42,13 @@ public class EnodeReplyAutoConfig {
 
     @ConditionalOnProperty(prefix = "spring.enode", name = "reply", havingValue = "redis")
     static class RedisReply {
-        @Value("${spring.enode.reply.topic:}")
-        private String queueName;
 
         @Bean
         public RedisSendReplyService redisSendReplyService(
+            CommandConfiguration commandConfiguration,
             @Qualifier("enodeReactiveStringRedisTemplate") ReactiveStringRedisTemplate enodeReactiveStringRedisTemplate,
             SerializeService serializeService) {
-            return new RedisSendReplyService(queueName, enodeReactiveStringRedisTemplate, serializeService);
+            return new RedisSendReplyService(commandConfiguration, enodeReactiveStringRedisTemplate, serializeService);
         }
 
         @Bean
@@ -76,12 +75,11 @@ public class EnodeReplyAutoConfig {
 
     @ConditionalOnProperty(prefix = "spring.enode", name = "reply", havingValue = "kafka", matchIfMissing = false)
     static class KafkaReply {
-        @Value("${spring.enode.reply.topic:}")
-        private String replyTopic;
+
 
         @Bean(name = "kafkaSendReplyService")
-        public KafkaSendReplyService kafkaSendReplyService(KafkaSendMessageService kafkaSendMessageService, SerializeService serializeService) {
-            return new KafkaSendReplyService(replyTopic, kafkaSendMessageService, serializeService);
+        public KafkaSendReplyService kafkaSendReplyService(CommandConfiguration commandConfiguration, KafkaSendMessageService kafkaSendMessageService, SerializeService serializeService) {
+            return new KafkaSendReplyService(commandConfiguration, kafkaSendMessageService, serializeService);
         }
     }
 

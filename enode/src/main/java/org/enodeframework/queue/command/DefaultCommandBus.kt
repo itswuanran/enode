@@ -44,17 +44,17 @@ class DefaultCommandBus(
         try {
             Assert.nonNull(commandResultProcessor, "commandResultProcessor")
             commandResultProcessor.registerProcessingCommand(command, commandReturnType, taskCompletionSource)
-            val sendMessageAsync = sendMessageService.sendMessageAsync(buildCommandMessage(command, true))
-            sendMessageAsync.exceptionally { ex: Throwable ->
-                val replyMessage = GenericReplyMessage()
-                replyMessage.status = CommandStatus.SendFailed.value
-                replyMessage.commandId = command.id
-                replyMessage.aggregateRootId = command.aggregateRootId
-                replyMessage.returnType = commandReturnType.value
-                replyMessage.result = ex.message ?: ""
-                commandResultProcessor.processReplyMessage(replyMessage)
-                taskCompletionSource.completeExceptionally(ex)
-                null
+            sendMessageService.sendMessageAsync(buildCommandMessage(command, true)).whenComplete { _, ex: Throwable? ->
+                if (ex != null) {
+                    val replyMessage = GenericReplyMessage()
+                    replyMessage.status = CommandStatus.SendFailed.value
+                    replyMessage.commandId = command.id
+                    replyMessage.aggregateRootId = command.aggregateRootId
+                    replyMessage.returnType = commandReturnType.value
+                    replyMessage.result = ex.message ?: ""
+                    commandResultProcessor.processReplyMessage(replyMessage)
+                    taskCompletionSource.completeExceptionally(ex)
+                }
             }
         } catch (ex: Exception) {
             taskCompletionSource.completeExceptionally(ex)

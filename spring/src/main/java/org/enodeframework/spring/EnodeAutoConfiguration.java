@@ -101,6 +101,9 @@ public class EnodeAutoConfiguration {
     @Value("${spring.enode.mq.topic.event:}")
     private String eventTopic;
 
+    @Value("${spring.enode.reply.topic:}")
+    private String replyTopic;
+
     @Value("${spring.enode.server.wait.timeout:10000}")
     private int timeout;
 
@@ -114,7 +117,7 @@ public class EnodeAutoConfiguration {
 
     @Bean(name = "defaultCommandConfiguration")
     public DefaultCommandConfiguration defaultCommandConfiguration() throws Exception {
-        return new DefaultCommandConfiguration("127.0.0.1", port);
+        return new DefaultCommandConfiguration(InetAddress.getLocalHost().getHostAddress(), port, timeout, replyTopic);
     }
 
     @Bean(name = "defaultScheduleService")
