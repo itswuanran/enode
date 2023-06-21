@@ -16,26 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.enodeframework.pulsar.message;
-
-import org.enodeframework.queue.QueueMessage;
-import org.enodeframework.queue.SendMessageResult;
-import org.enodeframework.queue.SendMessageService;
-import java.util.concurrent.CompletableFuture;
+package org.enodeframework.common.exception;
 
 /**
  * @author anruence@gmail.com
  */
-public class PulsarSendMessageService implements SendMessageService {
+public class ProducerNotFoundException extends EnodeException {
 
-    private final PulsarProducerHolder pulsarProducerHolder;
-
-    public PulsarSendMessageService(PulsarProducerHolder pulsarProducerHolder) {
-        this.pulsarProducerHolder = pulsarProducerHolder;
+    public ProducerNotFoundException() {
+        super();
     }
 
-    @Override
-    public CompletableFuture<SendMessageResult> sendMessageAsync(QueueMessage queueMessage) {
-        return pulsarProducerHolder.sendAsync(queueMessage);
+    public ProducerNotFoundException(String msg) {
+        super(msg);
+    }
+
+    public ProducerNotFoundException(Throwable cause) {
+        super(cause);
+    }
+
+    public ProducerNotFoundException(String msg, Throwable cause) {
+        super(msg, cause);
     }
 }

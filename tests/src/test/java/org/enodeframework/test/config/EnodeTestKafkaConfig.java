@@ -6,7 +6,6 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.enodeframework.kafka.KafkaMessageListener;
 import org.enodeframework.queue.command.CommandResultProcessor;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -48,8 +47,7 @@ public class EnodeTestKafkaConfig {
     }
 
     @Bean
-    public ConcurrentMessageListenerContainer<String, String> commandListenerContainer(
-        @Qualifier("kafkaCommandListener") KafkaMessageListener kafkaCommandListener, ConsumerFactory<String, String> consumerFactory) {
+    public ConcurrentMessageListenerContainer<String, String> commandListenerContainer(KafkaMessageListener kafkaCommandListener, ConsumerFactory<String, String> consumerFactory) {
         ContainerProperties properties = new ContainerProperties(commandTopic);
         properties.setGroupId(Constants.DEFAULT_CONSUMER_GROUP1);
         properties.setMessageListener(kafkaCommandListener);
@@ -60,10 +58,7 @@ public class EnodeTestKafkaConfig {
 
     @Bean
     @ConditionalOnProperty(prefix = "spring.enode", name = "reply", havingValue = "kafka")
-    public ConcurrentMessageListenerContainer<String, String> replyListenerContainer(
-        CommandResultProcessor commandResultProcessor,
-        @Qualifier("kafkaReplyListener") KafkaMessageListener kafkaReplyListener,
-        ConsumerFactory<String, String> consumerFactory) {
+    public ConcurrentMessageListenerContainer<String, String> replyListenerContainer(CommandResultProcessor commandResultProcessor, KafkaMessageListener kafkaReplyListener, ConsumerFactory<String, String> consumerFactory) {
         ContainerProperties properties = new ContainerProperties(replyTopic);
         properties.setGroupId(Constants.DEFAULT_CONSUMER_GROUP2 + "#" + commandResultProcessor.ReplyAddress());
         properties.setMessageListener(kafkaReplyListener);
@@ -73,9 +68,7 @@ public class EnodeTestKafkaConfig {
     }
 
     @Bean
-    public ConcurrentMessageListenerContainer<String, String> domainEventListenerContainer(
-        @Qualifier("kafkaDomainEventListener") KafkaMessageListener kafkaDomainEventListener,
-        ConsumerFactory<String, String> consumerFactory) {
+    public ConcurrentMessageListenerContainer<String, String> domainEventListenerContainer(KafkaMessageListener kafkaDomainEventListener, ConsumerFactory<String, String> consumerFactory) {
         ContainerProperties properties = new ContainerProperties(eventTopic);
         properties.setGroupId(Constants.DEFAULT_CONSUMER_GROUP3);
         properties.setMessageListener(kafkaDomainEventListener);

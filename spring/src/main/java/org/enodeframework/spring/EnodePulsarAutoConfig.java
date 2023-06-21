@@ -18,9 +18,8 @@
  */
 package org.enodeframework.spring;
 
-import com.google.common.collect.Maps;
 import org.apache.pulsar.client.api.Producer;
-import org.enodeframework.common.serializing.SerializeService;
+import org.enodeframework.pulsar.message.PulsarProducerHolder;
 import org.enodeframework.pulsar.message.PulsarMessageListener;
 import org.enodeframework.pulsar.message.PulsarSendMessageService;
 import org.enodeframework.queue.MessageHandlerHolder;
@@ -29,7 +28,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
 import javax.annotation.Resource;
-import java.util.Map;
 
 @ConditionalOnProperty(prefix = "spring.enode", name = "mq", havingValue = "pulsar")
 public class EnodePulsarAutoConfig {
@@ -40,35 +38,26 @@ public class EnodePulsarAutoConfig {
     @Resource(name = "enodePulsarCommandProducer")
     private Producer<byte[]> enodePulsarCommandProducer;
 
-    @Resource(name = "enodePulsarApplicationMessageProducer")
-    private Producer<byte[]> enodePulsarApplicationMessageProducer;
-
-    @Resource(name = "enodePulsarPublishableExceptionProducer")
-    private Producer<byte[]> enodePulsarPublishableExceptionProducer;
-
     @Resource(name = "enodePulsarReplyProducer")
     private Producer<byte[]> enodePulsarReplyProducer;
 
-    @Bean(name = "pulsarDomainEventListener")
-    @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "event")
-    public PulsarMessageListener pulsarDomainEventListener(MessageHandlerHolder messageHandlerHolder) {
+    @Bean(name = "enodePulsarMessageListener")
+    public PulsarMessageListener enodePulsarMessageListener(MessageHandlerHolder messageHandlerHolder) {
         return new PulsarMessageListener(messageHandlerHolder);
     }
-
-    @Bean(name = "pulsarCommandListener")
-    @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "command")
-    public PulsarMessageListener pulsarCommandListener(MessageHandlerHolder messageHandlerHolder) {
-        return new PulsarMessageListener(messageHandlerHolder);
+    @Bean(name = "enodePulsarProducerHolder")
+    public PulsarProducerHolder enodePulsaProducerHolder() {
+        PulsarProducerHolder pulsarProducerHolder = new PulsarProducerHolder();
+        pulsarProducerHolder.put(MessageTypeCode.CommandMessage.getValue(), enodePulsarCommandProducer);
+        pulsarProducerHolder.put(MessageTypeCode.DomainEventMessage.getValue(), enodePulsarDomainEventProducer);
+        pulsarProducerHolder.put(MessageTypeCode.ExceptionMessage.getValue(), enodePulsarDomainEventProducer);
+        pulsarProducerHolder.put(MessageTypeCode.ApplicationMessage.getValue(), enodePulsarDomainEventProducer);
+        pulsarProducerHolder.put(MessageTypeCode.ReplyMessage.getValue(), enodePulsarReplyProducer);
+        return pulsarProducerHolder;
     }
 
     @Bean(name = "pulsarSendMessageService")
-    public PulsarSendMessageService pulsarSendMessageService(SerializeService serializeService) {
-        Map<String, Producer<byte[]>> producers = Maps.newHashMap();
-        producers.put(MessageTypeCode.CommandMessage.getValue(), enodePulsarCommandProducer);
-        producers.put(MessageTypeCode.DomainEventMessage.getValue(), enodePulsarDomainEventProducer);
-        producers.put(MessageTypeCode.ExceptionMessage.getValue(), enodePulsarPublishableExceptionProducer);
-        producers.put(MessageTypeCode.ApplicationMessage.getValue(), enodePulsarApplicationMessageProducer);
-        producers.put(MessageTypeCode.ReplyMessage.getValue(), enodePulsarReplyProducer);
-        return new PulsarSendMessageService(producers, serializeService);
+    public PulsarSendMessageService pulsarSendMessageService(PulsarProducerHolder pulsarProducerHolder) {
+        return new PulsarSendMessageService(pulsarProducerHolder);
     }
 }

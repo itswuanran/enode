@@ -28,15 +28,8 @@ import org.springframework.kafka.core.KafkaTemplate;
 
 @ConditionalOnProperty(prefix = "spring.enode", name = "mq", havingValue = "kafka")
 public class EnodeKafkaAutoConfiguration {
-    @Bean(name = "kafkaDomainEventListener")
-    @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "event")
-    public KafkaMessageListener kafkaDomainEventListener(MessageHandlerHolder messageHandlerHolder) {
-        return new KafkaMessageListener(messageHandlerHolder);
-    }
-
-    @Bean(name = "kafkaCommandListener")
-    @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "command")
-    public KafkaMessageListener kafkaCommandListener(MessageHandlerHolder messageHandlerHolder) {
+    @Bean(name = "enodeKafkaMessageListener")
+    public KafkaMessageListener enodekKafkaMessageListener(MessageHandlerHolder messageHandlerHolder) {
         return new KafkaMessageListener(messageHandlerHolder);
     }
 
