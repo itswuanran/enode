@@ -47,14 +47,14 @@ public class KafkaSendReplyService implements SendReplyService {
     @NotNull
     @Override
     public CompletableFuture<SendMessageResult> send(@NotNull ReplyMessage message) {
-        return kafkaProducerHolder.send(buildQueueMessage(message));
+        kafkaProducerHolder.send(buildQueueMessage(message));
+        return CompletableFuture.completedFuture(new SendMessageResult(""));
     }
 
     private QueueMessage buildQueueMessage(ReplyMessage replyMessage) {
         GenericReplyMessage message = replyMessage.asGenericReplyMessage();
         QueueMessage queueMessage = replyMessage.asPartQueueMessage();
-//        queueMessage.setTopic(commandOptions.replyWith(replyMessage.getAddress()));
-        queueMessage.setTopic(commandOptions.getReplyTopic());
+        queueMessage.setTopic(commandOptions.replyWith(replyMessage.getAddress()));
         queueMessage.setTag(replyMessage.getAddress());
         queueMessage.setBody(serializeService.serializeBytes(message));
         queueMessage.setType(MessageTypeCode.ReplyMessage.getValue());

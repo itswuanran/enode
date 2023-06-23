@@ -17,10 +17,10 @@ class DefaultCommandOptions(
 
     override fun replyWith(tag: String): String {
         val value = encode(tag)
-        return "$replyTopic#$value"
+        return "$replyTopic-$value"
     }
 
     private fun encode(value: String): String {
-        return value.replace(".", "#").replace(":","s").replace("://","p")
+        return value.replace(".", "-").replace("://","h").replace(":","p")
     }
 }
