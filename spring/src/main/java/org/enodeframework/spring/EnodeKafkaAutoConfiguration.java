@@ -19,6 +19,7 @@
 package org.enodeframework.spring;
 
 import org.enodeframework.kafka.KafkaMessageListener;
+import org.enodeframework.kafka.KafkaProducerHolder;
 import org.enodeframework.kafka.KafkaSendMessageService;
 import org.enodeframework.queue.MessageHandlerHolder;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -29,12 +30,17 @@ import org.springframework.kafka.core.KafkaTemplate;
 @ConditionalOnProperty(prefix = "spring.enode", name = "mq", havingValue = "kafka")
 public class EnodeKafkaAutoConfiguration {
     @Bean(name = "enodeKafkaMessageListener")
-    public KafkaMessageListener enodekKafkaMessageListener(MessageHandlerHolder messageHandlerHolder) {
+    public KafkaMessageListener enodeKafkaMessageListener(MessageHandlerHolder messageHandlerHolder) {
         return new KafkaMessageListener(messageHandlerHolder);
     }
 
     @Bean(name = "kafkaSendMessageService")
-    public KafkaSendMessageService kafkaSendMessageService(@Qualifier(value = "enodeKafkaTemplate") KafkaTemplate<String, String> kafkaTemplate) {
-        return new KafkaSendMessageService(kafkaTemplate);
+    public KafkaSendMessageService kafkaSendMessageService(@Qualifier(value = "kafkaProducerHolder") KafkaProducerHolder kafkaProducerHolder) {
+        return new KafkaSendMessageService(kafkaProducerHolder);
+    }
+
+    @Bean(name = "kafkaProducerHolder")
+    public KafkaProducerHolder kafkaProducerHolder(@Qualifier(value = "enodeKafkaTemplate") KafkaTemplate<String, String> kafkaTemplate) {
+        return new KafkaProducerHolder(kafkaTemplate);
     }
 }

@@ -14,14 +14,14 @@ import org.slf4j.LoggerFactory
 /**
  * @author anruence@gmail.com
  */
-class TcpServerListener(
+class TcpReplyMessageListener(
     private val commandResultProcessor: CommandResultProcessor,
     private val serverOptions: NetServerOptions,
 ) : AbstractVerticle() {
 
     private lateinit var tcpEventBusBridge: TcpEventBusBridge
 
-    private val logger = LoggerFactory.getLogger(TcpServerListener::class.java)
+    private val logger = LoggerFactory.getLogger(TcpReplyMessageListener::class.java)
 
     override fun start() {
         val address = commandResultProcessor.replyAddress()

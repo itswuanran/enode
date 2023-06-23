@@ -36,14 +36,14 @@ public class EnodePgEventStoreAutoConfig {
         EventSerializer eventSerializer,
         SerializeService serializeService) {
         PgEventStore eventStore =
-            new PgEventStore(pgPool, DefaultEventStoreConfiguration.Driver.pg(), eventSerializer, serializeService);
+            new PgEventStore(pgPool, DefaultEventStoreOptions.Driver.pg(), eventSerializer, serializeService);
         return eventStore;
     }
 
     @Bean
     public PgPublishedVersionStore pgPublishedVersionStore(@Qualifier("enodePgPool") PgPool pgPool) {
         PgPublishedVersionStore versionStore =
-            new PgPublishedVersionStore(pgPool, DefaultEventStoreConfiguration.Driver.pg());
+            new PgPublishedVersionStore(pgPool, DefaultEventStoreOptions.Driver.pg());
         return versionStore;
     }
 }

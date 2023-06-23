@@ -12,12 +12,12 @@ import org.enodeframework.common.exception.EventStoreException
 import org.enodeframework.common.exception.IORuntimeException
 import org.enodeframework.eventing.AggregateEventAppendResult
 import org.enodeframework.eventing.EventAppendStatus
-import org.enodeframework.eventing.EventStoreConfiguration
+import org.enodeframework.eventing.EventStoreOptions
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 
 open class MySQLAddDomainEventsHandler(
-    private val options: EventStoreConfiguration,
+    private val options: EventStoreOptions,
     private val msg: String,
 ) : Handler<AsyncResult<RowSet<Row>>> {
 

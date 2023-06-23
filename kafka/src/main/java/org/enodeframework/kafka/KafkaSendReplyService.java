@@ -18,7 +18,7 @@
  */
 package org.enodeframework.kafka;
 
-import org.enodeframework.commanding.CommandConfiguration;
+import org.enodeframework.commanding.CommandOptions;
 import org.enodeframework.common.serializing.SerializeService;
 import org.enodeframework.messaging.ReplyMessage;
 import org.enodeframework.queue.MessageTypeCode;
@@ -33,25 +33,25 @@ import java.util.concurrent.CompletableFuture;
  * @author anruence@gmail.com
  */
 public class KafkaSendReplyService implements SendReplyService {
-    private final CommandConfiguration commandConfiguration;
-    private final KafkaSendMessageService sendMessageService;
+    private final CommandOptions commandOptions;
     private final SerializeService serializeService;
+    private final KafkaProducerHolder kafkaProducerHolder;
 
-    public KafkaSendReplyService(CommandConfiguration commandConfiguration, KafkaSendMessageService sendMessageService, SerializeService serializeService) {
-        this.sendMessageService = sendMessageService;
-        this.commandConfiguration = commandConfiguration;
+    public KafkaSendReplyService(KafkaProducerHolder kafkaProducerHolder, CommandOptions commandOptions, SerializeService serializeService) {
+        this.kafkaProducerHolder = kafkaProducerHolder;
+        this.commandOptions = commandOptions;
         this.serializeService = serializeService;
     }
 
     @Override
     public CompletableFuture<SendMessageResult> send(ReplyMessage message) {
-        return sendMessageService.sendMessageAsync(buildQueueMessage(message));
+        return kafkaProducerHolder.send(buildQueueMessage(message));
     }
 
     private QueueMessage buildQueueMessage(ReplyMessage replyMessage) {
         GenericReplyMessage message = replyMessage.asGenericReplyMessage();
         QueueMessage queueMessage = replyMessage.asPartQueueMessage();
-        queueMessage.setTopic(commandConfiguration.replyTo(replyMessage.getAddress()));
+        queueMessage.setTopic(commandOptions.getReplyTopic());
         queueMessage.setBody(serializeService.serializeBytes(message));
         queueMessage.setType(MessageTypeCode.ReplyMessage.getValue());
         return queueMessage;

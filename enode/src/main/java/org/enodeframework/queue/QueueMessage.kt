@@ -48,10 +48,6 @@ class QueueMessage : Serializable {
         return body.decodeToString()
     }
 
-    fun channel(): String {
-        return "$topic#$tag"
-    }
-
     override fun toString(): String {
         return MoreObjects.toStringHelper(this).add("body", bodyAsStr()).add("topic", topic).add("tag", tag)
             .add("routeKey", routeKey).add("key", key).add("type", type).toString()

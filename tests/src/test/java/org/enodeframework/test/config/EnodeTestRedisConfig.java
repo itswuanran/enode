@@ -1,6 +1,6 @@
 package org.enodeframework.test.config;
 
-import org.enodeframework.commanding.CommandConfiguration;
+import org.enodeframework.commanding.CommandOptions;
 import org.enodeframework.redis.message.RedisReplyMessageListener;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -31,10 +31,10 @@ public class EnodeTestRedisConfig {
     }
 
     @Bean
-    public RedisMessageListenerContainer redisMessageListenerContainer(RedisReplyMessageListener redisReplyMessageListener, CommandConfiguration commandConfiguration) {
+    public RedisMessageListenerContainer redisMessageListenerContainer(RedisReplyMessageListener redisReplyMessageListener, CommandOptions commandOptions) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(redisConnectionFactory());
-        container.addMessageListener(redisReplyMessageListener, ChannelTopic.of(commandConfiguration.replyTo()));
+        container.addMessageListener(redisReplyMessageListener, ChannelTopic.of(commandOptions.replyTo()));
         return container;
     }
 }

@@ -19,8 +19,8 @@
 package org.enodeframework.spring;
 
 import org.apache.pulsar.client.api.Producer;
-import org.enodeframework.pulsar.message.PulsarProducerHolder;
 import org.enodeframework.pulsar.message.PulsarMessageListener;
+import org.enodeframework.pulsar.message.PulsarProducerHolder;
 import org.enodeframework.pulsar.message.PulsarSendMessageService;
 import org.enodeframework.queue.MessageHandlerHolder;
 import org.enodeframework.queue.MessageTypeCode;
@@ -45,8 +45,9 @@ public class EnodePulsarAutoConfig {
     public PulsarMessageListener enodePulsarMessageListener(MessageHandlerHolder messageHandlerHolder) {
         return new PulsarMessageListener(messageHandlerHolder);
     }
-    @Bean(name = "enodePulsarProducerHolder")
-    public PulsarProducerHolder enodePulsaProducerHolder() {
+
+    @Bean(name = "pulsarProducerHolder")
+    public PulsarProducerHolder pulsarProducerHolder() {
         PulsarProducerHolder pulsarProducerHolder = new PulsarProducerHolder();
         pulsarProducerHolder.put(MessageTypeCode.CommandMessage.getValue(), enodePulsarCommandProducer);
         pulsarProducerHolder.put(MessageTypeCode.DomainEventMessage.getValue(), enodePulsarDomainEventProducer);

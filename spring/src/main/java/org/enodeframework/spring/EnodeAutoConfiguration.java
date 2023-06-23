@@ -20,7 +20,7 @@ package org.enodeframework.spring;
 
 import com.google.common.collect.Maps;
 import kotlinx.coroutines.Dispatchers;
-import org.enodeframework.commanding.CommandConfiguration;
+import org.enodeframework.commanding.CommandOptions;
 import org.enodeframework.commanding.CommandHandlerProvider;
 import org.enodeframework.commanding.CommandProcessor;
 import org.enodeframework.commanding.ProcessingCommandHandler;
@@ -111,13 +111,13 @@ public class EnodeAutoConfiguration {
     private int port;
 
     @Bean(name = "defaultCommandResultProcessor", initMethod = "start", destroyMethod = "stop")
-    public DefaultCommandResultProcessor defaultCommandResultProcessor(CommandConfiguration commandConfiguration, ScheduleService scheduleService, SerializeService serializeService) throws Exception {
-        return new DefaultCommandResultProcessor(scheduleService, serializeService, commandConfiguration, timeout);
+    public DefaultCommandResultProcessor defaultCommandResultProcessor(CommandOptions commandOptions, ScheduleService scheduleService, SerializeService serializeService) throws Exception {
+        return new DefaultCommandResultProcessor(scheduleService, serializeService, commandOptions, timeout);
     }
 
-    @Bean(name = "defaultCommandConfiguration")
-    public DefaultCommandConfiguration defaultCommandConfiguration() throws Exception {
-        return new DefaultCommandConfiguration(InetAddress.getLocalHost().getHostAddress(), port, timeout, replyTopic);
+    @Bean(name = "defaultCommandOptions")
+    public DefaultCommandOptions defaultCommandOptions() throws Exception {
+        return new DefaultCommandOptions(InetAddress.getLocalHost().getHostAddress(), port, timeout, replyTopic);
     }
 
     @Bean(name = "defaultScheduleService")

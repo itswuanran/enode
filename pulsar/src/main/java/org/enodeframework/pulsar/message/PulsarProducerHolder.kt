@@ -1,6 +1,6 @@
 package org.enodeframework.pulsar.message
 
-import com.beust.jcommander.internal.Maps
+import com.google.common.collect.Maps
 import org.apache.pulsar.client.api.MessageId
 import org.apache.pulsar.client.api.Producer
 import org.enodeframework.common.exception.IORuntimeException
@@ -24,23 +24,16 @@ class PulsarProducerHolder(private val producerMap: MutableMap<String, Producer<
     }
 
     fun sendAsync(queueMessage: QueueMessage): CompletableFuture<SendMessageResult> {
-        return chooseProducer(queueMessage.type).newMessage()
-            .key(queueMessage.routeKey)
+        return chooseProducer(queueMessage.type).newMessage().key(queueMessage.routeKey)
             .property(SysProperties.MESSAGE_TYPE_KEY, queueMessage.type)
-            .property(SysProperties.MESSAGE_TAG_KEY, queueMessage.tag)
-            .properties(queueMessage.items)
-            .value(queueMessage.body)
-            .orderingKey(queueMessage.key.toByteArray(StandardCharsets.UTF_8))
-            .sendAsync()
+            .property(SysProperties.MESSAGE_TAG_KEY, queueMessage.tag).properties(queueMessage.items)
+            .value(queueMessage.body).orderingKey(queueMessage.key.toByteArray(StandardCharsets.UTF_8)).sendAsync()
             .exceptionally { throwable: Throwable? ->
                 logger.error(
-                    "Async send message has exception, message: {}",
-                    queueMessage,
-                    throwable
+                    "Async send message has exception, message: {}", queueMessage, throwable
                 )
                 throw IORuntimeException(throwable)
-            }
-            .thenApply { messageId: MessageId ->
+            }.thenApply { messageId: MessageId ->
                 if (logger.isDebugEnabled) {
                     logger.debug(
                         "Async send message success, sendResult: {}, message: {}", messageId, queueMessage

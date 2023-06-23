@@ -18,7 +18,7 @@
  */
 package org.enodeframework.redis.message;
 
-import org.enodeframework.commanding.CommandConfiguration;
+import org.enodeframework.commanding.CommandOptions;
 import org.enodeframework.common.serializing.SerializeService;
 import org.enodeframework.messaging.ReplyMessage;
 import org.enodeframework.queue.SendMessageResult;
@@ -34,13 +34,13 @@ import java.util.concurrent.CompletableFuture;
  * @author anruence@gmail.com
  */
 public class RedisSendReplyService implements SendReplyService {
-    private final CommandConfiguration commandConfiguration;
+    private final CommandOptions commandOptions;
     private final ReactiveStringRedisTemplate reactiveRedisTemplate;
     private final SerializeService serializeService;
     private static final Logger logger = LoggerFactory.getLogger(RedisSendReplyService.class);
 
-    public RedisSendReplyService(CommandConfiguration commandConfiguration, ReactiveStringRedisTemplate reactiveRedisTemplate, SerializeService serializeService) {
-        this.commandConfiguration = commandConfiguration;
+    public RedisSendReplyService(CommandOptions commandOptions, ReactiveStringRedisTemplate reactiveRedisTemplate, SerializeService serializeService) {
+        this.commandOptions = commandOptions;
         this.reactiveRedisTemplate = reactiveRedisTemplate;
         this.serializeService = serializeService;
     }
@@ -48,7 +48,7 @@ public class RedisSendReplyService implements SendReplyService {
     @Override
     public CompletableFuture<SendMessageResult> send(ReplyMessage message) {
         GenericReplyMessage genericReplyMessage = message.asGenericReplyMessage();
-        String destination = commandConfiguration.replyTo(message.getAddress());
+        String destination = commandOptions.replyWith(message.getAddress());
         return reactiveRedisTemplate.convertAndSend(destination, serializeService.serialize(genericReplyMessage))
             .toFuture()
             .thenApply(x -> {

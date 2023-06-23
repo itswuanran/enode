@@ -18,6 +18,7 @@
  */
 package org.enodeframework.pulsar.message;
 
+import org.enodeframework.commanding.CommandOptions;
 import org.enodeframework.common.serializing.SerializeService;
 import org.enodeframework.messaging.ReplyMessage;
 import org.enodeframework.queue.MessageTypeCode;
@@ -34,7 +35,6 @@ import java.util.concurrent.CompletableFuture;
  */
 public class PulsarSendReplyService implements SendReplyService {
     private final PulsarProducerHolder pulsarProducerHolder;
-
     private final SerializeService serializeService;
 
     public PulsarSendReplyService(PulsarProducerHolder pulsarProducerHolder, SerializeService serializeService) {
@@ -53,6 +53,7 @@ public class PulsarSendReplyService implements SendReplyService {
         GenericReplyMessage message = replyMessage.asGenericReplyMessage();
         QueueMessage queueMessage = replyMessage.asPartQueueMessage();
         queueMessage.setTopic(topic);
+        queueMessage.setTag(replyMessage.getAddress());
         queueMessage.setBody(serializeService.serializeBytes(message));
         queueMessage.setType(MessageTypeCode.ReplyMessage.getValue());
         return queueMessage;

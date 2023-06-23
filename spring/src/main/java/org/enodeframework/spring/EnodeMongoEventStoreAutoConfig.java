@@ -32,11 +32,11 @@ public class EnodeMongoEventStoreAutoConfig {
 
     @Bean
     public MongoEventStore mongoEventStore(@Qualifier("enodeMongoClient") MongoClient mongoClient, EventSerializer eventSerializer, SerializeService serializeService) {
-        return new MongoEventStore(mongoClient, DefaultEventStoreConfiguration.Driver.mongo(), eventSerializer, serializeService);
+        return new MongoEventStore(mongoClient, DefaultEventStoreOptions.Driver.mongo(), eventSerializer, serializeService);
     }
 
     @Bean
     public MongoPublishedVersionStore mongoPublishedVersionStore(@Qualifier("enodeMongoClient") MongoClient mongoClient) {
-        return new MongoPublishedVersionStore(mongoClient, DefaultEventStoreConfiguration.Driver.mongo());
+        return new MongoPublishedVersionStore(mongoClient, DefaultEventStoreOptions.Driver.mongo());
     }
 }

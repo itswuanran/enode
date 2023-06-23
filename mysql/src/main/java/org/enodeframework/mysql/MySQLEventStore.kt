@@ -10,7 +10,7 @@ import org.enodeframework.eventing.DomainEventStream
 import org.enodeframework.eventing.EventAppendResult
 import org.enodeframework.eventing.EventSerializer
 import org.enodeframework.eventing.EventStore
-import org.enodeframework.eventing.EventStoreConfiguration
+import org.enodeframework.eventing.EventStoreOptions
 import org.enodeframework.mysql.handler.MySQLAddDomainEventsHandler
 import org.enodeframework.mysql.handler.MySQLFindDomainEventsHandler
 import java.util.concurrent.CompletableFuture
@@ -22,14 +22,14 @@ import java.util.concurrent.CompletableFuture
 
 open class MySQLEventStore(
     sqlClient: MySQLPool,
-    configuration: EventStoreConfiguration,
+    configuration: EventStoreOptions,
     eventSerializer: EventSerializer,
     serializeService: SerializeService
 ) : EventStore {
 
     private val eventSerializer: EventSerializer
     private val serializeService: SerializeService
-    private val options: EventStoreConfiguration
+    private val options: EventStoreOptions
     private val sqlClient: MySQLPool
 
     override fun batchAppendAsync(eventStreams: List<DomainEventStream>): CompletableFuture<EventAppendResult> {

@@ -4,12 +4,11 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.enodeframework.commanding.CommandOptions;
 import org.enodeframework.kafka.KafkaMessageListener;
-import org.enodeframework.queue.command.CommandResultProcessor;
 import org.enodeframework.samples.QueueProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,17 +43,14 @@ public class KafkaConfig {
         return new KafkaTemplate<>(producerFactory());
     }
 
-    @Value("${spring.enode.mq.topic.reply:}")
-    private String replyTopic;
-
     @Autowired
     @Qualifier("kafkaReplyListener")
     private KafkaMessageListener kafkaReplyListener;
 
     @Bean
-    public ConcurrentMessageListenerContainer<String, String> retryListenerContainer(CommandResultProcessor commandResultProcessor) {
-        ContainerProperties properties = new ContainerProperties(replyTopic);
-        properties.setGroupId(DEFAULT_CONSUMER_GROUP0 + "#" + commandResultProcessor.replyAddress());
+    public ConcurrentMessageListenerContainer<String, String> retryListenerContainer(CommandOptions commandOptions) {
+        ContainerProperties properties = new ContainerProperties(commandOptions.getReplyTopic());
+        properties.setGroupId(DEFAULT_CONSUMER_GROUP0 + "#" + commandOptions.address());
         properties.setMessageListener(kafkaReplyListener);
         properties.setMissingTopicsFatal(false);
         properties.setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);

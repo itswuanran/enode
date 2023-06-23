@@ -28,8 +28,6 @@ import org.enodeframework.common.io.Task;
 import org.enodeframework.queue.MessageHandler;
 import org.enodeframework.queue.MessageHandlerHolder;
 import org.enodeframework.queue.QueueMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -38,8 +36,6 @@ import java.util.concurrent.CountDownLatch;
  * @author anruence@gmail.com
  */
 public class OnsMessageListener implements MessageListener, BatchMessageListener {
-
-    private static final Logger logger = LoggerFactory.getLogger(OnsMessageListener.class);
 
     private final MessageHandlerHolder messageHandlerHolder;
 

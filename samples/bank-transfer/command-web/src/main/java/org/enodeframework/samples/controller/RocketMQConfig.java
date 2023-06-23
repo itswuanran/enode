@@ -4,6 +4,7 @@ import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.MessageListener;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
+import org.enodeframework.commanding.CommandOptions;
 import org.enodeframework.queue.command.CommandResultProcessor;
 import org.enodeframework.samples.QueueProperties;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -28,12 +29,12 @@ public class RocketMQConfig {
     }
 
     @Bean(initMethod = "start", destroyMethod = "shutdown")
-    public DefaultMQPushConsumer replyConsumer(CommandResultProcessor commandResultProcessor, @Qualifier("rocketMQReplyListener") MessageListener rocketMQReplyListener) throws MQClientException {
+    public DefaultMQPushConsumer replyConsumer(CommandOptions commandOptions, @Qualifier("rocketMQReplyListener") MessageListener rocketMQReplyListener) throws MQClientException {
         DefaultMQPushConsumer defaultMQPushConsumer = new DefaultMQPushConsumer();
         defaultMQPushConsumer.setConsumerGroup(QueueProperties.DEFAULT_CONSUMER_GROUP0);
         defaultMQPushConsumer.setNamesrvAddr(QueueProperties.NAMESRVADDR);
         // 只订阅发送到自己服务器的消息
-        defaultMQPushConsumer.subscribe(replyTopic, commandResultProcessor.replyAddress());
+        defaultMQPushConsumer.subscribe(replyTopic, commandOptions.address());
         defaultMQPushConsumer.setMessageListener(rocketMQReplyListener);
         return defaultMQPushConsumer;
     }

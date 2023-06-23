@@ -37,7 +37,7 @@ public class EnodeJDBCPgEventStoreAutoConfig {
         EventSerializer eventSerializer,
         SerializeService serializeService) {
         JDBCEventStore eventStore = new JDBCEventStore(
-            enodePgDataSource, DefaultEventStoreConfiguration.Driver.pg(), eventSerializer, serializeService);
+            enodePgDataSource, DefaultEventStoreOptions.Driver.pg(), eventSerializer, serializeService);
         return eventStore;
     }
 
@@ -45,7 +45,7 @@ public class EnodeJDBCPgEventStoreAutoConfig {
     public JDBCPublishedVersionStore jdbcPublishedVersionStore(
         @Qualifier("enodePgDataSource") DataSource enodePgDataSource) {
         JDBCPublishedVersionStore publishedVersionStore =
-            new JDBCPublishedVersionStore(enodePgDataSource, DefaultEventStoreConfiguration.Driver.pg());
+            new JDBCPublishedVersionStore(enodePgDataSource, DefaultEventStoreOptions.Driver.pg());
         return publishedVersionStore;
     }
 }

@@ -12,7 +12,7 @@ import io.vertx.sqlclient.PoolOptions;
 import org.enodeframework.jdbc.JDBCEventStore;
 import org.enodeframework.jdbc.JDBCPublishedVersionStore;
 import org.enodeframework.vertx.message.TcpSendReplyService;
-import org.enodeframework.vertx.message.TcpServerListener;
+import org.enodeframework.vertx.message.TcpReplyMessageListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -50,7 +50,7 @@ public class EnodeTestDataSourceConfig {
     private TcpSendReplyService tcpSendReplyService;
 
     @Autowired(required = false)
-    private TcpServerListener tcpServerListener;
+    private TcpReplyMessageListener tcpServerListener;
 
     @Bean
     public Vertx vertx() {

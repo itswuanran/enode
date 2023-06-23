@@ -21,6 +21,8 @@ package org.enodeframework.pulsar.message;
 import org.enodeframework.queue.QueueMessage;
 import org.enodeframework.queue.SendMessageResult;
 import org.enodeframework.queue.SendMessageService;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -34,8 +36,9 @@ public class PulsarSendMessageService implements SendMessageService {
         this.pulsarProducerHolder = pulsarProducerHolder;
     }
 
+    @NotNull
     @Override
-    public CompletableFuture<SendMessageResult> sendMessageAsync(QueueMessage queueMessage) {
+    public CompletableFuture<SendMessageResult> sendMessageAsync(@NotNull QueueMessage queueMessage) {
         return pulsarProducerHolder.sendAsync(queueMessage);
     }
 }

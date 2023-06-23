@@ -1,7 +1,7 @@
 package org.enodeframework.eventing
 
 
-interface EventStoreConfiguration {
+interface EventStoreOptions {
     /**
      * database名称
      */

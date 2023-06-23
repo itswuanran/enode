@@ -19,40 +19,29 @@
 package org.enodeframework.spring;
 
 import org.apache.rocketmq.client.producer.MQProducer;
-import org.enodeframework.common.serializing.SerializeService;
 import org.enodeframework.queue.MessageHandlerHolder;
 import org.enodeframework.rocketmq.message.RocketMQMessageListener;
+import org.enodeframework.rocketmq.message.RocketMQProducerHolder;
 import org.enodeframework.rocketmq.message.RocketMQSendMessageService;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
 @ConditionalOnProperty(prefix = "spring.enode", name = "mq", havingValue = "rocketmq")
 public class EnodeRocketMQAutoConfig {
-    @Value("${spring.enode.mq.topic.reply:}")
-    private String replyTopic;
 
-    @Bean(name = "rocketMQDomainEventListener")
-    @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "event")
-    public RocketMQMessageListener rocketMQDomainEventListener(MessageHandlerHolder messageHandlerHolder) {
-        return new RocketMQMessageListener(messageHandlerHolder);
-    }
-
-    @Bean(name = "rocketMQCommandListener")
-    @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "command")
-    public RocketMQMessageListener rocketMQCommandListener(MessageHandlerHolder messageHandlerHolder) {
-        return new RocketMQMessageListener(messageHandlerHolder);
-    }
-
-    @Bean(name = "rocketMQReplyListener")
-    @ConditionalOnProperty(prefix = "spring.enode.mq.topic", name = "reply")
-    public RocketMQMessageListener rocketMQReplyListener(MessageHandlerHolder messageHandlerHolder) {
+    @Bean(name = "rocketMQMessageListener")
+    public RocketMQMessageListener rocketMQMessageListener(MessageHandlerHolder messageHandlerHolder) {
         return new RocketMQMessageListener(messageHandlerHolder);
     }
 
     @Bean(name = "rocketMQSendMessageService")
-    public RocketMQSendMessageService rocketMQSendMessageService(@Qualifier(value = "enodeMQProducer") MQProducer mqProducer, SerializeService serializeService) {
-        return new RocketMQSendMessageService(replyTopic, mqProducer, serializeService);
+    public RocketMQSendMessageService rocketMQSendMessageService(RocketMQProducerHolder rocketMQProducerHolder) {
+        return new RocketMQSendMessageService(rocketMQProducerHolder);
+    }
+
+    @Bean(name = "rocketMQProducerHolder")
+    public RocketMQProducerHolder rocketMQProducerHolder(@Qualifier(value = "enodeMQProducer") MQProducer mqProducer) {
+        return new RocketMQProducerHolder(mqProducer);
     }
 }

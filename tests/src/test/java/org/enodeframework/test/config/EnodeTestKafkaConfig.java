@@ -4,9 +4,8 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.enodeframework.commanding.CommandConfiguration;
+import org.enodeframework.commanding.CommandOptions;
 import org.enodeframework.kafka.KafkaMessageListener;
-import org.enodeframework.queue.command.CommandResultProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -32,8 +31,7 @@ public class EnodeTestKafkaConfig {
     @Value("${spring.enode.mq.topic.event}")
     private String eventTopic;
 
-    @Value("${spring.enode.reply.topic}")
-    private String replyTopic;
+    private String rdot = "1";
 
     @Bean
     public ConsumerFactory<String, String> consumerFactory() {
@@ -51,7 +49,7 @@ public class EnodeTestKafkaConfig {
     @Bean
     public ConcurrentMessageListenerContainer<String, String> commandListenerContainer(KafkaMessageListener kafkaCommandListener, ConsumerFactory<String, String> consumerFactory) {
         ContainerProperties properties = new ContainerProperties(commandTopic);
-        properties.setGroupId(Constants.DEFAULT_CONSUMER_GROUP1);
+        properties.setGroupId(Constants.DEFAULT_CONSUMER_GROUP1 + rdot);
         properties.setMessageListener(kafkaCommandListener);
         properties.setMissingTopicsFatal(false);
         properties.setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
@@ -60,10 +58,10 @@ public class EnodeTestKafkaConfig {
 
     @Bean
     @ConditionalOnProperty(prefix = "spring.enode", name = "reply", havingValue = "kafka")
-    public ConcurrentMessageListenerContainer<String, String> replyListenerContainer(CommandConfiguration commandConfiguration, KafkaMessageListener kafkaReplyListener, ConsumerFactory<String, String> consumerFactory) {
-        ContainerProperties properties = new ContainerProperties(commandConfiguration.replyTo());
-        properties.setGroupId(Constants.DEFAULT_CONSUMER_GROUP2);
-        properties.setMessageListener(kafkaReplyListener);
+    public ConcurrentMessageListenerContainer<String, String> replyListenerContainer(CommandOptions commandOptions, KafkaMessageListener kafkaMessageListener, ConsumerFactory<String, String> consumerFactory) {
+        ContainerProperties properties = new ContainerProperties(commandOptions.getReplyTopic());
+        properties.setGroupId(Constants.DEFAULT_CONSUMER_GROUP2 + rdot);
+        properties.setMessageListener(kafkaMessageListener);
         properties.setMissingTopicsFatal(false);
         properties.setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
         return new ConcurrentMessageListenerContainer<>(consumerFactory, properties);
@@ -72,7 +70,7 @@ public class EnodeTestKafkaConfig {
     @Bean
     public ConcurrentMessageListenerContainer<String, String> domainEventListenerContainer(KafkaMessageListener kafkaDomainEventListener, ConsumerFactory<String, String> consumerFactory) {
         ContainerProperties properties = new ContainerProperties(eventTopic);
-        properties.setGroupId(Constants.DEFAULT_CONSUMER_GROUP3);
+        properties.setGroupId(Constants.DEFAULT_CONSUMER_GROUP3 + rdot);
         properties.setMessageListener(kafkaDomainEventListener);
         properties.setMissingTopicsFatal(false);
         properties.setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);

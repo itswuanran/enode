@@ -49,8 +49,12 @@ public class EnodeConfigurationSelector implements DeferredImportSelector {
             EnodeOnsAutoConfig.class.getName(),
             EnodePulsarAutoConfig.class.getName(),
             EnodeReplyAutoConfig.RedisReply.class.getName(),
-            EnodeReplyAutoConfig.KafkaReply.class.getName(),
             EnodeReplyAutoConfig.TcpReply.class.getName(),
+            EnodeReplyAutoConfig.KafkaReply.class.getName(),
+            EnodeReplyAutoConfig.PulsarReply.class.getName(),
+            EnodeReplyAutoConfig.RocketMQReply.class.getName(),
+            EnodeReplyAutoConfig.OnsReply.class.getName(),
+            EnodeReplyAutoConfig.AmqpReply.class.getName(),
             EnodeRocketMQAutoConfig.class.getName(),
         };
     }
