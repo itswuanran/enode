@@ -12,11 +12,15 @@ class DefaultCommandOptions(
     override var replyTopic: String,
 ) : CommandOptions {
     override fun replyTo(): String {
-        val xx = address()
-        return "$replyTopic#$xx"
+        return replyWith(address())
     }
 
     override fun replyWith(tag: String): String {
-        return "$replyTopic#$tag"
+        val value = encode(tag)
+        return "$replyTopic#$value"
+    }
+
+    private fun encode(value: String): String {
+        return value.replace(".", "#").replace(":","s").replace("://","p")
     }
 }

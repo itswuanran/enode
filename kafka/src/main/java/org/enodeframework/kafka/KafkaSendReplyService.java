@@ -26,6 +26,7 @@ import org.enodeframework.queue.QueueMessage;
 import org.enodeframework.queue.SendMessageResult;
 import org.enodeframework.queue.SendReplyService;
 import org.enodeframework.queue.reply.GenericReplyMessage;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -43,15 +44,18 @@ public class KafkaSendReplyService implements SendReplyService {
         this.serializeService = serializeService;
     }
 
+    @NotNull
     @Override
-    public CompletableFuture<SendMessageResult> send(ReplyMessage message) {
+    public CompletableFuture<SendMessageResult> send(@NotNull ReplyMessage message) {
         return kafkaProducerHolder.send(buildQueueMessage(message));
     }
 
     private QueueMessage buildQueueMessage(ReplyMessage replyMessage) {
         GenericReplyMessage message = replyMessage.asGenericReplyMessage();
         QueueMessage queueMessage = replyMessage.asPartQueueMessage();
+//        queueMessage.setTopic(commandOptions.replyWith(replyMessage.getAddress()));
         queueMessage.setTopic(commandOptions.getReplyTopic());
+        queueMessage.setTag(replyMessage.getAddress());
         queueMessage.setBody(serializeService.serializeBytes(message));
         queueMessage.setType(MessageTypeCode.ReplyMessage.getValue());
         return queueMessage;
