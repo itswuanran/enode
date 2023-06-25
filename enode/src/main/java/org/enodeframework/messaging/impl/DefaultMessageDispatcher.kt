@@ -87,7 +87,7 @@ class DefaultMessageDispatcher(
     fun dispatchSingleMessage(message: Message, queueMessageDispatching: QueueMessageDispatching) {
         val messageHandlerDataList = messageHandlerProvider.getHandlers(message.javaClass)
         if (messageHandlerDataList.isEmpty()) {
-            queueMessageDispatching.onMessageHandled(message)
+            queueMessageDispatching.onMessageHandled()
             return
         }
         messageHandlerDataList.forEach { messageHandlerData: MessageHandlerData<MessageHandlerProxy1> ->

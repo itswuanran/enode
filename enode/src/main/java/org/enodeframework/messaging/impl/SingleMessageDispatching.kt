@@ -25,7 +25,7 @@ class SingleMessageDispatching(
     fun removeHandledHandler(handlerTypeName: String) {
         if (handlerDict.remove(handlerTypeName) != null) {
             if (handlerDict.isEmpty()) {
-                queueMessageDispatching.onMessageHandled(message)
+                queueMessageDispatching.onMessageHandled()
             }
         }
     }

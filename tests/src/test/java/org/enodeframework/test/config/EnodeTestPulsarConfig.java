@@ -5,8 +5,8 @@ import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.SubscriptionType;
+import org.enodeframework.commanding.CommandOptions;
 import org.enodeframework.pulsar.message.PulsarMessageListener;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -27,13 +27,12 @@ public class EnodeTestPulsarConfig {
     @Bean
     public PulsarClient pulsarClient() throws PulsarClientException {
         return PulsarClient.builder()
-            .serviceUrl("pulsar://localhost:6650")
+            .serviceUrl("pulsar://127.0.0.1:6650")
             .build();
     }
 
     @Bean
-    public Consumer<byte[]> commandConsumer(PulsarClient pulsarClient, @Qualifier("pulsarCommandListener")
-    PulsarMessageListener pulsarCommandListener) throws PulsarClientException {
+    public Consumer<byte[]> commandConsumer(PulsarClient pulsarClient, PulsarMessageListener pulsarCommandListener) throws PulsarClientException {
         return pulsarClient.newConsumer().messageListener(pulsarCommandListener)
             .topic(commandTopic)
             .subscriptionType(SubscriptionType.Key_Shared)
@@ -42,8 +41,9 @@ public class EnodeTestPulsarConfig {
     }
 
     @Bean
-    public Consumer<byte[]> eventConsumer(PulsarClient pulsarClient, @Qualifier("pulsarDomainEventListener")
-    PulsarMessageListener pulsarDomainEventListener) throws PulsarClientException {
+    public Consumer<byte[]> eventConsumer(
+        PulsarClient pulsarClient,
+        PulsarMessageListener pulsarDomainEventListener) throws PulsarClientException {
         return pulsarClient.newConsumer().messageListener(pulsarDomainEventListener)
             .topic(eventTopic)
             .subscriptionType(SubscriptionType.Key_Shared)
@@ -66,6 +66,11 @@ public class EnodeTestPulsarConfig {
         @Bean(name = "enodePulsarDomainEventProducer")
         public Producer<byte[]> enodePulsarEventProducer(PulsarClient pulsarClient) throws PulsarClientException {
             return pulsarClient.newProducer().topic(eventTopic).producerName(Constants.DEFAULT_PRODUCER_GROUP).create();
+        }
+
+        @Bean(name = "enodePulsarReplyProducer")
+        public Producer<byte[]> enodePulsarReplyProducer(PulsarClient pulsarClient, CommandOptions commandOptions) throws PulsarClientException {
+            return pulsarClient.newProducer().topic(commandOptions.replyTo()).producerName(Constants.DEFAULT_PRODUCER_GROUP).create();
         }
     }
 }

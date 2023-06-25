@@ -18,6 +18,7 @@
  */
 package org.enodeframework.spring;
 
+import org.enodeframework.kafka.KafkaBatchMessageListener;
 import org.enodeframework.kafka.KafkaMessageListener;
 import org.enodeframework.kafka.KafkaProducerHolder;
 import org.enodeframework.kafka.KafkaSendMessageService;
@@ -32,6 +33,11 @@ public class EnodeKafkaAutoConfiguration {
     @Bean(name = "enodeKafkaMessageListener")
     public KafkaMessageListener enodeKafkaMessageListener(MessageHandlerHolder messageHandlerHolder) {
         return new KafkaMessageListener(messageHandlerHolder);
+    }
+
+    @Bean(name = "enodeKafkaBatchMessageListener")
+    public KafkaBatchMessageListener enodeKafkaBatchMessageListener(MessageHandlerHolder messageHandlerHolder) {
+        return new KafkaBatchMessageListener(messageHandlerHolder);
     }
 
     @Bean(name = "kafkaSendMessageService")

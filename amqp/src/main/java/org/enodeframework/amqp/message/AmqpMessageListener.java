@@ -23,9 +23,6 @@ import org.enodeframework.common.extensions.SysProperties;
 import org.enodeframework.common.io.Task;
 import org.enodeframework.queue.MessageHandlerHolder;
 import org.enodeframework.queue.QueueMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.amqp.core.BatchMessageListener;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageListener;
 import org.springframework.amqp.core.MessageProperties;
@@ -36,8 +33,7 @@ import java.util.concurrent.CountDownLatch;
 /**
  * @author anruence@gmail.com
  */
-public class AmqpMessageListener implements MessageListener, BatchMessageListener {
-    private static final Logger logger = LoggerFactory.getLogger(AmqpMessageListener.class);
+public class AmqpMessageListener implements MessageListener {
     private final MessageHandlerHolder messageHandlerMap;
 
     public AmqpMessageListener(MessageHandlerHolder messageHandlerMap) {
@@ -49,7 +45,6 @@ public class AmqpMessageListener implements MessageListener, BatchMessageListene
         onMessageBatch(Lists.newArrayList(message));
     }
 
-    @Override
     public void onMessageBatch(List<Message> messages) {
         CountDownLatch latch = new CountDownLatch(messages.size());
         messages.forEach(message -> {

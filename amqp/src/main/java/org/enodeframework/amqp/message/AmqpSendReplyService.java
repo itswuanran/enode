@@ -19,20 +19,12 @@
 package org.enodeframework.amqp.message;
 
 import org.enodeframework.commanding.CommandOptions;
-import org.enodeframework.common.exception.IORuntimeException;
-import org.enodeframework.common.extensions.SysProperties;
 import org.enodeframework.common.serializing.SerializeService;
 import org.enodeframework.messaging.ReplyMessage;
 import org.enodeframework.queue.QueueMessage;
 import org.enodeframework.queue.SendMessageResult;
 import org.enodeframework.queue.SendReplyService;
 import org.enodeframework.queue.reply.GenericReplyMessage;
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.amqp.core.AsyncAmqpTemplate;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.core.MessageProperties;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -58,8 +50,9 @@ public class AmqpSendReplyService implements SendReplyService {
         QueueMessage queueMessage = replyMessage.asPartQueueMessage();
         queueMessage.setBody(serializeService.serializeBytes(message));
         queueMessage.setTag(message.getAddress());
-        queueMessage.setTopic(commandOptions.replyWith(replyMessage.getAddress()));
-        return amqpProducerHolder.send(queueMessage);
+        queueMessage.setTopic(commandOptions.getReplyTopic());
+        amqpProducerHolder.send(queueMessage);
+        return CompletableFuture.completedFuture(new SendMessageResult(""));
     }
 
 }

@@ -7,8 +7,6 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.enodeframework.commanding.CommandOptions;
 import org.enodeframework.kafka.KafkaMessageListener;
 import org.enodeframework.samples.QueueProperties;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,14 +41,11 @@ public class KafkaConfig {
         return new KafkaTemplate<>(producerFactory());
     }
 
-    @Autowired
-    @Qualifier("kafkaReplyListener")
-    private KafkaMessageListener kafkaReplyListener;
 
     @Bean
-    public ConcurrentMessageListenerContainer<String, String> retryListenerContainer(CommandOptions commandOptions) {
-        ContainerProperties properties = new ContainerProperties(commandOptions.getReplyTopic());
-        properties.setGroupId(DEFAULT_CONSUMER_GROUP0 + "#" + commandOptions.address());
+    public ConcurrentMessageListenerContainer<String, String> replyListenerContainer(CommandOptions commandOptions, KafkaMessageListener kafkaReplyListener) {
+        ContainerProperties properties = new ContainerProperties(commandOptions.replyTo());
+        properties.setGroupId(DEFAULT_CONSUMER_GROUP0);
         properties.setMessageListener(kafkaReplyListener);
         properties.setMissingTopicsFatal(false);
         properties.setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);

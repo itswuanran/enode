@@ -4,15 +4,13 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.enodeframework.commanding.CommandOptions;
 import org.enodeframework.kafka.KafkaMessageListener;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
@@ -35,10 +33,6 @@ public class KafkaEventConfig {
     @Value("${spring.enode.mq.topic.event}")
     private String eventTopic;
 
-    @Autowired
-    @Qualifier("kafkaDomainEventListener")
-    private KafkaMessageListener kafkaDomainEventListener;
-
     @Bean
     public ConsumerFactory<String, String> consumerFactory() {
         Map<String, Object> props = new HashMap<>();
@@ -53,10 +47,21 @@ public class KafkaEventConfig {
     }
 
     @Bean
-    public ConcurrentMessageListenerContainer<String, String> domainEventListenerContainer() {
+    public ConcurrentMessageListenerContainer<String, String> domainEventListenerContainer(KafkaMessageListener kafkaDomainEventListener) {
         ContainerProperties properties = new ContainerProperties(eventTopic);
         properties.setGroupId(DEFAULT_CONSUMER_GROUP0);
         properties.setMessageListener(kafkaDomainEventListener);
+        properties.setMissingTopicsFatal(false);
+        properties.setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
+        return new ConcurrentMessageListenerContainer<>(consumerFactory(), properties);
+    }
+
+
+    @Bean
+    public ConcurrentMessageListenerContainer<String, String> replyListenerContainer(CommandOptions commandOptions, KafkaMessageListener kafkaReplyListener) {
+        ContainerProperties properties = new ContainerProperties(commandOptions.replyTo());
+        properties.setGroupId(DEFAULT_CONSUMER_GROUP0);
+        properties.setMessageListener(kafkaReplyListener);
         properties.setMissingTopicsFatal(false);
         properties.setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
         return new ConcurrentMessageListenerContainer<>(consumerFactory(), properties);

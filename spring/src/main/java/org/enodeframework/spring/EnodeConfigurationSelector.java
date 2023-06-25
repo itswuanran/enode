@@ -46,6 +46,7 @@ public class EnodeConfigurationSelector implements DeferredImportSelector {
             EnodeMySQLEventStoreAutoConfig.class.getName(),
             EnodeMongoEventStoreAutoConfig.class.getName(),
             EnodeKafkaAutoConfiguration.class.getName(),
+            EnodeAmqpAutoConfiguration.class.getName(),
             EnodeOnsAutoConfig.class.getName(),
             EnodePulsarAutoConfig.class.getName(),
             EnodeReplyAutoConfig.RedisReply.class.getName(),
