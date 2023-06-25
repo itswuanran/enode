@@ -21,7 +21,7 @@ class QueueMessageDispatching(
         return messageQueue.poll()
     }
 
-    fun onMessageHandled(message: Message?) {
+    fun onMessageHandled() {
         val nextMessage = dequeueMessage()
         if (nextMessage == null) {
             rootDispatching.onChildDispatchingFinished(this)

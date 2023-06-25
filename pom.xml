@@ -87,7 +87,7 @@
         <vertx.version>4.4.3</vertx.version>
         <opentelemetry.version>1.27.0</opentelemetry.version>
         <metrics-core.version>4.2.19</metrics-core.version>
-        <spring-boot.version>3.1.0</spring-boot.version>
+        <spring-boot.version>3.1.1</spring-boot.version>
     </properties>
 
     <dependencyManagement>
@@ -290,6 +290,10 @@
                 <version>${maven.surefire.version}</version>
                 <configuration>
                     <skipTests>true</skipTests>
+                    <argLine>--illegal-access=permit</argLine>
+                    <argLine>--add-opens java.base/java.lang=ALL-UNNAMED</argLine>
+                    <argLine>--add-opens java.base/java.util=ALL-UNNAMED</argLine>
+                    <argLine>--add-opens java.base/sun.net=ALL-UNNAMED</argLine>
                 </configuration>
             </plugin>
             <plugin>

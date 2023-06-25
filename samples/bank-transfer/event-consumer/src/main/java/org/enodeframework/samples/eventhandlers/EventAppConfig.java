@@ -22,8 +22,7 @@ public class EventAppConfig {
 
     @Value("${spring.enode.datasource.password:}")
     private String password;
-    @Autowired
-    private DefaultCommandResultProcessor commandResultProcessor;
+
     @Autowired
     private JDBCEventStore jdbcEventStore;
     @Autowired

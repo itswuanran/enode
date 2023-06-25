@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import io.vertx.core.Vertx;
 import org.enodeframework.jdbc.JDBCEventStore;
 import org.enodeframework.jdbc.JDBCPublishedVersionStore;
-import org.enodeframework.queue.command.DefaultCommandResultProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -24,8 +23,7 @@ public class CommandConsumerAppConfig {
 
     @Value("${spring.enode.datasource.password:}")
     private String password;
-    @Autowired
-    private DefaultCommandResultProcessor commandResultProcessor;
+
     @Autowired
     private JDBCEventStore jdbcEventStore;
     @Autowired

@@ -5,8 +5,6 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.enodeframework.kafka.KafkaMessageListener;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -35,15 +33,11 @@ public class KafkaCommandConfig {
     @Value("${spring.enode.mq.topic.command:}")
     private String commandTopic;
 
-    @Autowired
-    @Qualifier("kafkaCommandListener")
-    private KafkaMessageListener kafkaCommandListener;
-
     @Bean
-    public ConcurrentMessageListenerContainer<String, String> commandListenerContainer() {
+    public ConcurrentMessageListenerContainer<String, String> commandListenerContainer(KafkaMessageListener kafkaMessageListener) {
         ContainerProperties properties = new ContainerProperties(commandTopic);
         properties.setGroupId(DEFAULT_CONSUMER_GROUP0);
-        properties.setMessageListener(kafkaCommandListener);
+        properties.setMessageListener(kafkaMessageListener);
         properties.setMissingTopicsFatal(false);
         properties.setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
         return new ConcurrentMessageListenerContainer<>(consumerFactory(), properties);
@@ -70,7 +64,6 @@ public class KafkaCommandConfig {
             props.put(ProducerConfig.RETRIES_CONFIG, 1);
             props.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
             props.put(ProducerConfig.LINGER_MS_CONFIG, 1);
-            props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 1024000);
             props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
             props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
             return new DefaultKafkaProducerFactory<>(props);

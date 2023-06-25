@@ -21,8 +21,6 @@ package org.enodeframework.redis.message;
 import org.enodeframework.queue.MessageHandlerHolder;
 import org.enodeframework.queue.MessageTypeCode;
 import org.enodeframework.queue.QueueMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 

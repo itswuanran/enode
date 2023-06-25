@@ -22,6 +22,7 @@ import org.enodeframework.amqp.message.AmqpMessageListener;
 import org.enodeframework.amqp.message.AmqpProducerHolder;
 import org.enodeframework.amqp.message.AmqpSendMessageService;
 import org.enodeframework.queue.MessageHandlerHolder;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.AsyncAmqpTemplate;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -40,7 +41,7 @@ public class EnodeAmqpAutoConfiguration {
     }
 
     @Bean(name = "amqpProducerHolder")
-    public AmqpProducerHolder amqpProducerHolder(@Qualifier(value = "enodeAsyncAmqpTemplate") AsyncAmqpTemplate asyncAmqpTemplate) {
+    public AmqpProducerHolder amqpProducerHolder(@Qualifier(value = "enodeAmqpTemplate") AmqpTemplate asyncAmqpTemplate) {
         return new AmqpProducerHolder(asyncAmqpTemplate);
     }
 }

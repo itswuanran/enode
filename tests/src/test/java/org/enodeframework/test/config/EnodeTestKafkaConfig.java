@@ -31,7 +31,7 @@ public class EnodeTestKafkaConfig {
     @Value("${spring.enode.mq.topic.event}")
     private String eventTopic;
 
-    private String rdot = "2";
+    private final String Suffix = "T";
 
     @Bean
     public ConsumerFactory<String, String> consumerFactory() {
@@ -49,7 +49,7 @@ public class EnodeTestKafkaConfig {
     @Bean
     public ConcurrentMessageListenerContainer<String, String> commandListenerContainer(KafkaMessageListener kafkaCommandListener, ConsumerFactory<String, String> consumerFactory) {
         ContainerProperties properties = new ContainerProperties(commandTopic);
-        properties.setGroupId(Constants.DEFAULT_CONSUMER_GROUP1 + rdot);
+        properties.setGroupId(Constants.DEFAULT_CONSUMER_GROUP1 + Suffix);
         properties.setMessageListener(kafkaCommandListener);
         properties.setMissingTopicsFatal(false);
         properties.setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
@@ -60,7 +60,7 @@ public class EnodeTestKafkaConfig {
     @ConditionalOnProperty(prefix = "spring.enode", name = "reply", havingValue = "kafka")
     public ConcurrentMessageListenerContainer<String, String> replyListenerContainer(CommandOptions commandOptions, KafkaMessageListener kafkaMessageListener, ConsumerFactory<String, String> consumerFactory) {
         ContainerProperties properties = new ContainerProperties(commandOptions.replyTo());
-        properties.setGroupId(Constants.DEFAULT_CONSUMER_GROUP2 + rdot);
+        properties.setGroupId(Constants.DEFAULT_CONSUMER_GROUP2 + Suffix);
         properties.setMessageListener(kafkaMessageListener);
         properties.setMissingTopicsFatal(false);
         properties.setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
@@ -70,7 +70,7 @@ public class EnodeTestKafkaConfig {
     @Bean
     public ConcurrentMessageListenerContainer<String, String> domainEventListenerContainer(KafkaMessageListener kafkaDomainEventListener, ConsumerFactory<String, String> consumerFactory) {
         ContainerProperties properties = new ContainerProperties(eventTopic);
-        properties.setGroupId(Constants.DEFAULT_CONSUMER_GROUP3 + rdot);
+        properties.setGroupId(Constants.DEFAULT_CONSUMER_GROUP3 + Suffix);
         properties.setMessageListener(kafkaDomainEventListener);
         properties.setMissingTopicsFatal(false);
         properties.setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
