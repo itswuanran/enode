@@ -18,7 +18,7 @@ class AmqpProducerHolder(private val asyncAmqpTemplate: AmqpTemplate) {
         return CompletableFuture.supplyAsync {
             asyncAmqpTemplate.send(
                 queueMessage.topic,
-                "${queueMessage.type}.r",
+                "${queueMessage.type}.${queueMessage.tag}",
                 this.covertToAmqpMessage(queueMessage)
             )
         }.exceptionally { throwable: Throwable? ->
