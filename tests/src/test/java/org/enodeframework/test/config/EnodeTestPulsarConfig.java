@@ -1,10 +1,6 @@
 package org.enodeframework.test.config;
 
-import org.apache.pulsar.client.api.Consumer;
-import org.apache.pulsar.client.api.Producer;
-import org.apache.pulsar.client.api.PulsarClient;
-import org.apache.pulsar.client.api.PulsarClientException;
-import org.apache.pulsar.client.api.SubscriptionType;
+import org.apache.pulsar.client.api.*;
 import org.enodeframework.commanding.CommandOptions;
 import org.enodeframework.pulsar.message.PulsarMessageListener;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,7 +32,7 @@ public class EnodeTestPulsarConfig {
         return pulsarClient.newConsumer().messageListener(pulsarCommandListener)
             .topic(commandTopic)
             .subscriptionType(SubscriptionType.Key_Shared)
-            .subscriptionName(Constants.DEFAULT_CONSUMER_GROUP0)
+            .subscriptionName(Constants.DEFAULT_CONSUMER_GROUP1)
             .subscribe();
     }
 
@@ -47,7 +43,19 @@ public class EnodeTestPulsarConfig {
         return pulsarClient.newConsumer().messageListener(pulsarDomainEventListener)
             .topic(eventTopic)
             .subscriptionType(SubscriptionType.Key_Shared)
-            .subscriptionName(Constants.DEFAULT_CONSUMER_GROUP1)
+            .subscriptionName(Constants.DEFAULT_CONSUMER_GROUP2)
+            .subscribe();
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "spring.enode", name = "reply", havingValue = "pulsar")
+    public Consumer<byte[]> replyConsumer(
+        PulsarClient pulsarClient,
+        PulsarMessageListener pulsarMessageListener, CommandOptions commandOptions) throws PulsarClientException {
+        return pulsarClient.newConsumer().messageListener(pulsarMessageListener)
+            .topic(commandOptions.getReplyTopic())
+            .subscriptionType(SubscriptionType.Key_Shared)
+            .subscriptionName(Constants.DEFAULT_CONSUMER_GROUP3)
             .subscribe();
     }
 
@@ -70,7 +78,7 @@ public class EnodeTestPulsarConfig {
 
         @Bean(name = "enodePulsarReplyProducer")
         public Producer<byte[]> enodePulsarReplyProducer(PulsarClient pulsarClient, CommandOptions commandOptions) throws PulsarClientException {
-            return pulsarClient.newProducer().topic(commandOptions.replyTo()).producerName(Constants.DEFAULT_PRODUCER_GROUP).create();
+            return pulsarClient.newProducer().topic(commandOptions.getReplyTopic()).producerName(Constants.DEFAULT_PRODUCER_GROUP).create();
         }
     }
 }

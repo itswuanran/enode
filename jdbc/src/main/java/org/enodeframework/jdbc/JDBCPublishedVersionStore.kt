@@ -1,6 +1,5 @@
 package org.enodeframework.jdbc
 
-import io.vertx.core.AbstractVerticle
 import io.vertx.jdbcclient.JDBCPool
 import io.vertx.sqlclient.Tuple
 import org.enodeframework.common.io.IOHelper
@@ -9,28 +8,15 @@ import org.enodeframework.eventing.PublishedVersionStore
 import org.enodeframework.jdbc.handler.JDBCFindPublishedVersionHandler
 import org.enodeframework.jdbc.handler.JDBCUpsertPublishedVersionHandler
 import java.util.concurrent.CompletableFuture
-import javax.sql.DataSource
 
 /**
  * @author anruence@gmail.com
  */
 open class JDBCPublishedVersionStore(
-    dataSource: DataSource, private val options: EventStoreOptions
-) : AbstractVerticle(), PublishedVersionStore {
+    sqlClient: JDBCPool, private val options: EventStoreOptions
+) : PublishedVersionStore {
 
-    private lateinit var sqlClient: JDBCPool
-
-    private val dataSource: DataSource
-
-    override fun start() {
-        super.start()
-        this.sqlClient = JDBCPool.pool(vertx, dataSource)
-    }
-
-    override fun stop() {
-        super.stop()
-        this.sqlClient.close()
-    }
+    private var sqlClient: JDBCPool
 
     override fun updatePublishedVersionAsync(
         processorName: String, aggregateRootTypeName: String, aggregateRootId: String, publishedVersion: Int
@@ -103,6 +89,6 @@ open class JDBCPublishedVersionStore(
     }
 
     init {
-        this.dataSource = dataSource
+        this.sqlClient = sqlClient
     }
 }

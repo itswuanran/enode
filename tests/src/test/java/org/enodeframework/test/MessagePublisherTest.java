@@ -13,13 +13,9 @@ import org.enodeframework.test.command.AggregateThrowExceptionCommand;
 import org.enodeframework.test.command.AsyncHandlerCommand;
 import org.enodeframework.test.command.CreateTestAggregateCommand;
 import org.enodeframework.test.config.TestMockConfig;
-import org.enodeframework.test.mock.FailedType;
-import org.enodeframework.test.mock.MockApplicationMessagePublisher;
-import org.enodeframework.test.mock.MockDomainEventPublisher;
-import org.enodeframework.test.mock.MockEventStore;
-import org.enodeframework.test.mock.MockPublishableExceptionPublisher;
-import org.junit.Assert;
-import org.junit.Test;
+import org.enodeframework.test.mock.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.util.TestPropertyValues;
@@ -50,33 +46,33 @@ public class MessagePublisherTest extends AbstractTest {
         command.setTitle("Sample Note");
         mockEventStore.SetExpectFailedCount(FailedType.UnKnownException, 5);
         CommandResult asyncResult = Task.await(commandService.executeAsync(command));
-        Assert.assertNotNull(asyncResult);
+        Assertions.assertNotNull(asyncResult);
 
         CommandResult commandResult = asyncResult;
-        Assert.assertNotNull(commandResult);
-        Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
+        Assertions.assertNotNull(commandResult);
+        Assertions.assertEquals(CommandStatus.Success, commandResult.getStatus());
         mockEventStore.Reset();
         command = new CreateTestAggregateCommand();
         command.setAggregateRootId(IdGenerator.id());
         command.setTitle("Sample Note");
         mockEventStore.SetExpectFailedCount(FailedType.IOException, 5);
         asyncResult = Task.await(commandService.executeAsync(command));
-        Assert.assertNotNull(asyncResult);
+        Assertions.assertNotNull(asyncResult);
 
         commandResult = asyncResult;
-        Assert.assertNotNull(commandResult);
-        Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
+        Assertions.assertNotNull(commandResult);
+        Assertions.assertEquals(CommandStatus.Success, commandResult.getStatus());
         mockEventStore.Reset();
         command = new CreateTestAggregateCommand();
         command.setAggregateRootId(IdGenerator.id());
         command.setTitle("Sample Note");
         mockEventStore.SetExpectFailedCount(FailedType.TaskIOException, 5);
         asyncResult = Task.await(commandService.executeAsync(command));
-        Assert.assertNotNull(asyncResult);
+        Assertions.assertNotNull(asyncResult);
 
         commandResult = asyncResult;
-        Assert.assertNotNull(commandResult);
-        Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
+        Assertions.assertNotNull(commandResult);
+        Assertions.assertEquals(CommandStatus.Success, commandResult.getStatus());
         mockEventStore.Reset();
     }
 
@@ -92,27 +88,27 @@ public class MessagePublisherTest extends AbstractTest {
         command1.setPublishableException(true);
         ((MockPublishableExceptionPublisher) publishableExceptionPublisher).SetExpectFailedCount(FailedType.UnKnownException, 5);
         CommandResult asyncResult = Task.await(commandService.executeAsync(command1));
-        Assert.assertNotNull(asyncResult);
+        Assertions.assertNotNull(asyncResult);
 
         CommandResult commandResult = asyncResult;
-        Assert.assertNotNull(commandResult);
-        Assert.assertEquals(CommandStatus.Failed, commandResult.getStatus());
+        Assertions.assertNotNull(commandResult);
+        Assertions.assertEquals(CommandStatus.Failed, commandResult.getStatus());
         ((MockPublishableExceptionPublisher) publishableExceptionPublisher).Reset();
         ((MockPublishableExceptionPublisher) publishableExceptionPublisher).SetExpectFailedCount(FailedType.IOException, 5);
         asyncResult = Task.await(commandService.executeAsync(command1));
-        Assert.assertNotNull(asyncResult);
+        Assertions.assertNotNull(asyncResult);
 
         commandResult = asyncResult;
-        Assert.assertNotNull(commandResult);
-        Assert.assertEquals(CommandStatus.Failed, commandResult.getStatus());
+        Assertions.assertNotNull(commandResult);
+        Assertions.assertEquals(CommandStatus.Failed, commandResult.getStatus());
         ((MockPublishableExceptionPublisher) publishableExceptionPublisher).Reset();
         ((MockPublishableExceptionPublisher) publishableExceptionPublisher).SetExpectFailedCount(FailedType.TaskIOException, 5);
         asyncResult = Task.await(commandService.executeAsync(command1));
-        Assert.assertNotNull(asyncResult);
+        Assertions.assertNotNull(asyncResult);
 
         commandResult = asyncResult;
-        Assert.assertNotNull(commandResult);
-        Assert.assertEquals(CommandStatus.Failed, commandResult.getStatus());
+        Assertions.assertNotNull(commandResult);
+        Assertions.assertEquals(CommandStatus.Failed, commandResult.getStatus());
         ((MockPublishableExceptionPublisher) publishableExceptionPublisher).Reset();
     }
 
@@ -124,32 +120,32 @@ public class MessagePublisherTest extends AbstractTest {
         command.setTitle("Sample Note");
         mockEventStore.SetExpectFailedCount(FailedType.UnKnownException, 5);
         CommandResult asyncResult = Task.await(commandService.executeAsync(command, CommandReturnType.EventHandled));
-        Assert.assertNotNull(asyncResult);
+        Assertions.assertNotNull(asyncResult);
 
         CommandResult commandResult = asyncResult;
-        Assert.assertNotNull(commandResult);
-        Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
+        Assertions.assertNotNull(commandResult);
+        Assertions.assertEquals(CommandStatus.Success, commandResult.getStatus());
         mockEventStore.Reset();
         command = new CreateTestAggregateCommand();
         command.setAggregateRootId(IdGenerator.id());
         command.setTitle("Sample Note");
         mockEventStore.SetExpectFailedCount(FailedType.IOException, 5);
         asyncResult = Task.await(commandService.executeAsync(command, CommandReturnType.EventHandled));
-        Assert.assertNotNull(asyncResult);
+        Assertions.assertNotNull(asyncResult);
 
         commandResult = asyncResult;
-        Assert.assertNotNull(commandResult);
-        Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
+        Assertions.assertNotNull(commandResult);
+        Assertions.assertEquals(CommandStatus.Success, commandResult.getStatus());
         mockEventStore.Reset();
         command = new CreateTestAggregateCommand();
         command.setAggregateRootId(IdGenerator.id());
         command.setTitle("Sample Note");
         mockEventStore.SetExpectFailedCount(FailedType.TaskIOException, 5);
         asyncResult = Task.await(commandService.executeAsync(command, CommandReturnType.EventHandled));
-        Assert.assertNotNull(asyncResult);
+        Assertions.assertNotNull(asyncResult);
         commandResult = asyncResult;
-        Assert.assertNotNull(commandResult);
-        Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
+        Assertions.assertNotNull(commandResult);
+        Assertions.assertEquals(CommandStatus.Success, commandResult.getStatus());
         mockEventStore.Reset();
     }
 
@@ -160,33 +156,33 @@ public class MessagePublisherTest extends AbstractTest {
         command.setTitle("Sample Note");
         ((MockDomainEventPublisher) domainEventPublisher).setExpectFailedCount(FailedType.UnKnownException, 5);
         CommandResult asyncResult = Task.await(commandService.executeAsync(command));
-        Assert.assertNotNull(asyncResult);
+        Assertions.assertNotNull(asyncResult);
 
         CommandResult commandResult = asyncResult;
-        Assert.assertNotNull(commandResult);
-        Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
+        Assertions.assertNotNull(commandResult);
+        Assertions.assertEquals(CommandStatus.Success, commandResult.getStatus());
         ((MockDomainEventPublisher) domainEventPublisher).Reset();
         command = new CreateTestAggregateCommand();
         command.setAggregateRootId(IdGenerator.id());
         command.setTitle("Sample Note");
         ((MockDomainEventPublisher) domainEventPublisher).setExpectFailedCount(FailedType.IOException, 5);
         asyncResult = Task.await(commandService.executeAsync(command));
-        Assert.assertNotNull(asyncResult);
+        Assertions.assertNotNull(asyncResult);
 
         commandResult = asyncResult;
-        Assert.assertNotNull(commandResult);
-        Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
+        Assertions.assertNotNull(commandResult);
+        Assertions.assertEquals(CommandStatus.Success, commandResult.getStatus());
         ((MockDomainEventPublisher) domainEventPublisher).Reset();
         command = new CreateTestAggregateCommand();
         command.setAggregateRootId(IdGenerator.id());
         command.setTitle("Sample Note");
         ((MockDomainEventPublisher) domainEventPublisher).setExpectFailedCount(FailedType.TaskIOException, 5);
         asyncResult = Task.await(commandService.executeAsync(command));
-        Assert.assertNotNull(asyncResult);
+        Assertions.assertNotNull(asyncResult);
 
         commandResult = asyncResult;
-        Assert.assertNotNull(commandResult);
-        Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
+        Assertions.assertNotNull(commandResult);
+        Assertions.assertEquals(CommandStatus.Success, commandResult.getStatus());
         ((MockDomainEventPublisher) domainEventPublisher).Reset();
     }
 
@@ -198,33 +194,33 @@ public class MessagePublisherTest extends AbstractTest {
         command.setAggregateRootId(IdGenerator.id());
         command.setShouldGenerateApplicationMessage(true);
         CommandResult asyncResult = Task.await(commandService.executeAsync(command));
-        Assert.assertNotNull(asyncResult);
+        Assertions.assertNotNull(asyncResult);
 
         CommandResult commandResult = asyncResult;
-        Assert.assertNotNull(commandResult);
-        Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
+        Assertions.assertNotNull(commandResult);
+        Assertions.assertEquals(CommandStatus.Success, commandResult.getStatus());
         mockApplicationMessagePublisher.Reset();
         mockApplicationMessagePublisher.SetExpectFailedCount(FailedType.IOException, 5);
         AsyncHandlerCommand command1 = new AsyncHandlerCommand();
         command1.setAggregateRootId(IdGenerator.id());
         command1.setShouldGenerateApplicationMessage(true);
         asyncResult = Task.await(commandService.executeAsync(command1));
-        Assert.assertNotNull(asyncResult);
+        Assertions.assertNotNull(asyncResult);
 
         commandResult = asyncResult;
-        Assert.assertNotNull(commandResult);
-        Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
+        Assertions.assertNotNull(commandResult);
+        Assertions.assertEquals(CommandStatus.Success, commandResult.getStatus());
         mockApplicationMessagePublisher.Reset();
         mockApplicationMessagePublisher.SetExpectFailedCount(FailedType.TaskIOException, 5);
         AsyncHandlerCommand command2 = new AsyncHandlerCommand();
         command2.setAggregateRootId(IdGenerator.id());
         command2.setShouldGenerateApplicationMessage(true);
         asyncResult = Task.await(commandService.executeAsync(command2));
-        Assert.assertNotNull(asyncResult);
+        Assertions.assertNotNull(asyncResult);
 
         commandResult = asyncResult;
-        Assert.assertNotNull(commandResult);
-        Assert.assertEquals(CommandStatus.Success, commandResult.getStatus());
+        Assertions.assertNotNull(commandResult);
+        Assertions.assertEquals(CommandStatus.Success, commandResult.getStatus());
         mockApplicationMessagePublisher.Reset();
     }
 

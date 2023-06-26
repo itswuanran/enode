@@ -4,21 +4,18 @@ import com.zaxxer.hikari.HikariDataSource;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
+import io.vertx.jdbcclient.JDBCPool;
 import io.vertx.mysqlclient.MySQLConnectOptions;
 import io.vertx.mysqlclient.MySQLPool;
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.PoolOptions;
-import org.enodeframework.jdbc.JDBCEventStore;
-import org.enodeframework.jdbc.JDBCPublishedVersionStore;
-import org.enodeframework.vertx.message.TcpSendReplyService;
 import org.enodeframework.vertx.message.TcpReplyMessageListener;
+import org.enodeframework.vertx.message.TcpSendReplyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
-
-import javax.sql.DataSource;
 
 public class EnodeTestDataSourceConfig {
 
@@ -41,12 +38,6 @@ public class EnodeTestDataSourceConfig {
     private String pgPassword;
 
     @Autowired(required = false)
-    private JDBCEventStore jdbcEventStore;
-
-    @Autowired(required = false)
-    private JDBCPublishedVersionStore jdbcPublishedVersionStore;
-
-    @Autowired(required = false)
     private TcpSendReplyService tcpSendReplyService;
 
     @Autowired(required = false)
@@ -60,12 +51,6 @@ public class EnodeTestDataSourceConfig {
         }
         if (tcpServerListener != null) {
             vertx.deployVerticle(tcpServerListener);
-        }
-        if (jdbcEventStore != null) {
-            vertx.deployVerticle(jdbcEventStore);
-        }
-        if (jdbcPublishedVersionStore != null) {
-            vertx.deployVerticle(jdbcPublishedVersionStore);
         }
         return vertx;
     }
@@ -98,25 +83,25 @@ public class EnodeTestDataSourceConfig {
         return PgPool.pool(connectOptions, poolOptions);
     }
 
-    @Bean("enodeMySQLDataSource")
+    @Bean("enodeJDBCPool")
     @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "jdbc-mysql")
-    public DataSource enodeMySQLDataSource() {
+    public JDBCPool enodeJDBCMySQLPool(Vertx vertx) {
         HikariDataSource dataSource = new HikariDataSource();
         dataSource.setJdbcUrl(jdbcUrl);
         dataSource.setUsername(username);
         dataSource.setPassword(password);
         dataSource.setDriverClassName(com.mysql.cj.jdbc.Driver.class.getName());
-        return dataSource;
+        return JDBCPool.pool(vertx, dataSource);
     }
 
-    @Bean("enodePgDataSource")
+    @Bean("enodeJDBCPool")
     @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "jdbc-pg")
-    public DataSource enodePgDataSource() {
+    public JDBCPool enodeJDBCPgPool(Vertx vertx) {
         HikariDataSource dataSource = new HikariDataSource();
         dataSource.setJdbcUrl(pgJdbcUrl);
         dataSource.setUsername(pgUsername);
         dataSource.setPassword(pgPassword);
         dataSource.setDriverClassName(org.postgresql.Driver.class.getName());
-        return dataSource;
+        return JDBCPool.pool(vertx, dataSource);
     }
 }

@@ -20,6 +20,7 @@ package org.enodeframework.spring;
 
 import io.vertx.core.VertxOptions;
 import io.vertx.core.net.NetServerOptions;
+import org.apache.pulsar.client.api.Producer;
 import org.enodeframework.amqp.message.AmqpMessageListener;
 import org.enodeframework.amqp.message.AmqpProducerHolder;
 import org.enodeframework.amqp.message.AmqpSendReplyService;
@@ -35,6 +36,7 @@ import org.enodeframework.pulsar.message.PulsarMessageListener;
 import org.enodeframework.pulsar.message.PulsarProducerHolder;
 import org.enodeframework.pulsar.message.PulsarSendReplyService;
 import org.enodeframework.queue.MessageHandlerHolder;
+import org.enodeframework.queue.MessageTypeCode;
 import org.enodeframework.queue.command.CommandResultProcessor;
 import org.enodeframework.redis.message.RedisReplyMessageListener;
 import org.enodeframework.redis.message.RedisSendReplyService;
@@ -46,14 +48,12 @@ import org.enodeframework.vertx.message.TcpReplyMessageListener;
 import org.enodeframework.vertx.message.TcpSendReplyService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 
 public class EnodeReplyAutoConfig {
-
 
     @ConditionalOnProperty(prefix = "spring.enode", name = "reply", havingValue = "redis")
     static class RedisReply {
@@ -80,7 +80,7 @@ public class EnodeReplyAutoConfig {
         }
 
         @Bean(name = "tcpSendReplyService")
-        public TcpSendReplyService tcpSendReplyService() throws Exception {
+        public TcpSendReplyService tcpSendReplyService() {
             return new TcpSendReplyService(new VertxOptions());
         }
     }
@@ -99,7 +99,7 @@ public class EnodeReplyAutoConfig {
         }
 
         @Bean(name = "kafkaProducerHolder")
-        @ConditionalOnMissingBean(KafkaProducerHolder.class)
+        @ConditionalOnExpression(value = "#{!'kafka'.equals('${spring.enode.mq}')}")
         public KafkaProducerHolder kafkaProducerHolder(KafkaTemplate<String, String> kafkaTemplate) {
             return new KafkaProducerHolder(kafkaTemplate);
         }
@@ -150,6 +150,22 @@ public class EnodeReplyAutoConfig {
         @ConditionalOnExpression(value = "#{!'pulsar'.equals('${spring.enode.mq}')}")
         public PulsarMessageListener pulsarReplyMessageListener(MessageHandlerHolder messageHandlerHolder) {
             return new PulsarMessageListener(messageHandlerHolder);
+        }
+
+        @Bean(name = "pulsarProducerHolder")
+        @ConditionalOnExpression(value = "#{!'pulsar'.equals('${spring.enode.mq}')}")
+        public PulsarProducerHolder pulsarProducerHolder(
+            @Qualifier("enodePulsarCommandProducer") Producer<byte[]> enodePulsarCommandProducer,
+            @Qualifier("enodePulsarDomainEventProducer") Producer<byte[]> enodePulsarDomainEventProducer,
+            @Qualifier("enodePulsarReplyProducer") Producer<byte[]> enodePulsarReplyProducer
+        ) {
+            PulsarProducerHolder pulsarProducerHolder = new PulsarProducerHolder();
+            pulsarProducerHolder.put(MessageTypeCode.CommandMessage.getValue(), enodePulsarCommandProducer);
+            pulsarProducerHolder.put(MessageTypeCode.DomainEventMessage.getValue(), enodePulsarDomainEventProducer);
+            pulsarProducerHolder.put(MessageTypeCode.ExceptionMessage.getValue(), enodePulsarDomainEventProducer);
+            pulsarProducerHolder.put(MessageTypeCode.ApplicationMessage.getValue(), enodePulsarDomainEventProducer);
+            pulsarProducerHolder.put(MessageTypeCode.ReplyMessage.getValue(), enodePulsarReplyProducer);
+            return pulsarProducerHolder;
         }
     }
 

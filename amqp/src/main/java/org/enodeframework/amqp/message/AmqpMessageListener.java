@@ -23,6 +23,8 @@ import org.enodeframework.common.exception.IORuntimeException;
 import org.enodeframework.common.extensions.SysProperties;
 import org.enodeframework.queue.MessageHandlerHolder;
 import org.enodeframework.queue.QueueMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.listener.api.ChannelAwareMessageListener;
@@ -34,6 +36,7 @@ import java.io.IOException;
  */
 public class AmqpMessageListener implements ChannelAwareMessageListener {
     private final MessageHandlerHolder messageHandlerMap;
+    private final Logger logger = LoggerFactory.getLogger(AmqpMessageListener.class);
 
     public AmqpMessageListener(MessageHandlerHolder messageHandlerMap) {
         this.messageHandlerMap = messageHandlerMap;
@@ -46,6 +49,7 @@ public class AmqpMessageListener implements ChannelAwareMessageListener {
             try {
                 channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
             } catch (IOException e) {
+                logger.error("Acknowledge message failed: {}.", message, e);
                 throw new IORuntimeException(e);
             }
         });

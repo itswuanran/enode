@@ -10,14 +10,14 @@ import org.enodeframework.eventing.PublishedVersionStore;
 import org.enodeframework.messaging.ApplicationMessage;
 import org.enodeframework.messaging.MessagePublisher;
 import org.enodeframework.test.config.EnodeTestDataSourceConfig;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {EnodeTestDataSourceConfig.class})
 @SpringBootTest(classes = App.class)
 public abstract class AbstractTest {
