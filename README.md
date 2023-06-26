@@ -493,6 +493,13 @@ public class DepositTransactionProcessManager {
 
 ```
 
+### docker部署
+定义了docker-compose.yml单体环境，用于应用的测试
+
+```bash
+docker-compose up -d
+```
+
 ### `MQ`配置启动
 
 目前支持三种

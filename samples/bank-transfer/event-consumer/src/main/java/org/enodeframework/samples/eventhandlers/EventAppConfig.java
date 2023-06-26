@@ -2,10 +2,7 @@ package org.enodeframework.samples.eventhandlers;
 
 import com.zaxxer.hikari.HikariDataSource;
 import io.vertx.core.Vertx;
-import org.enodeframework.jdbc.JDBCEventStore;
-import org.enodeframework.jdbc.JDBCPublishedVersionStore;
-import org.enodeframework.queue.command.DefaultCommandResultProcessor;
-import org.springframework.beans.factory.annotation.Autowired;
+import io.vertx.jdbcclient.JDBCPool;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -23,27 +20,20 @@ public class EventAppConfig {
     @Value("${spring.enode.datasource.password:}")
     private String password;
 
-    @Autowired
-    private JDBCEventStore jdbcEventStore;
-    @Autowired
-    private JDBCPublishedVersionStore jdbcPublishedVersionStore;
-
-    @Bean("enodeMySQLDataSource")
+    @Bean("enodeJDBCPool")
     @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "jdbc-mysql")
-    public HikariDataSource enodeMySQLDataSource() {
+    public JDBCPool enodeJDBCPool(Vertx vertx) {
         HikariDataSource dataSource = new HikariDataSource();
         dataSource.setJdbcUrl(jdbcUrl);
         dataSource.setUsername(username);
         dataSource.setPassword(password);
         dataSource.setDriverClassName(com.mysql.cj.jdbc.Driver.class.getName());
-        return dataSource;
+        return JDBCPool.pool(vertx, dataSource);
     }
 
     @Bean
     public Vertx vertx() {
         Vertx vertx = Vertx.vertx();
-        vertx.deployVerticle(jdbcEventStore);
-        vertx.deployVerticle(jdbcPublishedVersionStore);
         return vertx;
     }
 

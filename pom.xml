@@ -61,7 +61,7 @@
     </distributionManagement>
 
     <properties>
-        <revision>1.1.7</revision>
+        <revision>1.1.8</revision>
         <maven.skip.deploy>false</maven.skip.deploy>
         <maven.surefire.version>3.1.2</maven.surefire.version>
         <maven.deploy.version>3.1.1</maven.deploy.version>
@@ -77,14 +77,14 @@
         <slfj4.version>2.0.7</slfj4.version>
         <guava.version>32.0.1-jre</guava.version>
         <jackson.version>2.15.2</jackson.version>
-        <junit.version>4.13.2</junit.version>
+        <jupiter.version>5.9.3</jupiter.version>
         <jmh.version>1.36</jmh.version>
         <rocketmq.version>5.1.1</rocketmq.version>
         <ons.version>2.0.5.Final</ons.version>
         <pulsar.version>3.0.0</pulsar.version>
         <mysql.version>8.0.33</mysql.version>
         <reflections.version>0.10.2</reflections.version>
-        <vertx.version>4.4.3</vertx.version>
+        <vertx.version>4.4.4</vertx.version>
         <opentelemetry.version>1.27.0</opentelemetry.version>
         <metrics-core.version>4.2.19</metrics-core.version>
         <spring-boot.version>3.1.1</spring-boot.version>
@@ -145,9 +145,10 @@
                 <version>${slfj4.version}</version>
             </dependency>
             <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${junit.version}</version>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-engine</artifactId>
+                <version>${jupiter.version}</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.openjdk.jmh</groupId>
@@ -288,12 +289,18 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven.surefire.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.junit.jupiter</groupId>
+                        <artifactId>junit-jupiter-engine</artifactId>
+                        <version>${jupiter.version}</version>
+                    </dependency>
+                </dependencies>
                 <configuration>
                     <skipTests>true</skipTests>
-                    <argLine>--illegal-access=permit</argLine>
+                    <argLine>--add-opens java.base/sun.net=ALL-UNNAMED</argLine>
                     <argLine>--add-opens java.base/java.lang=ALL-UNNAMED</argLine>
                     <argLine>--add-opens java.base/java.util=ALL-UNNAMED</argLine>
-                    <argLine>--add-opens java.base/sun.net=ALL-UNNAMED</argLine>
                 </configuration>
             </plugin>
             <plugin>

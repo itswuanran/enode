@@ -1,47 +1,27 @@
 package org.enodeframework.jdbc
 
-import io.vertx.core.AbstractVerticle
 import io.vertx.jdbcclient.JDBCPool
 import io.vertx.sqlclient.Tuple
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.common.serializing.SerializeService
-import org.enodeframework.eventing.AggregateEventAppendResult
-import org.enodeframework.eventing.BatchAggregateEventAppendResult
-import org.enodeframework.eventing.DomainEventStream
-import org.enodeframework.eventing.EventAppendResult
-import org.enodeframework.eventing.EventSerializer
-import org.enodeframework.eventing.EventStore
-import org.enodeframework.eventing.EventStoreOptions
+import org.enodeframework.eventing.*
 import org.enodeframework.jdbc.handler.JDBCAddDomainEventsHandler
 import org.enodeframework.jdbc.handler.JDBCFindDomainEventsHandler
 import java.util.concurrent.CompletableFuture
-import javax.sql.DataSource
 
 /**
  * @author anruence@gmail.com
  */
 open class JDBCEventStore(
-    dataSource: DataSource,
+    sqlClient: JDBCPool,
     options: EventStoreOptions,
     eventSerializer: EventSerializer,
     serializeService: SerializeService
-) : AbstractVerticle(), EventStore {
-
+) : EventStore {
+    private var sqlClient: JDBCPool
     private val eventSerializer: EventSerializer
     private val serializeService: SerializeService
     private val options: EventStoreOptions
-    private val dataSource: DataSource
-    private lateinit var sqlClient: JDBCPool
-
-    override fun start() {
-        super.start()
-        this.sqlClient = JDBCPool.pool(vertx, dataSource)
-    }
-
-    override fun stop() {
-        super.stop()
-        this.sqlClient.close()
-    }
 
     override fun batchAppendAsync(eventStreams: List<DomainEventStream>): CompletableFuture<EventAppendResult> {
         val future = CompletableFuture<EventAppendResult>()
@@ -158,7 +138,7 @@ open class JDBCEventStore(
     }
 
     init {
-        this.dataSource = dataSource
+        this.sqlClient = sqlClient
         this.eventSerializer = eventSerializer
         this.serializeService = serializeService
         this.options = options

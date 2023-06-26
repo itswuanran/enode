@@ -33,9 +33,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public class AmqpSendReplyService implements SendReplyService {
     private final AmqpProducerHolder amqpProducerHolder;
-
     private final CommandOptions commandOptions;
-
     private final SerializeService serializeService;
 
     public AmqpSendReplyService(AmqpProducerHolder amqpProducerHolder, CommandOptions commandOptions, SerializeService serializeService) {

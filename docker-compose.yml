@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   postgres-1:
     image: postgres:latest
@@ -8,13 +7,12 @@ services:
       POSTGRES_USER: ecloud
       POSTGRES_PASSWORD: abcd1234ABCD
       POSTGRES_DB: enode
-    restart: always
     ports:
       - "15432:5432"
     volumes:
       - ./scripts/data/pg:/var/lib/postgresql/data
       - ./scripts/pg.sql:/docker-entrypoint-initdb.d/pg.sql
-
+    restart: on-failure
   mysql-1:
     image: mysql:latest
     container_name: e-mysql
@@ -28,6 +26,7 @@ services:
     volumes:
       - ./scripts/data/mysql:/var/lib/mysql
       - ./scripts/mysql.sql:/docker-entrypoint-initdb.d/mysql.sql
+    restart: on-failure
 
   mongodb-1:
     image: mongo:latest
@@ -41,11 +40,11 @@ services:
     volumes:
       - ./scripts/data/mongo:/data/db
       - ./scripts/mongo.js:/docker-entrypoint-initdb.d/mongo.js
+    restart: on-failure
 
   mongo-express-1:
     image: mongo-express:latest
     container_name: e-mongo-express
-    restart: always
     depends_on:
       - mongodb-1
     ports:
@@ -54,6 +53,7 @@ services:
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: abcd1234ABCD
       ME_CONFIG_MONGODB_URL: mongodb://root:abcd1234ABCD@mongodb-1:27017/
+    restart: on-failure
 
   # kafka stack
   zookeeper-1:
@@ -64,6 +64,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "22182:2182"
+    restart: on-failure
 
   kafka-1:
     image: confluentinc/cp-kafka:latest
@@ -79,6 +80,7 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    restart: on-failure
 
   # rocketmq nameserver
   namesrv-1:
@@ -89,6 +91,7 @@ services:
     volumes:
       - ./scripts/data/rmq/namesrv/logs:/home/rocketmq/logs
     command: sh mqnamesrv
+    restart: on-failure
 
   # rocketmq broker
   broker-1:
@@ -107,6 +110,20 @@ services:
       - ./scripts/data/rmq/broker/store:/home/rocketmq/store
       - ./scripts/conf/broker.conf:/opt/rocketmq-5.1.1/conf/broker.conf
     command: sh mqbroker -c /opt/rocketmq-5.1.1/conf/broker.conf
+    restart: on-failure
+
+
+  # rabbitmq server
+  rabbitmq-1:
+    image: rabbitmq:management
+    container_name: e-rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: on-failure
 
   # pulsar server
   pulsar-1:
@@ -116,19 +133,9 @@ services:
       - "6650:6650"
       - "18080:8080"
     volumes:
-      - .scripts/data/pulsar:/pulsar/data
+      - ./scripts/data/pulsar:/pulsar/data
     command: bin/pulsar standalone
-
-  # rabbitmq server
-  rabbitmq-1:
-    image: rabbitmq:latest
-    container_name: e-rabbitmq
-    environment:
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
-    ports:
-      - "5672:5672"
-      - "15672:15672"
+    restart: on-failure
 
   # redis server
   redis-1:
@@ -137,10 +144,24 @@ services:
     ports:
       - "6379:6379"
       - "8001:8001"
+    restart: on-failure
     deploy:
       replicas: 1
-      restart_policy:
-        condition: on-failure
+
+  portainer-1:
+    container_name: e-portainer
+    image: portainer/portainer-ce:latest
+    ports:
+      - "29443:9443"
+      - "28000:8000"
+      - "29000:9000"
+    volumes:
+      - portainer_data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
+volumes:
+  portainer_data:
 
 networks:
   default:

@@ -53,7 +53,7 @@ public class PulsarMessageListener implements MessageListener<byte[]> {
             try {
                 consumer.acknowledge(msg);
             } catch (PulsarClientException e) {
-                logger.error("Acknowledge message fail: {}.", queueMessage, e);
+                logger.error("Acknowledge message failed: {}.", queueMessage, e);
                 throw new IORuntimeException(e);
             }
         });

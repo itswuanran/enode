@@ -18,6 +18,7 @@
  */
 package org.enodeframework.spring;
 
+import io.vertx.jdbcclient.JDBCPool;
 import org.enodeframework.common.serializing.SerializeService;
 import org.enodeframework.eventing.EventSerializer;
 import org.enodeframework.jdbc.JDBCEventStore;
@@ -26,26 +27,23 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
-import javax.sql.DataSource;
-
 @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "jdbc-mysql")
 public class EnodeJDBCMySQLEventStoreAutoConfig {
 
     @Bean
     public JDBCEventStore jdbcEventStore(
-        @Qualifier("enodeMySQLDataSource") DataSource enodeMySQLDataSource,
+        @Qualifier("enodeJDBCPool") JDBCPool jdbcPool,
         EventSerializer eventSerializer,
         SerializeService serializeService) {
         JDBCEventStore eventStore = new JDBCEventStore(
-            enodeMySQLDataSource, DefaultEventStoreOptions.Driver.mysql(), eventSerializer, serializeService);
+            jdbcPool, DefaultEventStoreOptions.Driver.mysql(), eventSerializer, serializeService);
         return eventStore;
     }
 
     @Bean
-    public JDBCPublishedVersionStore jdbcPublishedVersionStore(
-        @Qualifier("enodeMySQLDataSource") DataSource enodeMySQLDataSource) {
+    public JDBCPublishedVersionStore jdbcPublishedVersionStore(@Qualifier("enodeJDBCPool") JDBCPool jdbcPool) {
         JDBCPublishedVersionStore publishedVersionStore =
-            new JDBCPublishedVersionStore(enodeMySQLDataSource, DefaultEventStoreOptions.Driver.mysql());
+            new JDBCPublishedVersionStore(jdbcPool, DefaultEventStoreOptions.Driver.mysql());
         return publishedVersionStore;
     }
 }

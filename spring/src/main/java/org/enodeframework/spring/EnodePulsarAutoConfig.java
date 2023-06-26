@@ -24,22 +24,12 @@ import org.enodeframework.pulsar.message.PulsarProducerHolder;
 import org.enodeframework.pulsar.message.PulsarSendMessageService;
 import org.enodeframework.queue.MessageHandlerHolder;
 import org.enodeframework.queue.MessageTypeCode;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
-import javax.annotation.Resource;
-
 @ConditionalOnProperty(prefix = "spring.enode", name = "mq", havingValue = "pulsar")
 public class EnodePulsarAutoConfig {
-
-    @Resource(name = "enodePulsarDomainEventProducer")
-    private Producer<byte[]> enodePulsarDomainEventProducer;
-
-    @Resource(name = "enodePulsarCommandProducer")
-    private Producer<byte[]> enodePulsarCommandProducer;
-
-    @Resource(name = "enodePulsarReplyProducer")
-    private Producer<byte[]> enodePulsarReplyProducer;
 
     @Bean(name = "enodePulsarMessageListener")
     public PulsarMessageListener enodePulsarMessageListener(MessageHandlerHolder messageHandlerHolder) {
@@ -47,7 +37,11 @@ public class EnodePulsarAutoConfig {
     }
 
     @Bean(name = "pulsarProducerHolder")
-    public PulsarProducerHolder pulsarProducerHolder() {
+    public PulsarProducerHolder pulsarProducerHolder(
+        @Qualifier("enodePulsarCommandProducer") Producer<byte[]> enodePulsarCommandProducer,
+        @Qualifier("enodePulsarDomainEventProducer") Producer<byte[]> enodePulsarDomainEventProducer,
+        @Qualifier("enodePulsarReplyProducer") Producer<byte[]> enodePulsarReplyProducer
+    ) {
         PulsarProducerHolder pulsarProducerHolder = new PulsarProducerHolder();
         pulsarProducerHolder.put(MessageTypeCode.CommandMessage.getValue(), enodePulsarCommandProducer);
         pulsarProducerHolder.put(MessageTypeCode.DomainEventMessage.getValue(), enodePulsarDomainEventProducer);

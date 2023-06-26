@@ -18,6 +18,7 @@
  */
 package org.enodeframework.spring;
 
+import io.vertx.jdbcclient.JDBCPool;
 import org.enodeframework.common.serializing.SerializeService;
 import org.enodeframework.eventing.EventSerializer;
 import org.enodeframework.jdbc.JDBCEventStore;
@@ -26,26 +27,23 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
-import javax.sql.DataSource;
-
 @ConditionalOnProperty(prefix = "spring.enode", name = "eventstore", havingValue = "jdbc-pg")
 public class EnodeJDBCPgEventStoreAutoConfig {
 
     @Bean
     public JDBCEventStore jdbcEventStore(
-        @Qualifier("enodePgDataSource") DataSource enodePgDataSource,
+        @Qualifier("enodeJDBCPool") JDBCPool jdbcPool,
         EventSerializer eventSerializer,
         SerializeService serializeService) {
-        JDBCEventStore eventStore = new JDBCEventStore(
-            enodePgDataSource, DefaultEventStoreOptions.Driver.pg(), eventSerializer, serializeService);
+        JDBCEventStore eventStore = new JDBCEventStore(jdbcPool, DefaultEventStoreOptions.Driver.pg(), eventSerializer, serializeService);
         return eventStore;
     }
 
     @Bean
     public JDBCPublishedVersionStore jdbcPublishedVersionStore(
-        @Qualifier("enodePgDataSource") DataSource enodePgDataSource) {
+        @Qualifier("enodeJDBCPool") JDBCPool jdbcPool) {
         JDBCPublishedVersionStore publishedVersionStore =
-            new JDBCPublishedVersionStore(enodePgDataSource, DefaultEventStoreOptions.Driver.pg());
+            new JDBCPublishedVersionStore(jdbcPool, DefaultEventStoreOptions.Driver.pg());
         return publishedVersionStore;
     }
 }
