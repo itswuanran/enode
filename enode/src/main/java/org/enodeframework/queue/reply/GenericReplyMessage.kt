@@ -20,6 +20,10 @@ class GenericReplyMessage : Serializable {
         return CommandResult(CommandStatus.valueOf(status), commandId, aggregateRootId, result)
     }
 
+    fun asTag(): String {
+        return address.replace("://", "h").replace(":", "p").replace(".", "-")
+    }
+
     override fun toString(): String {
         return "GenericReplyMessage(id='$id', returnType=$returnType, status='$status', commandId='$commandId', address='$address', aggregateRootId='$aggregateRootId', result='$result')"
     }
