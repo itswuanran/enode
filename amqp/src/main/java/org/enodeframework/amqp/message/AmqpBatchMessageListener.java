@@ -19,23 +19,25 @@
 package org.enodeframework.amqp.message;
 
 import com.rabbitmq.client.Channel;
-import org.enodeframework.common.exception.IORuntimeException;
 import org.enodeframework.common.extensions.SysProperties;
+import org.enodeframework.common.io.Task;
 import org.enodeframework.queue.MessageHandlerHolder;
 import org.enodeframework.queue.QueueMessage;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
-import org.springframework.amqp.rabbit.listener.api.ChannelAwareMessageListener;
+import org.springframework.amqp.rabbit.listener.api.ChannelAwareBatchMessageListener;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * @author anruence@gmail.com
  */
-public class AmqpMessageListener implements ChannelAwareMessageListener {
+public class AmqpBatchMessageListener implements ChannelAwareBatchMessageListener {
     private final MessageHandlerHolder messageHandlerMap;
 
-    public AmqpMessageListener(MessageHandlerHolder messageHandlerMap) {
+    public AmqpBatchMessageListener(MessageHandlerHolder messageHandlerMap) {
         this.messageHandlerMap = messageHandlerMap;
     }
 
@@ -46,9 +48,26 @@ public class AmqpMessageListener implements ChannelAwareMessageListener {
             try {
                 channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
             } catch (IOException e) {
-                throw new IORuntimeException(e);
+                throw new RuntimeException(e);
             }
         });
+    }
+
+    @Override
+    public void onMessageBatch(List<Message> messages, Channel channel) {
+        CountDownLatch latch = new CountDownLatch(messages.size());
+        messages.forEach(message -> {
+            QueueMessage queueMessage = this.covertToQueueMessage(message);
+            messageHandlerMap.chooseMessageHandler(queueMessage.getType()).handle(queueMessage, context -> {
+                latch.countDown();
+                try {
+                    channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        });
+        Task.await(latch);
     }
 
     private QueueMessage covertToQueueMessage(Message record) {

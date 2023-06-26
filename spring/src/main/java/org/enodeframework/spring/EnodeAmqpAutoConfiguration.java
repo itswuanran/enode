@@ -18,12 +18,12 @@
  */
 package org.enodeframework.spring;
 
+import org.enodeframework.amqp.message.AmqpBatchMessageListener;
 import org.enodeframework.amqp.message.AmqpMessageListener;
 import org.enodeframework.amqp.message.AmqpProducerHolder;
 import org.enodeframework.amqp.message.AmqpSendMessageService;
 import org.enodeframework.queue.MessageHandlerHolder;
 import org.springframework.amqp.core.AmqpTemplate;
-import org.springframework.amqp.core.AsyncAmqpTemplate;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -33,6 +33,11 @@ public class EnodeAmqpAutoConfiguration {
     @Bean(name = "enodeAmqpMessageListener")
     public AmqpMessageListener enodeAmqpMessageListener(MessageHandlerHolder messageHandlerHolder) {
         return new AmqpMessageListener(messageHandlerHolder);
+    }
+
+    @Bean(name = "enodeAmqpBatchMessageListener")
+    public AmqpBatchMessageListener enodeAmqpBatchMessageListener(MessageHandlerHolder messageHandlerHolder) {
+        return new AmqpBatchMessageListener(messageHandlerHolder);
     }
 
     @Bean(name = "amqpSendMessageService")

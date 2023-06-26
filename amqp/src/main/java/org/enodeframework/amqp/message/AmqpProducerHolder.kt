@@ -40,10 +40,9 @@ class AmqpProducerHolder(private val asyncAmqpTemplate: AmqpTemplate) {
 
     private fun covertToAmqpMessage(queueMessage: QueueMessage): Message {
         val props = MessageProperties()
+        props.messageId = queueMessage.key
         props.consumerQueue = queueMessage.topic
         props.consumerTag = queueMessage.tag
-        props.receivedRoutingKey = queueMessage.tag
-        props.messageId = queueMessage.key
         props.setHeader(SysProperties.MESSAGE_TYPE_KEY, queueMessage.type)
         props.setHeader(SysProperties.MESSAGE_TAG_KEY, queueMessage.tag)
         return Message(queueMessage.body, props)

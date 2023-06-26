@@ -49,10 +49,8 @@ public class AmqpSendReplyService implements SendReplyService {
         GenericReplyMessage message = replyMessage.asGenericReplyMessage();
         QueueMessage queueMessage = replyMessage.asPartQueueMessage();
         queueMessage.setBody(serializeService.serializeBytes(message));
-        queueMessage.setTag(message.getAddress());
+        queueMessage.setTag(message.asTag());
         queueMessage.setTopic(commandOptions.getReplyTopic());
-        amqpProducerHolder.send(queueMessage);
-        return CompletableFuture.completedFuture(new SendMessageResult(""));
+        return amqpProducerHolder.send(queueMessage);
     }
-
 }
