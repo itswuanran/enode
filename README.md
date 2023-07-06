@@ -75,10 +75,51 @@
 
 `enode`在使用便利性了做了很多尝试和努力，而且针对消息队列和`EventStore`的实现对开发者都是开放的，同时和`Spring`高度集成，开箱即用。
 
-## 重新思考CommandBus
-为了支持CommandBus同步返回结果，目前使用的TCP server的方式返回，在分布式系统中会出现一种网状调用，复杂的调用关系很难跟踪，同时维护困难。为了架构的简洁，引入消息通道 来支撑点对点的消息通信。
+## 重新思考`CommandBus`
+为了支持`CommandBus`同步返回结果，一直以来是使用`TCP Server`的方式返回，在分布式系统中这样会出现一种网状调用，复杂的调用关系很难跟踪，同时维护困难。为了架构的简洁，引入消息通道来支撑点对点的消息通信。
 
-原有的 server更像一种观察者模式，引入消息通道后，增加缓冲区，是一种标准的生产-消费模型
+原有的`Tcp Server`更像一种观察者模式的实现，引入消息通道后，增加消息缓冲区，是一种标准的生产-消费模型，这也是和观察者最核心的区别
+
+## 基础组件依赖
+
+### `docker`部署
+定义了`docker-compose.yml`，搭配docker-compose快速的在启动一套运行环境，用于应用的测试
+
+```bash
+docker-compose up -d
+```
+
+### `MQ`配置启动
+
+目前支持三种
+
+#### `Pulsar`
+
+```bash 
+bin/pulsar standalone
+
+```
+
+#### `Kafka`
+
+https://kafka.apache.org/quickstart
+
+```bash
+bin/zookeeper-server-start.sh config/zookeeper.properties
+bin/kafka-server-start.sh config/server.properties
+```
+
+#### `RocketMQ`
+
+https://rocketmq.apache.org/docs/quick-start/
+
+启动`RocketMQ`服务：
+
+```bash
+nohup sh bin/mqnamesrv &
+nohup sh bin/mqbroker -n 127.0.0.1:9876 &
+```
+
 
 ## 启动配置
 
@@ -493,44 +534,6 @@ public class DepositTransactionProcessManager {
 
 ```
 
-### docker部署
-定义了docker-compose.yml单体环境，用于应用的测试
-
-```bash
-docker-compose up -d
-```
-
-### `MQ`配置启动
-
-目前支持三种
-
-#### `Pulsar`
-
-```bash 
-bin/pulsar standalone
-
-```
-
-#### `Kafka`
-
-https://kafka.apache.org/quickstart
-
-```bash
-bin/zookeeper-server-start.sh config/zookeeper.properties
-bin/kafka-server-start.sh config/server.properties
-```
-
-#### `RocketMQ`
-
-https://rocketmq.apache.org/docs/quick-start/
-
-启动`RocketMQ`服务：
-
-```bash
-nohup sh bin/mqnamesrv &
-nohup sh bin/mqbroker -n 127.0.0.1:9876 &
-```
-
 ### `command-web`启动
 
 - `CQRS`架构中的`Command`端应用
@@ -579,7 +582,7 @@ aggregateRootType.getDeclaredConstructor().newInstance();
 如果采用常规的“单请求单连接”的方式，服务提供者很容易就被压跨，通过单一连接，保证单一消费者不会压死提供者，长连接，减少连接握手验证等，并使用异步`IO`
 ，复用线程池，防止`C10K`问题。
 
-### `CommandHandler`和`CommandAsyncHandler`区别 (现在统一成一个了)
+### `CommandHandler` 中的逻辑约束
 
 - `CommandHandler`是为了操作内存中的聚合根的，所以不会有异步操作，但后来`CommandHandler`的`Handle`
   方法也设计为了`handleAsync`了，目的是为了异步到底，否则异步链路中断的话，异步就没效果了
