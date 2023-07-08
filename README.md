@@ -21,11 +21,11 @@
 
 `enode`在架构层面严格规范了研发人员该如何写代码，要求用`DDD`的方式思考，严格遵守聚合内强一致性、聚合之间最终一致性的原则
 
-在设计上遵循`SOLID`
+在设计上遵循`SOLID`，以下均可扩展替换成自建
 - 针对`IoC`容器，目前`SpringBoot`友好适配
 - 针对`CommandBus`，只要求最基础的队列能力，目前适配了`Kafka`、`RocketMQ`、`Pulsar`、`AMQP`
 - 针对`EventStore`，适配了`MySQL`、`PostgreSQL`、`MongoDB`
-- 针对`ReplyService`，要求实心点对点通信模型，实现Command处理结果的通知
+- 针对`ReplyService`，要求实现点对点通信模型，实现Command处理结果的通知
 
 ## 使用约束
 
@@ -83,7 +83,8 @@ docker-compose up -d
 
 ## 详细介绍
 
-[wiki](./docs/intro.md)
+[enode核心概念介绍](./docs/intro.md)
+[enode使用说明](./docs/usage.md)
 
 ## 最佳实践
 
