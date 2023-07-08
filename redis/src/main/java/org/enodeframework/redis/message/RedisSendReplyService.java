@@ -24,6 +24,7 @@ import org.enodeframework.messaging.ReplyMessage;
 import org.enodeframework.queue.SendMessageResult;
 import org.enodeframework.queue.SendReplyService;
 import org.enodeframework.queue.reply.GenericReplyMessage;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
@@ -37,7 +38,7 @@ public class RedisSendReplyService implements SendReplyService {
     private final CommandOptions commandOptions;
     private final ReactiveStringRedisTemplate reactiveRedisTemplate;
     private final SerializeService serializeService;
-    private static final Logger logger = LoggerFactory.getLogger(RedisSendReplyService.class);
+    private final Logger logger = LoggerFactory.getLogger(RedisSendReplyService.class);
 
     public RedisSendReplyService(CommandOptions commandOptions, ReactiveStringRedisTemplate reactiveRedisTemplate, SerializeService serializeService) {
         this.commandOptions = commandOptions;
@@ -45,6 +46,7 @@ public class RedisSendReplyService implements SendReplyService {
         this.serializeService = serializeService;
     }
 
+    @NotNull
     @Override
     public CompletableFuture<SendMessageResult> send(ReplyMessage message) {
         GenericReplyMessage genericReplyMessage = message.asGenericReplyMessage();

@@ -68,18 +68,20 @@
         <maven.compiler.version>3.11.0</maven.compiler.version>
         <maven.source.version>3.3.0</maven.source.version>
         <maven.resources.version>3.3.1</maven.resources.version>
+        <maven.jar.version>3.3.0</maven.jar.version>
         <maven.javadoc.version>3.5.0</maven.javadoc.version>
         <maven.gpg.version>1.6</maven.gpg.version>
         <maven.flatten.version>1.5.0</maven.flatten.version>
         <dokka.version>1.8.10</dokka.version>
-        <kotlin.version>1.8.22</kotlin.version>
-        <kotlinx-coroutines.version>1.7.1</kotlinx-coroutines.version>
+        <dagger.version>2.46.1</dagger.version>
+        <kotlin.version>1.9.0</kotlin.version>
+        <kotlinx-coroutines.version>1.7.2</kotlinx-coroutines.version>
         <slfj4.version>2.0.7</slfj4.version>
-        <guava.version>32.0.1-jre</guava.version>
+        <guava.version>32.1.1-jre</guava.version>
         <jackson.version>2.15.2</jackson.version>
         <jupiter.version>5.9.3</jupiter.version>
         <jmh.version>1.36</jmh.version>
-        <rocketmq.version>5.1.1</rocketmq.version>
+        <rocketmq.version>5.1.3</rocketmq.version>
         <ons.version>2.0.5.Final</ons.version>
         <pulsar.version>3.0.0</pulsar.version>
         <mysql.version>8.0.33</mysql.version>
@@ -100,9 +102,9 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
-                <groupId>io.dropwizard.metrics</groupId>
-                <artifactId>metrics-bom</artifactId>
-                <version>${metrics-core.version}</version>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-bom</artifactId>
+                <version>${kotlin.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -117,6 +119,13 @@
                 <groupId>io.vertx</groupId>
                 <artifactId>vertx-stack-depchain</artifactId>
                 <version>${vertx.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.dropwizard.metrics</groupId>
+                <artifactId>metrics-bom</artifactId>
+                <version>${metrics-core.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -187,13 +196,6 @@
                 <artifactId>pulsar-client</artifactId>
                 <version>${pulsar.version}</version>
             </dependency>
-            <dependency>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-bom</artifactId>
-                <version>${kotlin.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -201,6 +203,7 @@
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib</artifactId>
+            <version>${kotlin.version}</version>
         </dependency>
     </dependencies>
 
@@ -211,9 +214,27 @@
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <version>${kotlin.version}</version>
                 <configuration>
-                    <jvmTarget>1.8</jvmTarget>
+                    <jvmTarget>17</jvmTarget>
                 </configuration>
                 <executions>
+                    <execution>
+                        <id>kapt</id>
+                        <goals>
+                            <goal>kapt</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDirs>
+                                <sourceDir>src/main/java</sourceDir>
+                            </sourceDirs>
+                            <annotationProcessorPaths>
+                                <annotationProcessorPath>
+                                    <groupId>com.google.dagger</groupId>
+                                    <artifactId>dagger-compiler</artifactId>
+                                    <version>${dagger.version}</version>
+                                </annotationProcessorPath>
+                            </annotationProcessorPaths>
+                        </configuration>
+                    </execution>
                     <execution>
                         <id>compile</id>
                         <goals>
@@ -222,7 +243,7 @@
                         <phase>compile</phase>
                         <configuration>
                             <sourceDirs>
-                                <sourceDir>${project.basedir}/src/main/java</sourceDir>
+                                <sourceDir>src/main/java</sourceDir>
                             </sourceDirs>
                         </configuration>
                     </execution>
@@ -234,7 +255,7 @@
                         <phase>test-compile</phase>
                         <configuration>
                             <sourceDirs>
-                                <sourceDir>${project.basedir}/src/test/java</sourceDir>
+                                <sourceDir>src/test/java</sourceDir>
                             </sourceDirs>
                         </configuration>
                     </execution>
@@ -245,8 +266,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven.compiler.version}</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>17</source>
+                    <target>17</target>
                     <encoding>UTF-8</encoding>
                 </configuration>
                 <executions>
@@ -370,9 +391,13 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${maven.jar.version}</version>
+            </plugin>
         </plugins>
     </build>
-
     <profiles>
         <profile>
             <id>sonatype-oss-release</id>
