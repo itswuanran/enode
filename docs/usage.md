@@ -1,11 +1,5 @@
 ## 一些规约
-### 聚合根的定义
 
-聚合根需要定义一个无参构造函数，因为聚合根初始化时使用了：
-
-```java
-aggregateRootType.getDeclaredConstructor().newInstance();
-```
 
 ### 为什么采用异步单一长连接?
 

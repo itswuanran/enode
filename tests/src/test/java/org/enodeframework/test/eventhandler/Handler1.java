@@ -14,11 +14,17 @@ import java.util.ArrayList;
 @Event
 public class Handler1 {
     private final Logger logger = LoggerFactory.getLogger(Handler1.class);
-
     @Priority(4)
     @Subscribe
     public void handleAsync(Event1 evnt) {
         logger.info("event1 handled by handler1.");
         EnodeCoreTest.HandlerTypes.computeIfAbsent(1, k -> new ArrayList<>()).add(getClass().getName());
+    }
+
+    @Priority(5)
+    @Subscribe
+    public void handleAsync2(Event1 evnt) throws InterruptedException {
+        logger.info("event1 handled by handler2.");
+        Thread.sleep(1000);
     }
 }

@@ -31,9 +31,9 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.CompletableFuture
 
 class PulsarProducerHolder {
-    private val logger = LoggerFactory.getLogger(PulsarSendMessageService::class.java)
+    private val logger = LoggerFactory.getLogger(PulsarProducerHolder::class.java)
 
-    private val producerMap: MutableMap<String, Producer<ByteArray>> = Maps.newHashMap()
+    private var producerMap: MutableMap<String, Producer<ByteArray>> = Maps.newHashMap()
     fun chooseProducer(type: String): Producer<ByteArray> {
         return producerMap[type] ?: throw ProducerNotFoundException("No producer for type: $type")
     }

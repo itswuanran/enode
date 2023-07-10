@@ -79,12 +79,12 @@ docker-compose up -d
   **使用也很简单，`@Subscribe` 方法体加上`suspend`标记即可**。
 
 - **针对`Java`异步编程做了深度优化，支持`CommandHandler`和`EventHandler`中定义`CompletableFuture`
-  返回值，阻塞调用封装在协程中，避免使用`#join() #get()`等阻塞代码，同时也支持kotlin suspend**
+  返回值，阻塞调用封装在协程中，避免使用`#join() #get()`等阻塞代码，同时也支持`kotlin suspend`**
 
 ## 详细介绍
 
-[enode核心概念介绍](./docs/intro.md)
-[enode使用说明](./docs/usage.md)
+- [enode核心概念介绍](./docs/intro.md)
+- [enode使用说明](./docs/usage.md)
 
 ## 最佳实践
 
@@ -99,7 +99,7 @@ docker-compose up -d
 
 - `CQRS`架构中的`Command`端应用
 
-> 主要用来接收`Command`，将`Command`发送到消息队列。
+主要用来接收来自用户的`Command`请求，核心是将`Command`发送到消息队列。
 
 ### `command-consumer`启动
 

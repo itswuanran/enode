@@ -4,6 +4,8 @@ import kotlinx.coroutines.future.await
 import org.enodeframework.commanding.CommandContext
 import org.enodeframework.commanding.CommandHandlerProxy
 import org.enodeframework.commanding.CommandMessage
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 import java.lang.invoke.MethodHandle
 import java.lang.reflect.Method
 import java.util.concurrent.CompletionStage
@@ -23,9 +25,19 @@ class DefaultCommandHandlerProxy : CommandHandlerProxy {
             invokeSuspend(getInnerObject(), context, command)
             return
         }
-        val result = methodHandle.invoke(getInnerObject(), context, command)
-        if (result is CompletionStage<*>) {
-            result.await()
+        if (CompletionStage::class.java.isAssignableFrom(method.returnType)) {
+            val result = methodHandle.invoke(getInnerObject(), context, command) as CompletionStage<*>
+            Mono.fromCompletionStage(result).toFuture().await()
+        } else if (Mono::class.java.isAssignableFrom(method.returnType)) {
+            val result = methodHandle.invoke(getInnerObject(), context, command) as Mono<*>
+            result.toFuture().await()
+        } else if (Flux::class.java.isAssignableFrom(method.returnType)) {
+            val result = methodHandle.invoke(getInnerObject(), context, command) as Flux<*>
+            result.all { true }.toFuture().await()
+        } else {
+            Mono.fromCallable {
+                methodHandle.invoke(getInnerObject(), context, command)
+            }.toFuture().await()
         }
     }
 
