@@ -26,6 +26,7 @@ import org.enodeframework.test.domain.InheritTestAggregate;
 import org.enodeframework.test.domain.TestAggregate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Mono;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -110,10 +111,10 @@ public class TestCommandHandler {
     }
 
     @Subscribe
-    public CompletableFuture<Void> handleAsync(CommandContext context, TestEventPriorityCommand command) {
-        return context.getAsync(command.getAggregateRootId(), TestAggregate.class).thenAccept(testAggregate -> {
+    public Mono<Void> handleAsync(CommandContext context, TestEventPriorityCommand command) {
+        return Mono.fromFuture(context.getAsync(command.getAggregateRootId(), TestAggregate.class).thenAccept(testAggregate -> {
             testAggregate.testEvents();
-        });
+        }));
     }
 
     @Subscribe

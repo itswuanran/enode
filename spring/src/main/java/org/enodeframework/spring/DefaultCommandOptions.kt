@@ -8,7 +8,7 @@ import org.enodeframework.commanding.CommandOptions
 class DefaultCommandOptions(
     override var host: String,
     override var port: Int,
-    override var timeoutMs: Int = 10000,
+    override var timeoutMs: Int = 5000,
     override var replyTopic: String,
 ) : CommandOptions {
     override fun replyTo(): String {

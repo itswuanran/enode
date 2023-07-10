@@ -18,7 +18,6 @@ import java.util.concurrent.CompletableFuture
 class RocketMQProducerHolder(private val producer: MQProducer) {
 
     private val logger = LoggerFactory.getLogger(RocketMQProducerHolder::class.java)
-
     fun send(queueMessage: QueueMessage): CompletableFuture<SendMessageResult> {
         val future = CompletableFuture<SendMessageResult>()
         val message: Message = this.covertToProducerRecord(queueMessage)

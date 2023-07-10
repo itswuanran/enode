@@ -21,6 +21,5 @@ public class Handler1231 {
     public void handleAsync(Event1 evnt, Event2 evnt2, Event3 evnt3) {
         _logger.info("event1,event2,event3 handled by handler1.");
         EnodeCoreTest.HandlerTypes.computeIfAbsent(3, k -> new ArrayList<>()).add(getClass().getName());
-
     }
 }

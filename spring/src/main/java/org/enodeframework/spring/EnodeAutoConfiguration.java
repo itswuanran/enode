@@ -104,7 +104,7 @@ public class EnodeAutoConfiguration {
     @Value("${spring.enode.reply.topic:}")
     private String replyTopic;
 
-    @Value("${spring.enode.server.wait.timeout:10000}")
+    @Value("${spring.enode.server.wait.timeout:5000}")
     private int timeout;
 
     @Value("${spring.enode.reply.server.port:8929}")
@@ -112,7 +112,7 @@ public class EnodeAutoConfiguration {
 
     @Bean(name = "defaultCommandResultProcessor", initMethod = "start", destroyMethod = "stop")
     public DefaultCommandResultProcessor defaultCommandResultProcessor(CommandOptions commandOptions, ScheduleService scheduleService, SerializeService serializeService) throws Exception {
-        return new DefaultCommandResultProcessor(scheduleService, serializeService, commandOptions, timeout);
+        return new DefaultCommandResultProcessor(scheduleService, serializeService, commandOptions, commandOptions.getTimeoutMs());
     }
 
     @Bean(name = "defaultCommandOptions")

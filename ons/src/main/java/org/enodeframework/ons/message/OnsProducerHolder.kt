@@ -15,7 +15,6 @@ import java.util.concurrent.CompletableFuture
 class OnsProducerHolder(private val producer: Producer) {
 
     private val logger = LoggerFactory.getLogger(OnsProducerHolder::class.java)
-
     fun send(queueMessage: QueueMessage?): CompletableFuture<SendMessageResult> {
         val future = CompletableFuture<SendMessageResult>()
         val message: Message = this.covertToProducerRecord(queueMessage!!)

@@ -3,6 +3,8 @@ package org.enodeframework.messaging.impl
 import kotlinx.coroutines.future.await
 import org.enodeframework.messaging.Message
 import org.enodeframework.messaging.MessageHandlerProxy1
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 import java.lang.invoke.MethodHandle
 import java.lang.reflect.Method
 import java.util.concurrent.CompletionStage
@@ -22,9 +24,19 @@ class DefaultMessageHandlerProxy1 : MessageHandlerProxy1 {
             invokeSuspend(getInnerObject(), message)
             return
         }
-        val result = methodHandle.invoke(getInnerObject(), message)
-        if (result is CompletionStage<*>) {
-            result.await()
+        if (CompletionStage::class.java.isAssignableFrom(method.returnType)) {
+            val result = methodHandle.invoke(getInnerObject(), message) as CompletionStage<*>
+            Mono.fromCompletionStage(result).toFuture().await()
+        } else if (Mono::class.java.isAssignableFrom(method.returnType)) {
+            val result = methodHandle.invoke(getInnerObject(), message) as Mono<*>
+            result.toFuture().await()
+        } else if (Flux::class.java.isAssignableFrom(method.returnType)) {
+            val result = methodHandle.invoke(getInnerObject(), message) as Flux<*>
+            result.all { true }.toFuture().await()
+        } else {
+            Mono.fromCallable {
+                methodHandle.invoke(getInnerObject(), message)
+            }.toFuture().await()
         }
     }
 
