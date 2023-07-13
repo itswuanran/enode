@@ -6,9 +6,6 @@ import io.vertx.core.json.JsonObject
 import io.vertx.ext.mongo.MongoClient
 import org.enodeframework.eventing.EventStoreOptions
 import org.enodeframework.eventing.PublishedVersionStore
-import org.enodeframework.mongo.handler.MongoAddPublishedVersionHandler
-import org.enodeframework.mongo.handler.MongoFindPublishedVersionHandler
-import org.enodeframework.mongo.handler.MongoUpdatePublishedVersionHandler
 import java.util.concurrent.CompletableFuture
 
 /**

@@ -4,7 +4,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.enodeframework.kafka.KafkaMessageListener;
+import org.enodeframework.kafka.message.KafkaAcknowledgingMessageListener;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -34,10 +34,10 @@ public class KafkaCommandConfig {
     private String commandTopic;
 
     @Bean
-    public ConcurrentMessageListenerContainer<String, String> commandListenerContainer(KafkaMessageListener kafkaMessageListener) {
+    public ConcurrentMessageListenerContainer<String, String> commandListenerContainer(KafkaAcknowledgingMessageListener kafkaAcknowledgingMessageListener) {
         ContainerProperties properties = new ContainerProperties(commandTopic);
         properties.setGroupId(DEFAULT_CONSUMER_GROUP0);
-        properties.setMessageListener(kafkaMessageListener);
+        properties.setMessageListener(kafkaAcknowledgingMessageListener);
         properties.setMissingTopicsFatal(false);
         properties.setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
         return new ConcurrentMessageListenerContainer<>(consumerFactory(), properties);

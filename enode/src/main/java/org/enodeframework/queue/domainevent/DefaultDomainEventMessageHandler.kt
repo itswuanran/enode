@@ -6,11 +6,7 @@ import org.enodeframework.commanding.CommandStatus
 import org.enodeframework.common.extensions.SysProperties
 import org.enodeframework.common.io.Task
 import org.enodeframework.common.serializing.SerializeService
-import org.enodeframework.eventing.DomainEventStream
-import org.enodeframework.eventing.EventProcessContext
-import org.enodeframework.eventing.EventSerializer
-import org.enodeframework.eventing.ProcessingEvent
-import org.enodeframework.eventing.ProcessingEventProcessor
+import org.enodeframework.eventing.*
 import org.enodeframework.queue.MessageContext
 import org.enodeframework.queue.MessageHandler
 import org.enodeframework.queue.QueueMessage
@@ -80,7 +76,8 @@ class DefaultDomainEventMessageHandler(
             replyMessage.address = address ?: ""
             replyMessage.status = CommandStatus.Success
             replyMessage.returnType = CommandReturnType.EventHandled
-            return eventConsumer.sendReplyService.send(replyMessage).thenApply { true }
+            eventConsumer.sendReplyService.send(replyMessage)
+            return Task.completedTask
         }
     }
 

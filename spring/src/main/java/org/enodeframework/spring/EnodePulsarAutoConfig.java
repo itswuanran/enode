@@ -25,10 +25,11 @@ import org.enodeframework.pulsar.message.PulsarSendMessageService;
 import org.enodeframework.queue.MessageHandlerHolder;
 import org.enodeframework.queue.MessageTypeCode;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
-@ConditionalOnProperty(prefix = "spring.enode", name = "mq", havingValue = "pulsar")
+@ConditionalOnExpression(value = "#{'pulsar'.equals('${spring.enode.mq}') or 'pulsar'.equals('${spring.enode.reply}')}")
 public class EnodePulsarAutoConfig {
 
     @Bean(name = "enodePulsarMessageListener")

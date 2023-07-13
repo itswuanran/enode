@@ -16,29 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.enodeframework.pulsar.message;
+package org.enodeframework.amqp.message
 
-import org.enodeframework.queue.QueueMessage;
-import org.enodeframework.queue.SendMessageResult;
-import org.enodeframework.queue.SendMessageService;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.concurrent.CompletableFuture;
+import org.enodeframework.queue.QueueMessage
+import org.enodeframework.queue.SendMessageResult
+import org.enodeframework.queue.SendMessageService
+import java.util.concurrent.CompletableFuture
 
 /**
  * @author anruence@gmail.com
  */
-public class PulsarSendMessageService implements SendMessageService {
-
-    private final PulsarProducerHolder pulsarProducerHolder;
-
-    public PulsarSendMessageService(PulsarProducerHolder pulsarProducerHolder) {
-        this.pulsarProducerHolder = pulsarProducerHolder;
-    }
-
-    @NotNull
-    @Override
-    public CompletableFuture<SendMessageResult> sendMessageAsync(@NotNull QueueMessage queueMessage) {
-        return pulsarProducerHolder.sendAsync(queueMessage);
+class AmqpSendMessageService(private val producerHolder: AmqpProducerHolder) : SendMessageService {
+    override fun sendMessageAsync(queueMessage: QueueMessage): CompletableFuture<SendMessageResult> {
+        return producerHolder.send(queueMessage)
     }
 }

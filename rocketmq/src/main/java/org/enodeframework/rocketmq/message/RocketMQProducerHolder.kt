@@ -44,7 +44,7 @@ class RocketMQProducerHolder(private val producer: MQProducer) {
             future.completeExceptionally(IORuntimeException(ex))
             logger.error("Async send message has exception, message: {}", queueMessage, ex)
         } catch (ex: InterruptedException) {
-            future.completeExceptionally(IORuntimeException(ex))
+            future.completeExceptionally(ex)
             logger.error("Async send message has exception, message: {}", queueMessage, ex)
         }
         return future

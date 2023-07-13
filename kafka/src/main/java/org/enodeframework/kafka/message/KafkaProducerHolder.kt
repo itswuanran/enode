@@ -1,6 +1,11 @@
-package org.enodeframework.kafka
+package org.enodeframework.kafka.message
 
 import com.google.common.collect.Maps
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.future.asCompletableFuture
+import kotlinx.coroutines.future.await
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.header.Header
 import org.apache.kafka.common.header.internals.RecordHeader
@@ -13,11 +18,20 @@ import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.kafka.support.SendResult
 import java.util.concurrent.CompletableFuture
 
-class KafkaProducerHolder(private val kafkaTemplate: KafkaTemplate<String, String>) {
+class KafkaProducerHolder(
+    private val kafkaTemplate: KafkaTemplate<String, String>,
+    private val dispatcher: CoroutineDispatcher,
+) {
 
     private val logger = LoggerFactory.getLogger(KafkaProducerHolder::class.java)
 
     fun send(queueMessage: QueueMessage): CompletableFuture<SendMessageResult> {
+        return CoroutineScope(dispatcher).async {
+            sendAsync(queueMessage).await()
+        }.asCompletableFuture()
+    }
+
+    private fun sendAsync(queueMessage: QueueMessage): CompletableFuture<SendMessageResult> {
         val message: ProducerRecord<String, String> = this.covertToProducerRecord(queueMessage)
         return kafkaTemplate.send(message)
             .handle { result: SendResult<String, String>, throwable: Throwable? ->
@@ -36,8 +50,7 @@ class KafkaProducerHolder(private val kafkaTemplate: KafkaTemplate<String, Strin
                         queueMessage
                     )
                 }
-                val items: MutableMap<String, Any> =
-                    Maps.newHashMap()
+                val items: MutableMap<String, Any> = Maps.newHashMap()
                 items["result"] = result
                 SendMessageResult("", items)
             }

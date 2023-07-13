@@ -4,15 +4,7 @@ import io.vertx.mysqlclient.MySQLPool
 import io.vertx.sqlclient.Tuple
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.common.serializing.SerializeService
-import org.enodeframework.eventing.AggregateEventAppendResult
-import org.enodeframework.eventing.BatchAggregateEventAppendResult
-import org.enodeframework.eventing.DomainEventStream
-import org.enodeframework.eventing.EventAppendResult
-import org.enodeframework.eventing.EventSerializer
-import org.enodeframework.eventing.EventStore
-import org.enodeframework.eventing.EventStoreOptions
-import org.enodeframework.mysql.handler.MySQLAddDomainEventsHandler
-import org.enodeframework.mysql.handler.MySQLFindDomainEventsHandler
+import org.enodeframework.eventing.*
 import java.util.concurrent.CompletableFuture
 
 
@@ -20,17 +12,12 @@ import java.util.concurrent.CompletableFuture
  * @author anruence@gmail.com
  */
 
-open class MySQLEventStore(
-    sqlClient: MySQLPool,
-    configuration: EventStoreOptions,
-    eventSerializer: EventSerializer,
-    serializeService: SerializeService
-) : EventStore {
-
-    private val eventSerializer: EventSerializer
+class MySQLEventStore(
+    private val sqlClient: MySQLPool,
+    private val options: EventStoreOptions,
+    private val eventSerializer: EventSerializer,
     private val serializeService: SerializeService
-    private val options: EventStoreOptions
-    private val sqlClient: MySQLPool
+) : EventStore {
 
     override fun batchAppendAsync(eventStreams: List<DomainEventStream>): CompletableFuture<EventAppendResult> {
         val future = CompletableFuture<EventAppendResult>()
@@ -144,12 +131,5 @@ open class MySQLEventStore(
         private const val SELECT_ONE_BY_VERSION_SQL = "SELECT * FROM %s WHERE aggregate_root_id = ? AND version = ?"
         private const val SELECT_ONE_BY_COMMAND_ID_SQL =
             "SELECT * FROM %s WHERE aggregate_root_id = ? AND command_id = ?"
-    }
-
-    init {
-        this.sqlClient = sqlClient
-        this.eventSerializer = eventSerializer
-        this.serializeService = serializeService
-        this.options = configuration
     }
 }

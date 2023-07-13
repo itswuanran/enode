@@ -5,8 +5,6 @@ import io.vertx.sqlclient.Tuple
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.eventing.EventStoreOptions
 import org.enodeframework.eventing.PublishedVersionStore
-import org.enodeframework.pg.handler.PgFindPublishedVersionHandler
-import org.enodeframework.pg.handler.PgUpsertPublishedVersionHandler
 import java.util.concurrent.CompletableFuture
 
 /**

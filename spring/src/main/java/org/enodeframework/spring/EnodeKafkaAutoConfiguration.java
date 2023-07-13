@@ -18,26 +18,56 @@
  */
 package org.enodeframework.spring;
 
-import org.enodeframework.kafka.KafkaBatchMessageListener;
-import org.enodeframework.kafka.KafkaMessageListener;
-import org.enodeframework.kafka.KafkaProducerHolder;
-import org.enodeframework.kafka.KafkaSendMessageService;
+import kotlinx.coroutines.Dispatchers;
+import org.enodeframework.kafka.message.*;
 import org.enodeframework.queue.MessageHandlerHolder;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.core.KafkaTemplate;
 
-@ConditionalOnProperty(prefix = "spring.enode", name = "mq", havingValue = "kafka")
+
+@ConditionalOnExpression(value = "#{'kafka'.equals('${spring.enode.mq}') or 'kafka'.equals('${spring.enode.reply}')}")
 public class EnodeKafkaAutoConfiguration {
+
     @Bean(name = "enodeKafkaMessageListener")
     public KafkaMessageListener enodeKafkaMessageListener(MessageHandlerHolder messageHandlerHolder) {
         return new KafkaMessageListener(messageHandlerHolder);
     }
 
+    @Bean(name = "enodeKafkaConsumerAwareMessageListener")
+    public KafkaConsumerAwareMessageListener enodeKafkaConsumerAwareMessageListener(MessageHandlerHolder messageHandlerHolder) {
+        return new KafkaConsumerAwareMessageListener(messageHandlerHolder);
+    }
+
+    @Bean(name = "enodeKafkaAcknowledgingMessageListener")
+    public KafkaAcknowledgingMessageListener enodeKafkaAcknowledgingMessageListener(MessageHandlerHolder messageHandlerHolder) {
+        return new KafkaAcknowledgingMessageListener(messageHandlerHolder);
+    }
+
+    @Bean(name = "enodeKafkaAcknowledgingConsumerAwareMessageListener")
+    public KafkaAcknowledgingConsumerAwareMessageListener enodeKafkaAcknowledgingConsumerAwareMessageListener(MessageHandlerHolder messageHandlerHolder) {
+        return new KafkaAcknowledgingConsumerAwareMessageListener(messageHandlerHolder);
+    }
+
     @Bean(name = "enodeKafkaBatchMessageListener")
     public KafkaBatchMessageListener enodeKafkaBatchMessageListener(MessageHandlerHolder messageHandlerHolder) {
         return new KafkaBatchMessageListener(messageHandlerHolder);
+    }
+
+    @Bean(name = "enodeKafkaBatchAcknowledgingMessageListener")
+    public KafkaBatchAcknowledgingMessageListener enodeKafkaBatchAcknowledgingMessageListener(MessageHandlerHolder messageHandlerHolder) {
+        return new KafkaBatchAcknowledgingMessageListener(messageHandlerHolder);
+    }
+
+    @Bean(name = "enodeKafkaBatchConsumerAwareMessageListener")
+    public KafkaBatchConsumerAwareMessageListener enodeKafkaBatchConsumerAwareMessageListener(MessageHandlerHolder messageHandlerHolder) {
+        return new KafkaBatchConsumerAwareMessageListener(messageHandlerHolder);
+    }
+
+    @Bean(name = "enodeKafkaBatchAcknowledgingConsumerAwareMessageListener")
+    public KafkaBatchAcknowledgingConsumerAwareMessageListener enodeKafkaBatchAcknowledgingConsumerAwareMessageListener(MessageHandlerHolder messageHandlerHolder) {
+        return new KafkaBatchAcknowledgingConsumerAwareMessageListener(messageHandlerHolder);
     }
 
     @Bean(name = "kafkaSendMessageService")
@@ -47,6 +77,6 @@ public class EnodeKafkaAutoConfiguration {
 
     @Bean(name = "kafkaProducerHolder")
     public KafkaProducerHolder kafkaProducerHolder(@Qualifier(value = "enodeKafkaTemplate") KafkaTemplate<String, String> kafkaTemplate) {
-        return new KafkaProducerHolder(kafkaTemplate);
+        return new KafkaProducerHolder(kafkaTemplate, Dispatchers.getIO());
     }
 }

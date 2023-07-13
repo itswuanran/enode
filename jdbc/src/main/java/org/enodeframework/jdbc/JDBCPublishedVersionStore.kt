@@ -5,18 +5,14 @@ import io.vertx.sqlclient.Tuple
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.eventing.EventStoreOptions
 import org.enodeframework.eventing.PublishedVersionStore
-import org.enodeframework.jdbc.handler.JDBCFindPublishedVersionHandler
-import org.enodeframework.jdbc.handler.JDBCUpsertPublishedVersionHandler
 import java.util.concurrent.CompletableFuture
 
 /**
  * @author anruence@gmail.com
  */
-open class JDBCPublishedVersionStore(
-    sqlClient: JDBCPool, private val options: EventStoreOptions
+class JDBCPublishedVersionStore(
+    private val sqlClient: JDBCPool, private val options: EventStoreOptions
 ) : PublishedVersionStore {
-
-    private var sqlClient: JDBCPool
 
     override fun updatePublishedVersionAsync(
         processorName: String, aggregateRootTypeName: String, aggregateRootId: String, publishedVersion: Int
@@ -86,9 +82,5 @@ open class JDBCPublishedVersionStore(
         private const val UPDATE_SQL =
             "UPDATE %s SET version = ?, update_at = ? WHERE processor_name = ? AND aggregate_root_id = ? AND version = ?"
         private const val SELECT_SQL = "SELECT version FROM %s WHERE processor_name = ? AND aggregate_root_id = ?"
-    }
-
-    init {
-        this.sqlClient = sqlClient
     }
 }

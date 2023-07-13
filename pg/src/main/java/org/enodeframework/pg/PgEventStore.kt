@@ -11,8 +11,6 @@ import org.enodeframework.eventing.EventAppendResult
 import org.enodeframework.eventing.EventSerializer
 import org.enodeframework.eventing.EventStore
 import org.enodeframework.eventing.EventStoreOptions
-import org.enodeframework.pg.handler.PgAddDomainEventsHandler
-import org.enodeframework.pg.handler.PgFindDomainEventsHandler
 import java.util.concurrent.CompletableFuture
 
 /**

@@ -20,28 +20,22 @@ package org.enodeframework.spring;
 
 import io.vertx.core.VertxOptions;
 import io.vertx.core.net.NetServerOptions;
-import org.apache.pulsar.client.api.Producer;
-import org.enodeframework.amqp.message.AmqpMessageListener;
+import org.enodeframework.amqp.message.AmqpChannelAwareMessageListener;
 import org.enodeframework.amqp.message.AmqpProducerHolder;
 import org.enodeframework.amqp.message.AmqpSendReplyService;
 import org.enodeframework.commanding.CommandOptions;
 import org.enodeframework.common.serializing.SerializeService;
-import org.enodeframework.kafka.KafkaMessageListener;
-import org.enodeframework.kafka.KafkaProducerHolder;
-import org.enodeframework.kafka.KafkaSendReplyService;
+import org.enodeframework.kafka.message.KafkaProducerHolder;
+import org.enodeframework.kafka.message.KafkaSendReplyService;
 import org.enodeframework.ons.message.OnsMessageListener;
 import org.enodeframework.ons.message.OnsProducerHolder;
 import org.enodeframework.ons.message.OnsSendReplyService;
-import org.enodeframework.pulsar.message.PulsarMessageListener;
 import org.enodeframework.pulsar.message.PulsarProducerHolder;
 import org.enodeframework.pulsar.message.PulsarSendReplyService;
 import org.enodeframework.queue.MessageHandlerHolder;
-import org.enodeframework.queue.MessageTypeCode;
 import org.enodeframework.queue.command.CommandResultProcessor;
 import org.enodeframework.redis.message.RedisReplyMessageListener;
 import org.enodeframework.redis.message.RedisSendReplyService;
-import org.enodeframework.rocketmq.message.RocketMQMessageListener;
-import org.enodeframework.rocketmq.message.RocketMQMessageOrderlyListener;
 import org.enodeframework.rocketmq.message.RocketMQProducerHolder;
 import org.enodeframework.rocketmq.message.RocketMQSendReplyService;
 import org.enodeframework.vertx.message.TcpReplyMessageListener;
@@ -51,7 +45,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
-import org.springframework.kafka.core.KafkaTemplate;
 
 public class EnodeReplyAutoConfig {
 
@@ -91,18 +84,6 @@ public class EnodeReplyAutoConfig {
         public KafkaSendReplyService kafkaSendReplyService(KafkaProducerHolder producerHolder, CommandOptions commandOptions, SerializeService serializeService) {
             return new KafkaSendReplyService(producerHolder, commandOptions, serializeService);
         }
-
-        @Bean(name = "kafkaReplyMessageListener")
-        @ConditionalOnExpression(value = "#{!'kafka'.equals('${spring.enode.mq}')}")
-        public KafkaMessageListener kafkaReplyMessageListener(MessageHandlerHolder messageHandlerHolder) {
-            return new KafkaMessageListener(messageHandlerHolder);
-        }
-
-        @Bean(name = "kafkaProducerHolder")
-        @ConditionalOnExpression(value = "#{!'kafka'.equals('${spring.enode.mq}')}")
-        public KafkaProducerHolder kafkaProducerHolder(KafkaTemplate<String, String> kafkaTemplate) {
-            return new KafkaProducerHolder(kafkaTemplate);
-        }
     }
 
     @ConditionalOnProperty(prefix = "spring.enode", name = "reply", havingValue = "rocketmq", matchIfMissing = false)
@@ -110,18 +91,6 @@ public class EnodeReplyAutoConfig {
         @Bean(name = "rocketMQSendReplyService")
         public RocketMQSendReplyService rocketMQSendReplyService(RocketMQProducerHolder producerHolder, CommandOptions commandOptions, SerializeService serializeService) {
             return new RocketMQSendReplyService(producerHolder, commandOptions, serializeService);
-        }
-
-        @Bean(name = "rocketMQReplyMessageListener")
-        @ConditionalOnExpression(value = "#{!'rocketmq'.equals('${spring.enode.mq}')}")
-        public RocketMQMessageListener rocketMQReplyMessageListener(MessageHandlerHolder messageHandlerHolder) {
-            return new RocketMQMessageListener(messageHandlerHolder);
-        }
-
-        @Bean(name = "rocketMQReplyMessageOrderlyListener")
-        @ConditionalOnExpression(value = "#{!'rocketmq'.equals('${spring.enode.mq}')}")
-        public RocketMQMessageOrderlyListener rocketMQReplyMessageOrderlyListener(MessageHandlerHolder messageHandlerHolder) {
-            return new RocketMQMessageOrderlyListener(messageHandlerHolder);
         }
     }
 
@@ -145,28 +114,6 @@ public class EnodeReplyAutoConfig {
         public PulsarSendReplyService pulsarSendReplyService(PulsarProducerHolder pulsarProducerHolder, SerializeService serializeService) {
             return new PulsarSendReplyService(pulsarProducerHolder, serializeService);
         }
-
-        @Bean(name = "pulsarReplyMessageListener")
-        @ConditionalOnExpression(value = "#{!'pulsar'.equals('${spring.enode.mq}')}")
-        public PulsarMessageListener pulsarReplyMessageListener(MessageHandlerHolder messageHandlerHolder) {
-            return new PulsarMessageListener(messageHandlerHolder);
-        }
-
-        @Bean(name = "pulsarProducerHolder")
-        @ConditionalOnExpression(value = "#{!'pulsar'.equals('${spring.enode.mq}')}")
-        public PulsarProducerHolder pulsarProducerHolder(
-            @Qualifier("enodePulsarCommandProducer") Producer<byte[]> enodePulsarCommandProducer,
-            @Qualifier("enodePulsarDomainEventProducer") Producer<byte[]> enodePulsarDomainEventProducer,
-            @Qualifier("enodePulsarReplyProducer") Producer<byte[]> enodePulsarReplyProducer
-        ) {
-            PulsarProducerHolder pulsarProducerHolder = new PulsarProducerHolder();
-            pulsarProducerHolder.put(MessageTypeCode.CommandMessage.getValue(), enodePulsarCommandProducer);
-            pulsarProducerHolder.put(MessageTypeCode.DomainEventMessage.getValue(), enodePulsarDomainEventProducer);
-            pulsarProducerHolder.put(MessageTypeCode.ExceptionMessage.getValue(), enodePulsarDomainEventProducer);
-            pulsarProducerHolder.put(MessageTypeCode.ApplicationMessage.getValue(), enodePulsarDomainEventProducer);
-            pulsarProducerHolder.put(MessageTypeCode.ReplyMessage.getValue(), enodePulsarReplyProducer);
-            return pulsarProducerHolder;
-        }
     }
 
     @ConditionalOnProperty(prefix = "spring.enode", name = "reply", havingValue = "amqp", matchIfMissing = false)
@@ -178,8 +125,8 @@ public class EnodeReplyAutoConfig {
 
         @Bean(name = "amqpReplyMessageListener")
         @ConditionalOnExpression(value = "#{!'amqp'.equals('${spring.enode.mq}')}")
-        public AmqpMessageListener amqpReplyMessageListener(MessageHandlerHolder messageHandlerHolder) {
-            return new AmqpMessageListener(messageHandlerHolder);
+        public AmqpChannelAwareMessageListener amqpReplyMessageListener(MessageHandlerHolder messageHandlerHolder) {
+            return new AmqpChannelAwareMessageListener(messageHandlerHolder);
         }
     }
 }
