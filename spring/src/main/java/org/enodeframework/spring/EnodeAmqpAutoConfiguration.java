@@ -18,10 +18,7 @@
  */
 package org.enodeframework.spring;
 
-import org.enodeframework.amqp.message.AmqpBatchMessageListener;
-import org.enodeframework.amqp.message.AmqpMessageListener;
-import org.enodeframework.amqp.message.AmqpProducerHolder;
-import org.enodeframework.amqp.message.AmqpSendMessageService;
+import org.enodeframework.amqp.message.*;
 import org.enodeframework.queue.MessageHandlerHolder;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -30,14 +27,25 @@ import org.springframework.context.annotation.Bean;
 
 @ConditionalOnProperty(prefix = "spring.enode", name = "mq", havingValue = "amqp")
 public class EnodeAmqpAutoConfiguration {
+
     @Bean(name = "enodeAmqpMessageListener")
     public AmqpMessageListener enodeAmqpMessageListener(MessageHandlerHolder messageHandlerHolder) {
         return new AmqpMessageListener(messageHandlerHolder);
     }
 
+    @Bean(name = "enodeAmqpChannelAwareMessageListener")
+    public AmqpChannelAwareMessageListener enodeAmqpChannelAwareMessageListener(MessageHandlerHolder messageHandlerHolder) {
+        return new AmqpChannelAwareMessageListener(messageHandlerHolder);
+    }
+
     @Bean(name = "enodeAmqpBatchMessageListener")
     public AmqpBatchMessageListener enodeAmqpBatchMessageListener(MessageHandlerHolder messageHandlerHolder) {
         return new AmqpBatchMessageListener(messageHandlerHolder);
+    }
+
+    @Bean(name = "enodeAmqpChannelAwareBatchMessageListener")
+    public AmqpChannelAwareBatchMessageListener enodeAmqpChannelAwareBatchMessageListener(MessageHandlerHolder messageHandlerHolder) {
+        return new AmqpChannelAwareBatchMessageListener(messageHandlerHolder);
     }
 
     @Bean(name = "amqpSendMessageService")
@@ -46,7 +54,7 @@ public class EnodeAmqpAutoConfiguration {
     }
 
     @Bean(name = "amqpProducerHolder")
-    public AmqpProducerHolder amqpProducerHolder(@Qualifier(value = "enodeAmqpTemplate") AmqpTemplate asyncAmqpTemplate) {
-        return new AmqpProducerHolder(asyncAmqpTemplate);
+    public AmqpProducerHolder amqpProducerHolder(@Qualifier(value = "enodeAmqpTemplate") AmqpTemplate amqpTemplate) {
+        return new AmqpProducerHolder(amqpTemplate);
     }
 }

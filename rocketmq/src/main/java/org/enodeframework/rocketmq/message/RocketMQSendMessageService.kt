@@ -16,29 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.enodeframework.rocketmq.message;
+package org.enodeframework.rocketmq.message
 
-import org.enodeframework.queue.QueueMessage;
-import org.enodeframework.queue.SendMessageResult;
-import org.enodeframework.queue.SendMessageService;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.concurrent.CompletableFuture;
+import org.enodeframework.queue.QueueMessage
+import org.enodeframework.queue.SendMessageResult
+import org.enodeframework.queue.SendMessageService
+import java.util.concurrent.CompletableFuture
 
 /**
  * @author anruence@gmail.com
  */
-public class RocketMQSendMessageService implements SendMessageService {
-
-    private final RocketMQProducerHolder producerHolder;
-
-    public RocketMQSendMessageService(RocketMQProducerHolder producerHolder) {
-        this.producerHolder = producerHolder;
-    }
-
-    @NotNull
-    @Override
-    public CompletableFuture<SendMessageResult> sendMessageAsync(@NotNull QueueMessage queueMessage) {
-        return producerHolder.send(queueMessage);
+class RocketMQSendMessageService(private val producerHolder: RocketMQProducerHolder) : SendMessageService {
+    override fun sendMessageAsync(queueMessage: QueueMessage): CompletableFuture<SendMessageResult> {
+        return producerHolder.send(queueMessage)
     }
 }

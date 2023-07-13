@@ -18,15 +18,9 @@
  */
 package org.enodeframework.rocketmq.message
 
-import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext
-import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus
-import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyContext
-import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyStatus
-import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently
-import org.apache.rocketmq.client.consumer.listener.MessageListenerOrderly
+import org.apache.rocketmq.client.consumer.listener.*
 import org.apache.rocketmq.common.message.MessageExt
 import org.enodeframework.common.extensions.SysProperties
-import org.enodeframework.common.io.Task.await
 import org.enodeframework.queue.MessageHandlerHolder
 import org.enodeframework.queue.QueueMessage
 import java.util.*
@@ -45,9 +39,9 @@ class RocketMQMessageListener(private val messageHandlerHolder: MessageHandlerHo
         msgs.forEach(Consumer { msg: MessageExt ->
             val queueMessage = covertToQueueMessage(msg)
             val messageHandler = messageHandlerHolder.chooseMessageHandler(queueMessage.type)
-            messageHandler.handle(queueMessage) { message: QueueMessage? -> latch.countDown() }
+            messageHandler.handle(queueMessage) { latch.countDown() }
         })
-        await(latch)
+        latch.await()
         return ConsumeConcurrentlyStatus.CONSUME_SUCCESS
     }
 }
@@ -60,7 +54,7 @@ class RocketMQMessageOrderlyListener(private val messageHandlerHolder: MessageHa
             val messageHandler = messageHandlerHolder.chooseMessageHandler(queueMessage.type)
             messageHandler.handle(queueMessage) { latch.countDown() }
         })
-        await(latch)
+        latch.await()
         return ConsumeOrderlyStatus.SUCCESS
     }
 }

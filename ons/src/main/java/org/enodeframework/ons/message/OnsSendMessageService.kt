@@ -16,27 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.enodeframework.ons.message;
+package org.enodeframework.ons.message
 
-import org.enodeframework.queue.QueueMessage;
-import org.enodeframework.queue.SendMessageResult;
-import org.enodeframework.queue.SendMessageService;
-
-import java.util.concurrent.CompletableFuture;
+import org.enodeframework.queue.QueueMessage
+import org.enodeframework.queue.SendMessageResult
+import org.enodeframework.queue.SendMessageService
+import java.util.concurrent.CompletableFuture
 
 /**
  * @author anruence@gmail.com
  */
-public class OnsSendMessageService implements SendMessageService {
-
-    private final OnsProducerHolder producerHolder;
-
-    public OnsSendMessageService(OnsProducerHolder producerHolder) {
-        this.producerHolder = producerHolder;
-    }
-
-    @Override
-    public CompletableFuture<SendMessageResult> sendMessageAsync(QueueMessage queueMessage) {
-        return producerHolder.send(queueMessage);
+class OnsSendMessageService(private val producerHolder: OnsProducerHolder) : SendMessageService {
+    override fun sendMessageAsync(queueMessage: QueueMessage): CompletableFuture<SendMessageResult> {
+        return producerHolder.send(queueMessage)
     }
 }

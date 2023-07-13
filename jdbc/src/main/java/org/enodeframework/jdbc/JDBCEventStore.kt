@@ -5,24 +5,17 @@ import io.vertx.sqlclient.Tuple
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.common.serializing.SerializeService
 import org.enodeframework.eventing.*
-import org.enodeframework.jdbc.handler.JDBCAddDomainEventsHandler
-import org.enodeframework.jdbc.handler.JDBCFindDomainEventsHandler
 import java.util.concurrent.CompletableFuture
 
 /**
  * @author anruence@gmail.com
  */
-open class JDBCEventStore(
-    sqlClient: JDBCPool,
-    options: EventStoreOptions,
-    eventSerializer: EventSerializer,
-    serializeService: SerializeService
-) : EventStore {
-    private var sqlClient: JDBCPool
-    private val eventSerializer: EventSerializer
+class JDBCEventStore(
+    private val sqlClient: JDBCPool,
+    private val options: EventStoreOptions,
+    private val eventSerializer: EventSerializer,
     private val serializeService: SerializeService
-    private val options: EventStoreOptions
-
+) : EventStore {
     override fun batchAppendAsync(eventStreams: List<DomainEventStream>): CompletableFuture<EventAppendResult> {
         val future = CompletableFuture<EventAppendResult>()
         val appendResult = EventAppendResult()
@@ -135,12 +128,5 @@ open class JDBCEventStore(
         private const val SELECT_ONE_BY_VERSION_SQL = "SELECT * FROM %s WHERE aggregate_root_id = ? AND version = ?"
         private const val SELECT_ONE_BY_COMMAND_ID_SQL =
             "SELECT * FROM %s WHERE aggregate_root_id = ? AND command_id = ?"
-    }
-
-    init {
-        this.sqlClient = sqlClient
-        this.eventSerializer = eventSerializer
-        this.serializeService = serializeService
-        this.options = options
     }
 }

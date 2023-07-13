@@ -19,9 +19,7 @@
 package org.enodeframework.spring;
 
 import com.aliyun.openservices.ons.api.Producer;
-import org.enodeframework.ons.message.OnsMessageListener;
-import org.enodeframework.ons.message.OnsProducerHolder;
-import org.enodeframework.ons.message.OnsSendMessageService;
+import org.enodeframework.ons.message.*;
 import org.enodeframework.queue.MessageHandlerHolder;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -29,18 +27,28 @@ import org.springframework.context.annotation.Bean;
 
 @ConditionalOnProperty(prefix = "spring.enode", name = "mq", havingValue = "ons")
 public class EnodeOnsAutoConfig {
-    @Bean(name = "onsSendMessageService")
-    public OnsSendMessageService onsSendMessageService(OnsProducerHolder onsProducerHolder) {
+    @Bean(name = "enodeOnsSendMessageService")
+    public OnsSendMessageService enodeOnsSendMessageService(OnsProducerHolder onsProducerHolder) {
         return new OnsSendMessageService(onsProducerHolder);
     }
 
-    @Bean(name = "onsProducerHolder")
-    public OnsProducerHolder onsProducerHolder(@Qualifier(value = "enodeOnsProducer") Producer producer) {
+    @Bean(name = "enodeOnsProducerHolder")
+    public OnsProducerHolder enodeOnsProducerHolder(@Qualifier(value = "enodeOnsProducer") Producer producer) {
         return new OnsProducerHolder(producer);
     }
 
-    @Bean(name = "onsMessageListener")
-    public OnsMessageListener onsMessageListener(MessageHandlerHolder messageHandlerHolder) {
+    @Bean(name = "enodeOnsMessageListener")
+    public OnsMessageListener enodeOnsMessageListener(MessageHandlerHolder messageHandlerHolder) {
         return new OnsMessageListener(messageHandlerHolder);
+    }
+
+    @Bean(name = "enodeOnsMessageOrderListener")
+    public OnsMessageOrderListener enodeOnsMessageOrderListener(MessageHandlerHolder messageHandlerHolder) {
+        return new OnsMessageOrderListener(messageHandlerHolder);
+    }
+
+    @Bean(name = "enodeOnsBatchMessageListener")
+    public OnsBatchMessageListener enodeOnsBatchMessageListener(MessageHandlerHolder messageHandlerHolder) {
+        return new OnsBatchMessageListener(messageHandlerHolder);
     }
 }

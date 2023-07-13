@@ -1,5 +1,7 @@
 package org.enodeframework.test.config;
 
+import org.enodeframework.amqp.message.AmqpBatchMessageListener;
+import org.enodeframework.amqp.message.AmqpChannelAwareMessageListener;
 import org.enodeframework.amqp.message.AmqpMessageListener;
 import org.enodeframework.commanding.CommandOptions;
 import org.springframework.amqp.core.*;
@@ -100,7 +102,7 @@ public class EnodeTestAmqpConfig {
         container.setConnectionFactory(connectionFactory);
         container.setQueueNames(commandTopic, eventTopic, options.getReplyTopic());
         container.setMessageListener(messageListenerAdapter);
-        container.setAcknowledgeMode(AcknowledgeMode.MANUAL);
+        container.setAcknowledgeMode(AcknowledgeMode.AUTO);
         container.setMissingQueuesFatal(false);
         return container;
     }

@@ -5,7 +5,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.enodeframework.commanding.CommandOptions;
-import org.enodeframework.kafka.KafkaMessageListener;
+import org.enodeframework.kafka.message.KafkaAcknowledgingMessageListener;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -47,7 +47,7 @@ public class KafkaEventConfig {
     }
 
     @Bean
-    public ConcurrentMessageListenerContainer<String, String> domainEventListenerContainer(KafkaMessageListener kafkaDomainEventListener) {
+    public ConcurrentMessageListenerContainer<String, String> domainEventListenerContainer(KafkaAcknowledgingMessageListener kafkaDomainEventListener) {
         ContainerProperties properties = new ContainerProperties(eventTopic);
         properties.setGroupId(DEFAULT_CONSUMER_GROUP0);
         properties.setMessageListener(kafkaDomainEventListener);
@@ -58,7 +58,7 @@ public class KafkaEventConfig {
 
 
     @Bean
-    public ConcurrentMessageListenerContainer<String, String> replyListenerContainer(CommandOptions commandOptions, KafkaMessageListener kafkaReplyListener) {
+    public ConcurrentMessageListenerContainer<String, String> replyListenerContainer(CommandOptions commandOptions, KafkaAcknowledgingMessageListener kafkaReplyListener) {
         ContainerProperties properties = new ContainerProperties(commandOptions.replyTo());
         properties.setGroupId(DEFAULT_CONSUMER_GROUP0);
         properties.setMessageListener(kafkaReplyListener);

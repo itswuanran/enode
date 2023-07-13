@@ -5,14 +5,12 @@ import io.vertx.sqlclient.Tuple
 import org.enodeframework.common.io.IOHelper
 import org.enodeframework.eventing.EventStoreOptions
 import org.enodeframework.eventing.PublishedVersionStore
-import org.enodeframework.mysql.handler.MySQLFindPublishedVersionHandler
-import org.enodeframework.mysql.handler.MySQLUpsertPublishedVersionHandler
 import java.util.concurrent.CompletableFuture
 
 /**
  * @author anruence@gmail.com
  */
-open class MySQLPublishedVersionStore(
+class MySQLPublishedVersionStore(
     private val client: MySQLPool,
     private val options: EventStoreOptions
 ) : PublishedVersionStore {
