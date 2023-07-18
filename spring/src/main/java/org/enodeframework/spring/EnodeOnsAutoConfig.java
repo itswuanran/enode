@@ -19,13 +19,17 @@
 package org.enodeframework.spring;
 
 import com.aliyun.openservices.ons.api.Producer;
-import org.enodeframework.ons.message.*;
+import org.enodeframework.ons.message.OnsBatchMessageListener;
+import org.enodeframework.ons.message.OnsMessageListener;
+import org.enodeframework.ons.message.OnsMessageOrderListener;
+import org.enodeframework.ons.message.OnsProducerHolder;
+import org.enodeframework.ons.message.OnsSendMessageService;
 import org.enodeframework.queue.MessageHandlerHolder;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 
-@ConditionalOnProperty(prefix = "spring.enode", name = "mq", havingValue = "ons")
+@ConditionalOnExpression(value = "#{'ons'.equals('${spring.enode.mq}') or 'ons'.equals('${spring.enode.reply}')}")
 public class EnodeOnsAutoConfig {
     @Bean(name = "enodeOnsSendMessageService")
     public OnsSendMessageService enodeOnsSendMessageService(OnsProducerHolder onsProducerHolder) {

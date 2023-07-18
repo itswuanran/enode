@@ -3,8 +3,8 @@ package org.enodeframework.queue.command
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.RemovalCause
-import org.enodeframework.commanding.CommandOptions
 import org.enodeframework.commanding.CommandMessage
+import org.enodeframework.commanding.CommandOptions
 import org.enodeframework.commanding.CommandResult
 import org.enodeframework.commanding.CommandReturnType
 import org.enodeframework.commanding.CommandStatus

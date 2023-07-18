@@ -30,6 +30,7 @@ import java.lang.annotation.Annotation;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -136,7 +137,7 @@ public class ClassPathScanHandler {
                 URL url = dirs.nextElement();
                 String protocol = url.getProtocol();
                 if ("file".equals(protocol)) {
-                    String filePath = URLDecoder.decode(url.getFile(), "UTF-8");
+                    String filePath = URLDecoder.decode(url.getFile(), StandardCharsets.UTF_8);
                     doScanPackageClassesByFile(classes, packageName, filePath, recursive);
                 } else if ("jar".equals(protocol)) {
                     doScanPackageClassesByJar(packageName, url, recursive, classes);

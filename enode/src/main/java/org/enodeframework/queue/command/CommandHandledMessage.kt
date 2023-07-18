@@ -1,6 +1,5 @@
 package org.enodeframework.queue.command
 
-import org.enodeframework.commanding.CommandResult
 import org.enodeframework.commanding.CommandReturnType
 import org.enodeframework.commanding.CommandStatus
 import org.enodeframework.messaging.AbstractReplyMessage

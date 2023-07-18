@@ -18,14 +18,20 @@
  */
 package org.enodeframework.spring;
 
-import org.enodeframework.amqp.message.*;
+import org.enodeframework.amqp.message.AmqpBatchMessageListener;
+import org.enodeframework.amqp.message.AmqpChannelAwareBatchMessageListener;
+import org.enodeframework.amqp.message.AmqpChannelAwareMessageListener;
+import org.enodeframework.amqp.message.AmqpMessageListener;
+import org.enodeframework.amqp.message.AmqpProducerHolder;
+import org.enodeframework.amqp.message.AmqpSendMessageService;
 import org.enodeframework.queue.MessageHandlerHolder;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 
-@ConditionalOnProperty(prefix = "spring.enode", name = "mq", havingValue = "amqp")
+
+@ConditionalOnExpression(value = "#{'amqp'.equals('${spring.enode.mq}') or 'amqp'.equals('${spring.enode.reply}')}")
 public class EnodeAmqpAutoConfiguration {
 
     @Bean(name = "enodeAmqpMessageListener")

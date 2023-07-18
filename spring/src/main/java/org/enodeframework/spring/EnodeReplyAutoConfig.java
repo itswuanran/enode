@@ -20,14 +20,12 @@ package org.enodeframework.spring;
 
 import io.vertx.core.VertxOptions;
 import io.vertx.core.net.NetServerOptions;
-import org.enodeframework.amqp.message.AmqpChannelAwareMessageListener;
 import org.enodeframework.amqp.message.AmqpProducerHolder;
 import org.enodeframework.amqp.message.AmqpSendReplyService;
 import org.enodeframework.commanding.CommandOptions;
 import org.enodeframework.common.serializing.SerializeService;
 import org.enodeframework.kafka.message.KafkaProducerHolder;
 import org.enodeframework.kafka.message.KafkaSendReplyService;
-import org.enodeframework.ons.message.OnsMessageListener;
 import org.enodeframework.ons.message.OnsProducerHolder;
 import org.enodeframework.ons.message.OnsSendReplyService;
 import org.enodeframework.pulsar.message.PulsarProducerHolder;
@@ -41,7 +39,6 @@ import org.enodeframework.rocketmq.message.RocketMQSendReplyService;
 import org.enodeframework.vertx.message.TcpReplyMessageListener;
 import org.enodeframework.vertx.message.TcpSendReplyService;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
@@ -96,15 +93,9 @@ public class EnodeReplyAutoConfig {
 
     @ConditionalOnProperty(prefix = "spring.enode", name = "reply", havingValue = "ons", matchIfMissing = false)
     static class OnsReply {
-        @Bean(name = "onsSendReplyService")
-        public OnsSendReplyService onsSendReplyService(OnsProducerHolder producerHolder, CommandOptions commandOptions, SerializeService serializeService) {
+        @Bean(name = "enodeOnsSendReplyService")
+        public OnsSendReplyService enodeOnsSendReplyService(OnsProducerHolder producerHolder, CommandOptions commandOptions, SerializeService serializeService) {
             return new OnsSendReplyService(producerHolder, commandOptions, serializeService);
-        }
-
-        @Bean(name = "onsReplyMessageListener")
-        @ConditionalOnExpression(value = "#{!'ons'.equals('${spring.enode.mq}')}")
-        public OnsMessageListener onsReplyMessageListener(MessageHandlerHolder messageHandlerHolder) {
-            return new OnsMessageListener(messageHandlerHolder);
         }
     }
 
@@ -121,12 +112,6 @@ public class EnodeReplyAutoConfig {
         @Bean(name = "amqpSendReplyService")
         public AmqpSendReplyService amqpSendReplyService(AmqpProducerHolder pulsarProducerHolder, CommandOptions commandOptions, SerializeService serializeService) {
             return new AmqpSendReplyService(pulsarProducerHolder, commandOptions, serializeService);
-        }
-
-        @Bean(name = "amqpReplyMessageListener")
-        @ConditionalOnExpression(value = "#{!'amqp'.equals('${spring.enode.mq}')}")
-        public AmqpChannelAwareMessageListener amqpReplyMessageListener(MessageHandlerHolder messageHandlerHolder) {
-            return new AmqpChannelAwareMessageListener(messageHandlerHolder);
         }
     }
 }
