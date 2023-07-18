@@ -18,7 +18,12 @@
  */
 package org.enodeframework.rocketmq.message
 
-import org.apache.rocketmq.client.consumer.listener.*
+import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext
+import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus
+import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyContext
+import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyStatus
+import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently
+import org.apache.rocketmq.client.consumer.listener.MessageListenerOrderly
 import org.apache.rocketmq.common.message.MessageExt
 import org.enodeframework.common.extensions.SysProperties
 import org.enodeframework.queue.MessageHandlerHolder

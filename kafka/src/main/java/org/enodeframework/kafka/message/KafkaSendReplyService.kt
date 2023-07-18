@@ -20,6 +20,7 @@ class KafkaSendReplyService(
     override fun send(message: ReplyMessage): CompletableFuture<SendMessageResult> {
         return kafkaProducerHolder.send(buildQueueMessage(message))
     }
+
     private fun buildQueueMessage(replyMessage: ReplyMessage): QueueMessage {
         val message = replyMessage.asGenericReplyMessage()
         val queueMessage = replyMessage.asPartQueueMessage()

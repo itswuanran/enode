@@ -12,7 +12,11 @@ import org.enodeframework.common.exception.EventStoreException
 import org.enodeframework.common.exception.IORuntimeException
 import org.enodeframework.common.exception.PublishedVersionStoreException
 import org.enodeframework.common.serializing.SerializeService
-import org.enodeframework.eventing.*
+import org.enodeframework.eventing.AggregateEventAppendResult
+import org.enodeframework.eventing.DomainEventStream
+import org.enodeframework.eventing.EventAppendStatus
+import org.enodeframework.eventing.EventSerializer
+import org.enodeframework.eventing.EventStoreOptions
 import org.slf4j.LoggerFactory
 import java.sql.SQLException
 import java.util.*

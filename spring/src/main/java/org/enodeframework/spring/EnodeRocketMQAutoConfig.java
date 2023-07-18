@@ -25,10 +25,10 @@ import org.enodeframework.rocketmq.message.RocketMQMessageOrderlyListener;
 import org.enodeframework.rocketmq.message.RocketMQProducerHolder;
 import org.enodeframework.rocketmq.message.RocketMQSendMessageService;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 
-@ConditionalOnProperty(prefix = "spring.enode", name = "mq", havingValue = "rocketmq")
+@ConditionalOnExpression(value = "#{'rocketmq'.equals('${spring.enode.mq}') or 'rocketmq'.equals('${spring.enode.reply}')}")
 public class EnodeRocketMQAutoConfig {
 
     @Bean(name = "rocketMQMessageOrderlyListener")
